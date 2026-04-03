@@ -1,0 +1,127 @@
+/* Article page styles */
+
+.article-page {
+  padding: 64px 0 80px;
+}
+
+.article-container {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.article-header {
+  margin-bottom: 48px;
+}
+
+.article-tag {
+  display: inline-block;
+  background: var(--accent-light);
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 100px;
+  margin-bottom: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.article-header h1 {
+  font-size: clamp(26px, 4vw, 38px);
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.5px;
+  color: var(--black);
+  margin-bottom: 20px;
+}
+
+.article-meta {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.article-body {
+  font-size: 17px;
+  line-height: 1.8;
+  color: #374151;
+}
+
+.article-body p {
+  margin-bottom: 24px;
+}
+
+.article-lead {
+  font-size: 19px;
+  color: var(--mid);
+  font-weight: 400;
+  line-height: 1.75;
+}
+
+.article-body h2 {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--black);
+  margin-top: 48px;
+  margin-bottom: 16px;
+  letter-spacing: -0.3px;
+}
+
+.article-body strong {
+  color: var(--dark);
+  font-weight: 600;
+}
+
+.article-body em {
+  font-style: italic;
+}
+
+.article-body a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.article-divider {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 48px 0;
+}
+
+.article-footer-note {
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1.65;
+}
+
+/* Article CTA section */
+.article-cta {
+  background: var(--dark);
+  padding: 64px 0;
+  text-align: center;
+}
+
+.article-cta h3 {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--white);
+  margin-bottom: 12px;
+}
+
+.article-cta p {
+  color: #9CA3AF;
+  font-size: 16px;
+  margin-bottom: 28px;
+  max-width: 480px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+@media (max-width: 768px) {
+  .article-header h1 { font-size: 24px; }
+  .article-body { font-size: 16px; }
+  .article-lead { font-size: 17px; }
+}
