@@ -21,6 +21,7 @@
       <a href="/" class="nav-logo">Jason Landers</a>
       <div class="nav-links">
         <a href="#writing">Writing</a>
+        <a href="#prompts">AI Prompts</a>
         <a href="#about">About</a>
         <a href="https://linkedin.com/in/jasonjlanders" target="_blank">LinkedIn</a>
         <a href="#newsletter" class="btn-nav">Subscribe</a>
@@ -155,6 +156,77 @@
         <a href="https://linkedin.com/in/jasonjlanders" target="_blank" class="btn-secondary">
           Follow on LinkedIn for new posts →
         </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- AI PROMPTS -->
+  <section class="prompts" id="prompts">
+    <div class="container">
+      <div class="prompts-header">
+        <div>
+          <h2 class="section-title">AI Prompts for SE Teams</h2>
+          <p class="section-sub">Practical prompts tested with real SE teams. New prompts go to newsletter subscribers first &mdash; then appear here the following week.</p>
+        </div>
+        <a href="#newsletter" class="btn-secondary prompts-subscribe">Get prompts first &rarr;</a>
+      </div>
+      <div class="prompts-grid">
+
+        <div class="prompt-card">
+          <div class="prompt-meta">
+            <span class="prompt-tag">Pre-Call Prep</span>
+            <span class="prompt-level">Claude &bull; CoWork</span>
+          </div>
+          <h3 class="prompt-title">5-Minute Account Brief</h3>
+          <p class="prompt-desc">Generate a structured pre-call brief from your CRM data and a quick web search. Replace the full 30-60 minute manual research process.</p>
+          <div class="prompt-box">
+            <pre>I have a customer call in [X minutes] with [COMPANY NAME].
+
+Using my Salesforce/CRM connection, pull:
+- Current opportunity stage, amount, and close date
+- Last 3 activities logged on this account
+- Any active POV records and their status
+- Products currently in scope
+
+Also search the web for any news about [COMPANY NAME] 
+in the last 14 days.
+
+Return a brief with: deal status, 3 discovery questions 
+tailored to their situation, top talking points, and 
+one suggested next step to propose at end of call.</pre>
+          </div>
+          <p class="prompt-note">Works best with Salesforce or Snowflake connected via MCP. Adjust field names to match your CRM setup.</p>
+        </div>
+
+        <div class="prompt-card">
+          <div class="prompt-meta">
+            <span class="prompt-tag">POV Strategy</span>
+            <span class="prompt-level">Any LLM</span>
+          </div>
+          <h3 class="prompt-title">Success Criteria Workshop Prep</h3>
+          <p class="prompt-desc">Draft a starting point for POV success criteria in the customer&rsquo;s language, not yours. Use as a conversation starter in the kickoff meeting &mdash; not as a finished document.</p>
+          <div class="prompt-box">
+            <pre>I'm starting a POV with [COMPANY] for [PRODUCTS].
+
+Their stated goals are: [PASTE WHAT CUSTOMER SAID]
+Their environment: [KNOWN TECH STACK/CONTEXT]
+Key stakeholders: [NAMES AND TITLES]
+
+Draft POV success criteria structured as:
+1. Business outcomes (in their language, not ours)
+2. Technical milestones (specific, measurable)
+3. Timeline with key dates
+4. Definition of done
+
+Avoid vague language like "improved visibility."
+Frame everything from the customer's perspective.</pre>
+          </div>
+          <p class="prompt-note">Bring this draft to the kickoff and edit it together with the customer. Criteria they help write are criteria they own.</p>
+        </div>
+
+      </div>
+      <div class="prompts-footer">
+        <p>More prompts published weekly. <a href="#newsletter">Subscribe to The SE Edge</a> to get each one before it appears here.</p>
       </div>
     </div>
   </section>

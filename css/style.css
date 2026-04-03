@@ -486,6 +486,122 @@ body {
 
 .writing-cta { text-align: center; }
 
+/* ---- AI PROMPTS ---- */
+.prompts {
+  padding: 96px 0;
+  background: var(--white);
+  border-top: 1px solid var(--border);
+}
+
+.prompts-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 48px;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.prompts-subscribe {
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.prompts-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+.prompt-card {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 32px;
+  background: var(--white);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.prompt-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.prompt-tag {
+  display: inline-block;
+  background: var(--accent-light);
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 100px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.prompt-level {
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.prompt-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--dark);
+  letter-spacing: -0.2px;
+}
+
+.prompt-desc {
+  font-size: 14px;
+  color: var(--mid);
+  line-height: 1.6;
+}
+
+.prompt-box {
+  background: #0F172A;
+  border-radius: 8px;
+  padding: 20px;
+  overflow-x: auto;
+}
+
+.prompt-box pre {
+  font-family: 'Menlo', 'Monaco', 'Consolas', monospace;
+  font-size: 12px;
+  line-height: 1.65;
+  color: #E2E8F0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  margin: 0;
+}
+
+.prompt-note {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.5;
+  font-style: italic;
+  border-top: 1px solid var(--border);
+  padding-top: 14px;
+  margin-top: 4px;
+}
+
+.prompts-footer {
+  text-align: center;
+  color: var(--muted);
+  font-size: 15px;
+}
+
+.prompts-footer a {
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.prompts-footer a:hover { text-decoration: underline; }
+
 /* ---- ABOUT ---- */
 .about {
   padding: 96px 0;
@@ -639,6 +755,8 @@ body {
   .nav-links { gap: 16px; }
   .hero { padding: 64px 0 56px; }
   .newsletter-inner { grid-template-columns: 1fr; gap: 40px; }
+  .prompts-grid { grid-template-columns: 1fr; }
+  .prompts-header { flex-direction: column; align-items: flex-start; }
   .posts-grid { grid-template-columns: 1fr; }
   .post-card.featured { grid-column: span 1; }
   .about-inner { grid-template-columns: 1fr; gap: 48px; }
