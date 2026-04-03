@@ -752,7 +752,9 @@ body {
 }
 
 @media (max-width: 768px) {
-  .nav-links { gap: 16px; }
+  .nav-links { gap: 10px; }
+  .nav-links a { font-size: 13px; }
+  .nav-link-prompts { display: none; }
   .hero { padding: 64px 0 56px; }
   .newsletter-inner { grid-template-columns: 1fr; gap: 40px; }
   .prompts-grid { grid-template-columns: 1fr; }
