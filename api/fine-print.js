@@ -28,7 +28,7 @@ module.exports = async function handler(req, res) {
   console.log('API key present:', !!apiKey);
 
   if (!apiKey) {
-    return res.status(503).json({ rateLimited: true, debug: 'No API key configured' });
+    return res.status(503).json({ rateLimited: true });
   }
 
   const prompt = `You are an expert Sales Engineering career advisor. Analyze this job description and return ONLY a JSON object with no markdown or explanation.
@@ -77,13 +77,13 @@ Return exactly this JSON structure:
 
     if (!geminiRes.ok) {
       console.log('Gemini error:', JSON.stringify(data).slice(0, 300));
-      return res.status(503).json({ rateLimited: true, debug: JSON.stringify(data).slice(0, 200) });
+      return res.status(503).json({ rateLimited: true });
     }
 
     const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
     if (!text) {
       console.log('No text in response:', JSON.stringify(data).slice(0, 200));
-      return res.status(503).json({ rateLimited: true, debug: 'No text returned' });
+      return res.status(503).json({ rateLimited: true });
     }
 
     console.log('Got response, parsing JSON...');
@@ -94,6 +94,6 @@ Return exactly this JSON structure:
 
   } catch (err) {
     console.log('Caught error:', err?.message || String(err));
-    return res.status(503).json({ rateLimited: true, debug: err?.message || String(err) });
+    return res.status(503).json({ rateLimited: true });
   }
 };
