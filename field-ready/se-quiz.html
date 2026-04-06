@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <title>What Kind of SE Are You? — Field Ready</title>
+  <meta name="description" content="Ten questions, six archetypes. Find out what kind of Sales Engineer you are — and who works best alongside you.">
+  <script defer src="https://umami-tau-drab.vercel.app/script.js" data-website-id="23015384-bcae-4732-9665-a39f261647e1"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface2: #222533;
+      --border: #2d3148;
+      --text: #e2e4ef;
+      --muted: #6b7280;
+      --accent: #6366f1;
+      --accent-dark: #4f46e5;
+      --accent-light: rgba(99,102,241,0.12);
+      --green: #22c55e;
+      --font: 'Inter', system-ui, sans-serif;
+    }
+
+    html, body {
+      min-height: 100%;
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .screen { display: none; }
+    .screen.active { display: block; }
+
+    /* ---- INTRO ---- */
+    #intro {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 24px;
+      text-align: center;
+    }
+
+    .brand-tag {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 16px;
+    }
+
+    .intro-title {
+      font-size: clamp(28px, 6vw, 44px);
+      font-weight: 800;
+      letter-spacing: -1px;
+      color: #fff;
+      line-height: 1.15;
+      margin-bottom: 16px;
+      max-width: 520px;
+    }
+
+    .intro-sub {
+      font-size: 16px;
+      color: var(--muted);
+      line-height: 1.7;
+      max-width: 440px;
+      margin-bottom: 36px;
+    }
+
+    .archetypes-preview {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      margin-bottom: 36px;
+      max-width: 480px;
+    }
+
+    .archetype-chip {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      padding: 6px 14px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .btn-start {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      padding: 16px 40px;
+      font-family: var(--font);
+      font-size: 17px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .btn-start:hover { background: var(--accent-dark); }
+
+    .intro-footer {
+      margin-top: 20px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    /* ---- QUIZ ---- */
+    #quiz {
+      min-height: 100vh;
+      padding: 24px;
+    }
+
+    .quiz-inner {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .progress-wrap {
+      margin-bottom: 32px;
+    }
+
+    .progress-bar-bg {
+      background: var(--surface);
+      border-radius: 100px;
+      height: 4px;
+      overflow: hidden;
+      margin-bottom: 10px;
+    }
+
+    .progress-bar-fill {
+      background: var(--accent);
+      height: 100%;
+      border-radius: 100px;
+      transition: width 0.4s ease;
+    }
+
+    .progress-label {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+    .question-block {
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .question-num {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 10px;
+    }
+
+    .question-text {
+      font-size: 20px;
+      font-weight: 700;
+      color: #fff;
+      line-height: 1.35;
+      margin-bottom: 24px;
+      letter-spacing: -0.3px;
+    }
+
+    .answers {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .answer-btn {
+      background: var(--surface);
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 20px;
+      font-family: var(--font);
+      font-size: 15px;
+      color: var(--text);
+      text-align: left;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s, transform 0.1s;
+      line-height: 1.45;
+    }
+
+    .answer-btn:hover {
+      border-color: var(--accent);
+      background: var(--accent-light);
+    }
+
+    .answer-btn:active {
+      transform: scale(0.98);
+    }
+
+    .answer-btn.selected {
+      border-color: var(--accent);
+      background: var(--accent-light);
+      color: #fff;
+    }
+
+    /* ---- RESULT ---- */
+    #result {
+      min-height: 100vh;
+      padding: 40px 24px;
+    }
+
+    .result-inner {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .result-header {
+      text-align: center;
+      margin-bottom: 36px;
+    }
+
+    .result-emoji {
+      font-size: 56px;
+      margin-bottom: 16px;
+    }
+
+    .result-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 8px;
+    }
+
+    .result-name {
+      font-size: 32px;
+      font-weight: 800;
+      letter-spacing: -1px;
+      color: #fff;
+      margin-bottom: 12px;
+    }
+
+    .result-tagline {
+      font-size: 16px;
+      color: var(--muted);
+      line-height: 1.6;
+      max-width: 460px;
+      margin: 0 auto;
+    }
+
+    .result-section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 22px;
+      margin-bottom: 14px;
+    }
+
+    .result-section-title {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--accent);
+      margin-bottom: 12px;
+    }
+
+    .result-section p {
+      font-size: 15px;
+      color: var(--text);
+      line-height: 1.65;
+    }
+
+    .traits-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .trait-card {
+      background: var(--surface2);
+      border-radius: 10px;
+      padding: 14px;
+    }
+
+    .trait-card-label {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 6px;
+    }
+
+    .trait-card-label.strength { color: var(--green); }
+    .trait-card-label.blindspot { color: #f97316; }
+
+    .trait-card p {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .works-with {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 14px;
+      color: var(--text);
+    }
+
+    .works-with-badge {
+      background: var(--accent-light);
+      border: 1px solid var(--accent);
+      color: var(--accent);
+      padding: 4px 14px;
+      border-radius: 100px;
+      font-size: 13px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .quote-block {
+      font-style: italic;
+      font-size: 14px;
+      color: var(--muted);
+      border-left: 3px solid var(--accent);
+      padding-left: 14px;
+      line-height: 1.6;
+    }
+
+    /* Email capture */
+    .email-section {
+      background: var(--accent);
+      border-radius: 14px;
+      padding: 24px;
+      margin-bottom: 14px;
+      text-align: center;
+    }
+
+    .email-section h3 {
+      font-size: 18px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 6px;
+    }
+
+    .email-section p {
+      font-size: 14px;
+      color: rgba(255,255,255,0.8);
+      margin-bottom: 16px;
+      line-height: 1.5;
+    }
+
+    .email-form {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .email-input {
+      flex: 1;
+      min-width: 180px;
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 8px;
+      padding: 11px 14px;
+      color: #fff;
+      font-family: var(--font);
+      font-size: 14px;
+      outline: none;
+    }
+
+    .email-input::placeholder { color: rgba(255,255,255,0.6); }
+
+    .email-submit {
+      background: #fff;
+      color: var(--accent);
+      border: none;
+      border-radius: 8px;
+      padding: 11px 20px;
+      font-family: var(--font);
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: opacity 0.15s;
+    }
+
+    .email-submit:hover { opacity: 0.9; }
+
+    .result-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 4px;
+    }
+
+    .btn-share {
+      width: 100%;
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      font-family: var(--font);
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: border-color 0.15s;
+    }
+
+    .btn-share:hover { border-color: var(--accent); }
+
+    .btn-retake {
+      width: 100%;
+      background: transparent;
+      color: var(--muted);
+      border: none;
+      padding: 12px;
+      font-family: var(--font);
+      font-size: 14px;
+      cursor: pointer;
+      transition: color 0.15s;
+    }
+
+    .btn-retake:hover { color: var(--text); }
+
+    .field-ready-footer {
+      margin-top: 32px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+      text-align: center;
+    }
+
+    .field-ready-footer a {
+      font-size: 12px;
+      color: var(--muted);
+      text-decoration: none;
+    }
+
+    .field-ready-footer a:hover { color: var(--accent); }
+
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--green);
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 100px;
+      font-size: 14px;
+      font-weight: 600;
+      transition: transform 0.3s ease;
+      pointer-events: none;
+      z-index: 100;
+      white-space: nowrap;
+    }
+
+    .toast.show { transform: translateX(-50%) translateY(0); }
+
+    @media (max-width: 480px) {
+      .traits-grid { grid-template-columns: 1fr; }
+      .email-form { flex-direction: column; }
+      .email-input, .email-submit { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="toast" id="toast">Copied to clipboard!</div>
+
+<!-- INTRO -->
+<div id="intro" class="screen active">
+  <div class="brand-tag">Field Ready</div>
+  <h1 class="intro-title">What kind of Sales Engineer are you?</h1>
+  <p class="intro-sub">Ten questions, six archetypes. A quick way to understand your own strengths and the different styles on your team.</p>
+  <div class="archetypes-preview">
+    <span class="archetype-chip">The Deep-Diver</span>
+    <span class="archetype-chip">The Executive Whisperer</span>
+    <span class="archetype-chip">The POV Perfectionist</span>
+    <span class="archetype-chip">The Competitive Assassin</span>
+    <span class="archetype-chip">The Demo Artist</span>
+    <span class="archetype-chip">The Champion Builder</span>
+  </div>
+  <button class="btn-start" onclick="startQuiz()">Take the quiz</button>
+  <p class="intro-footer">10 questions, about 3 minutes</p>
+</div>
+
+<!-- QUIZ -->
+<div id="quiz" class="screen">
+  <div class="quiz-inner">
+    <div class="progress-wrap">
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" id="progressBar" style="width:0%"></div>
+      </div>
+      <div class="progress-label" id="progressLabel">Question 1 of 10</div>
+    </div>
+    <div class="question-block" id="questionBlock"></div>
+  </div>
+</div>
+
+<!-- RESULT -->
+<div id="result" class="screen">
+  <div class="result-inner">
+    <div class="result-header">
+      <div class="result-emoji" id="resultEmoji"></div>
+      <div class="result-label">Your SE Archetype</div>
+      <div class="result-name" id="resultName"></div>
+      <p class="result-tagline" id="resultTagline"></p>
+    </div>
+
+    <div class="result-section">
+      <div class="result-section-title">What this means</div>
+      <p id="resultDescription"></p>
+    </div>
+
+    <div class="traits-grid" style="margin-bottom:14px;">
+      <div class="trait-card">
+        <div class="trait-card-label strength">Strengths</div>
+        <p id="resultStrengths"></p>
+      </div>
+      <div class="trait-card">
+        <div class="trait-card-label blindspot">Blind spot</div>
+        <p id="resultBlindspot"></p>
+      </div>
+    </div>
+
+    <div class="result-section">
+      <div class="result-section-title">Works best with</div>
+      <div class="works-with">
+        <span>You complement</span>
+        <span class="works-with-badge" id="resultWorksWith"></span>
+      </div>
+    </div>
+
+    <div class="result-section">
+      <div class="result-section-title">Your tell</div>
+      <div class="quote-block" id="resultQuote"></div>
+    </div>
+
+    <div class="email-section">
+      <h3>Get The SE Edge</h3>
+      <p>Weekly insights for all six archetypes -- and the leaders who work with them.</p>
+      <form class="email-form" action="https://magic.beehiiv.com/v1/ed62bc9e-56bd-41ca-be98-5ab6463a12bf" method="get" target="_blank">
+        <input class="email-input" type="email" name="email" placeholder="your@email.com" required />
+        <button class="email-submit" type="submit">Subscribe</button>
+      </form>
+    </div>
+
+    <div class="result-actions">
+      <button class="btn-share" onclick="shareResult()">Share your result</button>
+      <button class="btn-retake" onclick="retake()">Retake the quiz</button>
+    </div>
+
+    <div class="field-ready-footer">
+      <a href="/field-ready">Field Ready by Jason Landers &nbsp;·&nbsp; jasonlanders.com</a>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ---- QUESTIONS ----
+  const QUESTIONS = [
+    {
+      text: "Your AE just booked a discovery call with a new prospect. You:",
+      answers: [
+        { text: "Research the company, their tech stack, and every executive's LinkedIn", type: "a" },
+        { text: "Think about the business outcomes they probably care about", type: "b" },
+        { text: "Start drafting success criteria frameworks to bring to the call", type: "c" },
+        { text: "Look up which competitors they might be evaluating", type: "d" },
+        { text: "Think about which demo flow would be most compelling", type: "e" },
+        { text: "Ask the AE who the most important relationship in the account is", type: "f" }
+      ]
+    },
+    {
+      text: "A POV has gone quiet for 10 days. You:",
+      answers: [
+        { text: "Dig into the technical data to find a compelling insight to share", type: "a" },
+        { text: "Call the VP directly and ask what is really going on", type: "b" },
+        { text: "Review the success criteria and identify which gaps to address", type: "c" },
+        { text: "Research whether a competitor made a move on the account", type: "d" },
+        { text: "Prepare a compelling summary of what you have proven so far", type: "e" },
+        { text: "Check in with your champion to understand the internal dynamics", type: "f" }
+      ]
+    },
+    {
+      text: "The customer's staff engineer asks a question you don't know the answer to. You:",
+      answers: [
+        { text: "Are already halfway to an answer -- you prepped for this", type: "a" },
+        { text: "Bridge to the business impact instead of the technical detail", type: "b" },
+        { text: "Say you don't know but will get a definitive answer by tomorrow", type: "c" },
+        { text: "Use it as an opportunity to highlight a competitor's weakness", type: "d" },
+        { text: "Pivot smoothly to a strength and promise to follow up", type: "e" },
+        { text: "Ask your champion after the call what the right answer would have been", type: "f" }
+      ]
+    },
+    {
+      text: "Which part of a deal do you find most energizing?",
+      answers: [
+        { text: "The technical architecture and integration design phase", type: "a" },
+        { text: "The executive alignment and business case development", type: "b" },
+        { text: "The POV kickoff and success criteria definition", type: "c" },
+        { text: "The competitive bake-off moments", type: "d" },
+        { text: "The big demo or presentation", type: "e" },
+        { text: "Building the internal coalition of supporters", type: "f" }
+      ]
+    },
+    {
+      text: "Your manager asks for a deal update. You lead with:",
+      answers: [
+        { text: "The technical progress and what has been validated", type: "a" },
+        { text: "The executive sponsor's sentiment and business case status", type: "b" },
+        { text: "The POV scorecard and criteria completion rate", type: "c" },
+        { text: "The competitive landscape and your positioning", type: "d" },
+        { text: "How the last customer meeting went", type: "e" },
+        { text: "The champion's internal situation and political dynamics", type: "f" }
+      ]
+    },
+    {
+      text: "Which book would you most likely recommend to a new SE?",
+      answers: [
+        { text: "A technical architecture guide for your product category", type: "a" },
+        { text: "The Challenger Sale or SPIN Selling", type: "b" },
+        { text: "The Great Demo! by Peter Cohan", type: "c" },
+        { text: "Fanatical Prospecting (competitive mindset)", type: "d" },
+        { text: "Presentation Zen or a storytelling book", type: "e" },
+        { text: "Never Split the Difference (negotiation and relationships)", type: "f" }
+      ]
+    },
+    {
+      text: "A deal is in trouble. Your instinct is to:",
+      answers: [
+        { text: "Find a technical proof point that changes the conversation", type: "a" },
+        { text: "Get in front of the economic buyer immediately", type: "b" },
+        { text: "Audit the success criteria and reset the evaluation", type: "c" },
+        { text: "Find out what the competitor is saying and counter it", type: "d" },
+        { text: "Prepare a compelling results presentation", type: "e" },
+        { text: "Call your champion and ask what is really happening", type: "f" }
+      ]
+    },
+    {
+      text: "What do customers most often compliment you on?",
+      answers: [
+        { text: "Your technical depth and credibility", type: "a" },
+        { text: "Your ability to speak their language at the executive level", type: "b" },
+        { text: "Your process rigor and follow-through", type: "c" },
+        { text: "Your honesty about competitors", type: "d" },
+        { text: "Your demos and presentations", type: "e" },
+        { text: "How well you understand their internal situation", type: "f" }
+      ]
+    },
+    {
+      text: "Which metric matters most to you personally?",
+      answers: [
+        { text: "Technical win rate", type: "a" },
+        { text: "Executive meeting success rate", type: "b" },
+        { text: "POV conversion rate", type: "c" },
+        { text: "Competitive win rate", type: "d" },
+        { text: "Demo-to-POV conversion rate", type: "e" },
+        { text: "Account expansion and renewal rate", type: "f" }
+      ]
+    },
+    {
+      text: "At the end of a deal -- win or loss -- you most want to know:",
+      answers: [
+        { text: "What the technical decision criteria actually were", type: "a" },
+        { text: "What the economic buyer was ultimately thinking", type: "b" },
+        { text: "Whether the success criteria were the right ones", type: "c" },
+        { text: "Exactly why the competitor won or lost", type: "d" },
+        { text: "How the customer rated the demo and presentations", type: "e" },
+        { text: "What your champion said in the room when you were not there", type: "f" }
+      ]
+    }
+  ];
+
+  // ---- ARCHETYPES ----
+  const ARCHETYPES = {
+    a: {
+      emoji: "🔬",
+      name: "The Deep-Diver",
+      tagline: "Technical credibility is your superpower. You prepare relentlessly and customers trust you because you clearly know what you're talking about.",
+      description: "You live for the architecture conversation. When a customer's staff engineer throws a curveball, you're ready -- because you did the research. You're happiest whiteboarding with engineers, and you have genuine opinions about technology choices. Your technical credibility opens doors that polished pitches cannot.",
+      strengths: "Technical depth, POV execution, complex integrations, credibility with engineering teams",
+      blindspot: "You can get lost in the weeds when the exec just wants the headline. Not every customer needs to know how the engine works.",
+      worksWith: "The Executive Whisperer",
+      quote: "Actually, let me show you how this works under the hood."
+    },
+    b: {
+      emoji: "🎯",
+      name: "The Executive Whisperer",
+      tagline: "You translate technology into business outcomes effortlessly. Executives trust you. You make complex things feel simple and relevant.",
+      description: "You naturally think in terms of what the business cares about -- cost, risk, speed, competitive position. When a VP joins a call unexpectedly, you don't panic. You pivot to their world and make the conversation land. Engineers sometimes think you're shallow. They're wrong.",
+      strengths: "C-suite engagement, EBR facilitation, business value framing, executive alignment",
+      blindspot: "You sometimes under-prepare for the technical deep-dive. Not every room is a boardroom.",
+      worksWith: "The Deep-Diver",
+      quote: "What keeps you up at night?"
+    },
+    c: {
+      emoji: "📋",
+      name: "The POV Perfectionist",
+      tagline: "No POV starts without crystal-clear success criteria. You bring process discipline to evaluations that might otherwise drift.",
+      description: "You believe that a well-structured POV is the difference between winning and hoping. You will not let a discovery call end without a defined next step. You make everyone around you more rigorous -- sometimes to their frustration, and usually to their benefit. Your POV win rates prove the point.",
+      strengths: "Process discipline, POV win rates, forecast accuracy, success criteria definition",
+      blindspot: "You can slow things down when speed matters more than perfection. Sometimes a fast, imperfect POV beats a delayed perfect one.",
+      worksWith: "The Competitive Assassin",
+      quote: "Before we start -- what does success look like in your terms, not ours?"
+    },
+    d: {
+      emoji: "⚔️",
+      name: "The Competitive Assassin",
+      tagline: "You know every competitor's weakness and get energy from being told you're losing. Bake-offs are where you thrive.",
+      description: "You have done your homework on the competition. You know their product gaps, their pricing, their customer complaints, and the objections they'll raise about yours. When a customer says another vendor is winning, you lean forward. You know exactly what to do with that information.",
+      strengths: "Competitive win rates, battle prep, repositioning, handling competitive objections",
+      blindspot: "You can get too focused on beating the competitor instead of serving the customer. Winning the battle isn't always the same as winning the war.",
+      worksWith: "The POV Perfectionist",
+      quote: "Tell me more about what they showed you."
+    },
+    e: {
+      emoji: "🎨",
+      name: "The Demo Artist",
+      tagline: "You can make any product look beautiful. You read the room, pivot on instinct, and leave every audience wanting to see more.",
+      description: "You treat the demo as a performance -- and you're good at it. You know which features to lead with for which audience, when to slow down and when to move fast, and how to turn a technical walkthrough into a story. You're the person the team wants in the room for the big one.",
+      strengths: "Live demos, multi-stakeholder presentations, storytelling, real-time improvisation",
+      blindspot: "You sometimes demo before discovery is complete. The best demo in the world won't land if it's solving the wrong problem.",
+      worksWith: "The Champion Builder",
+      quote: "Let me show you something I think you'll find interesting."
+    },
+    f: {
+      emoji: "🤝",
+      name: "The Champion Builder",
+      tagline: "You play the long game. When a deal goes sideways, your champion fights for it internally -- because you built that relationship.",
+      description: "You invest in relationships the way others invest in deal stages. You know who the real decision-makers are, who influences them, and what they care about when no vendor is in the room. When a deal gets complicated internally, you're the one who finds out what's actually happening -- and has someone willing to tell them.",
+      strengths: "Relationship depth, expansion, retention, navigating enterprise politics",
+      blindspot: "You can be too patient. Some accounts need to be pushed, not nurtured. Knowing when to close vs. when to build is a skill worth developing.",
+      worksWith: "The Demo Artist",
+      quote: "How are things going on your end -- not the deal, just generally?"
+    }
+  };
+
+  // ---- STATE ----
+  let currentQ = 0;
+  let scores = { a: 0, b: 0, c: 0, d: 0, e: 0, f: 0 };
+
+  // ---- QUIZ LOGIC ----
+  function startQuiz() {
+    currentQ = 0;
+    scores = { a: 0, b: 0, c: 0, d: 0, e: 0, f: 0 };
+    showScreen('quiz');
+    renderQuestion();
+  }
+
+  function renderQuestion() {
+    const q = QUESTIONS[currentQ];
+    const pct = (currentQ / QUESTIONS.length) * 100;
+    document.getElementById('progressBar').style.width = pct + '%';
+    document.getElementById('progressLabel').textContent = `Question ${currentQ + 1} of ${QUESTIONS.length}`;
+
+    // Shuffle answers for each render
+    const shuffled = [...q.answers].sort(() => Math.random() - 0.5);
+
+    document.getElementById('questionBlock').innerHTML = `
+      <div class="question-num">Question ${currentQ + 1}</div>
+      <div class="question-text">${q.text}</div>
+      <div class="answers">
+        ${shuffled.map(a => `
+          <button class="answer-btn" onclick="selectAnswer('${a.type}', this)">
+            ${a.text}
+          </button>
+        `).join('')}
+      </div>
+    `;
+  }
+
+  function selectAnswer(type, el) {
+    // Highlight selection briefly
+    document.querySelectorAll('.answer-btn').forEach(b => b.classList.remove('selected'));
+    el.classList.add('selected');
+
+    scores[type]++;
+
+    setTimeout(() => {
+      currentQ++;
+      if (currentQ < QUESTIONS.length) {
+        renderQuestion();
+      } else {
+        showResult();
+      }
+    }, 280);
+  }
+
+  function showResult() {
+    // Find winning type
+    const winner = Object.entries(scores).sort((a, b) => b[1] - a[1])[0][0];
+    const archetype = ARCHETYPES[winner];
+
+    document.getElementById('resultEmoji').textContent = archetype.emoji;
+    document.getElementById('resultName').textContent = archetype.name;
+    document.getElementById('resultTagline').textContent = archetype.tagline;
+    document.getElementById('resultDescription').textContent = archetype.description;
+    document.getElementById('resultStrengths').textContent = archetype.strengths;
+    document.getElementById('resultBlindspot').textContent = archetype.blindspot;
+    document.getElementById('resultWorksWith').textContent = archetype.worksWith;
+    document.getElementById('resultQuote').textContent = '"' + archetype.quote + '"';
+
+    // Update progress bar to 100%
+    document.getElementById('progressBar').style.width = '100%';
+
+    showScreen('result');
+    window.scrollTo(0, 0);
+
+    // Store result for sharing
+    window._quizResult = archetype;
+    window._quizWinner = winner;
+  }
+
+  function shareResult() {
+    const a = window._quizResult;
+    if (!a) return;
+    const text = `I just took the SE Personality Quiz and I'm ${a.name} ${a.emoji}\n\n"${a.quote}"\n\nFind out which SE archetype you are: jasonlanders.com/field-ready/se-quiz.html`;
+
+    if (navigator.share) {
+      navigator.share({ text }).catch(() => copyText(text));
+    } else {
+      copyText(text);
+    }
+  }
+
+  function copyText(text) {
+    navigator.clipboard.writeText(text).then(showToast).catch(() => {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      showToast();
+    });
+  }
+
+  function showToast() {
+    const t = document.getElementById('toast');
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2500);
+  }
+
+  function retake() {
+    startQuiz();
+  }
+
+  function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    window.scrollTo(0, 0);
+  }
+</script>
+</body>
+</html>
