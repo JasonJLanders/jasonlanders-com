@@ -1,7 +1,12 @@
 {
+  "buildCommand": "npm install",
+  "outputDirectory": ".",
   "functions": {
     "api/fine-print.js": {
       "maxDuration": 30
     }
-  }
+  },
+  "rewrites": [
+    { "source": "/api/fine-print", "destination": "/api/fine-print" }
+  ]
 }
