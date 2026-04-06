@@ -1,17 +1,32 @@
 // api/fine-print.js -- Vercel serverless function
 
 module.exports = async function handler(req, res) {
+  // Log immediately so we know the function is running
+  console.log('Fine Print called, method:', req.method);
+
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { jobDescription } = req.body || {};
+  // Parse body -- Vercel may pass it as string or object
+  let body;
+  try {
+    body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+  } catch (e) {
+    console.log('Body parse error:', e.message, 'raw body:', req.body);
+    return res.status(400).json({ error: 'Invalid request body' });
+  }
+
+  const jobDescription = body?.jobDescription;
+  console.log('JD length:', jobDescription?.length);
 
   if (!jobDescription || jobDescription.trim().length < 100) {
     return res.status(400).json({ error: 'Please paste a complete job description.' });
   }
 
   const apiKey = process.env.GEMINI_API_KEY;
+  console.log('API key present:', !!apiKey);
+
   if (!apiKey) {
     return res.status(503).json({ rateLimited: true, debug: 'No API key configured' });
   }
@@ -19,7 +34,7 @@ module.exports = async function handler(req, res) {
   const prompt = `You are an expert Sales Engineering career advisor. Analyze this job description and return ONLY a JSON object with no markdown or explanation.
 
 JOB DESCRIPTION:
-${jobDescription.slice(0, 6000)}
+${jobDescription.slice(0, 5000)}
 
 Return exactly this JSON structure:
 {
@@ -39,7 +54,8 @@ Return exactly this JSON structure:
 }`;
 
   try {
-    const response = await fetch(
+    console.log('Calling Gemini API...');
+    const geminiRes = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`,
       {
         method: 'POST',
@@ -51,26 +67,33 @@ Return exactly this JSON structure:
       }
     );
 
-    const data = await response.json();
+    console.log('Gemini status:', geminiRes.status);
+    const data = await geminiRes.json();
 
-    if (response.status === 429) {
-      return res.status(429).json({ rateLimited: true, debug: 'Quota exceeded' });
+    if (geminiRes.status === 429) {
+      console.log('Rate limited:', JSON.stringify(data).slice(0, 200));
+      return res.status(429).json({ rateLimited: true });
     }
 
-    if (!response.ok) {
-      return res.status(503).json({ rateLimited: true, debug: `API error ${response.status}: ${JSON.stringify(data)}` });
+    if (!geminiRes.ok) {
+      console.log('Gemini error:', JSON.stringify(data).slice(0, 300));
+      return res.status(503).json({ rateLimited: true, debug: JSON.stringify(data).slice(0, 200) });
     }
 
     const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
     if (!text) {
-      return res.status(503).json({ rateLimited: true, debug: 'No text in response: ' + JSON.stringify(data) });
+      console.log('No text in response:', JSON.stringify(data).slice(0, 200));
+      return res.status(503).json({ rateLimited: true, debug: 'No text returned' });
     }
 
+    console.log('Got response, parsing JSON...');
     const clean = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
     const result = JSON.parse(clean);
+    console.log('Success, score:', result.overallScore);
     return res.status(200).json(result);
 
   } catch (err) {
+    console.log('Caught error:', err?.message || String(err));
     return res.status(503).json({ rateLimited: true, debug: err?.message || String(err) });
   }
 };
