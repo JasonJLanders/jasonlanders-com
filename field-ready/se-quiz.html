@@ -36,6 +36,9 @@
 
     .screen { display: none; }
     .screen.active { display: block; }
+    body.quiz-active { overflow: hidden; height: 100vh; }
+    body.quiz-active #quiz,
+    body.quiz-active #result { position: fixed; top: 0; left: 0; right: 0; bottom: 0; overflow-y: auto; }
 
     /* ---- INTRO ---- */
     #intro {
@@ -861,7 +864,13 @@
   function showScreen(id) {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     document.getElementById(id).classList.add('active');
-    window.scrollTo(0, 0);
+    if (id === 'intro') {
+      document.body.classList.remove('quiz-active');
+      window.scrollTo(0, 0);
+    } else {
+      document.body.classList.add('quiz-active');
+      document.getElementById(id).scrollTop = 0;
+    }
   }
 </script>
 </body>
