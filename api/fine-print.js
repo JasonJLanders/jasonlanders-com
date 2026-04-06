@@ -74,7 +74,7 @@ Be honest and specific. Reference actual language from the job description where
   try {
     const ai = new GoogleGenAI({ apiKey });
     const response = await ai.models.generateContent({
-      model: 'gemini-2.0-flash',
+      model: 'gemini-1.5-flash-latest',
       contents: prompt,
       config: { temperature: 0.3, maxOutputTokens: 1024 }
     });
