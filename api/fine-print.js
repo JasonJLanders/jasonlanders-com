@@ -1,87 +1,69 @@
-// api/fine-print.js
-// Vercel serverless function -- analyzes SE job descriptions via Gemini API
-
-const { GoogleGenAI } = require('@google/genai');
+// api/fine-print.js -- Vercel serverless function
 
 module.exports = async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { jobDescription } = req.body;
+  const { jobDescription } = req.body || {};
 
   if (!jobDescription || jobDescription.trim().length < 100) {
     return res.status(400).json({ error: 'Please paste a complete job description.' });
   }
 
-  if (jobDescription.length > 8000) {
-    return res.status(400).json({ error: 'Job description is too long. Try pasting just the core sections.' });
-  }
-
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
-    return res.status(503).json({ rateLimited: true });
+    return res.status(503).json({ rateLimited: true, debug: 'No API key configured' });
   }
 
-  const prompt = `You are an expert Sales Engineering career advisor with 20+ years of experience evaluating SE roles at B2B SaaS companies. Analyze this job description and return a JSON object only -- no markdown, no explanation, just the JSON.
+  const prompt = `You are an expert Sales Engineering career advisor. Analyze this job description and return ONLY a JSON object with no markdown or explanation.
 
 JOB DESCRIPTION:
-${jobDescription}
+${jobDescription.slice(0, 6000)}
 
-Return this exact JSON structure:
+Return exactly this JSON structure:
 {
   "overallScore": <number 0-100>,
-  "overallVerdict": "<one of: Solid Role | Mostly Solid | Proceed with Caution | Significant Concerns>",
-  "summary": "<2-3 sentences honest assessment of this role for an experienced SE>",
+  "overallVerdict": "<Solid Role | Mostly Solid | Proceed with Caution | Significant Concerns>",
+  "summary": "<2-3 sentences honest assessment for an experienced SE>",
   "dimensions": {
-    "compensation": {
-      "score": <0-20>,
-      "label": "<one of: Strong | Fair | Unclear | Weak>",
-      "note": "<1 sentence specific observation about comp structure, variable pay, or lack thereof>"
-    },
-    "technicalDepth": {
-      "score": <0-20>,
-      "label": "<one of: Strong | Fair | Unclear | Weak>",
-      "note": "<1 sentence about whether this requires real technical depth or is presentation-focused>"
-    },
-    "careerPath": {
-      "score": <0-20>,
-      "label": "<one of: Clear | Mentioned | Vague | Absent>",
-      "note": "<1 sentence about whether career growth is addressed>"
-    },
-    "seMotion": {
-      "score": <0-20>,
-      "label": "<one of: Structured | Developing | Unclear | Concerning>",
-      "note": "<1 sentence about whether this company appears to have a real SE motion>"
-    },
-    "workLifeBalance": {
-      "score": <0-20>,
-      "label": "<one of: Healthy | Typical | Watch Out | Red Flag>",
-      "note": "<1 sentence about travel, hours, or on-call signals in the posting>"
-    }
+    "compensation": { "score": <0-20>, "label": "<Strong | Fair | Unclear | Weak>", "note": "<1 sentence>" },
+    "technicalDepth": { "score": <0-20>, "label": "<Strong | Fair | Unclear | Weak>", "note": "<1 sentence>" },
+    "careerPath": { "score": <0-20>, "label": "<Clear | Mentioned | Vague | Absent>", "note": "<1 sentence>" },
+    "seMotion": { "score": <0-20>, "label": "<Structured | Developing | Unclear | Concerning>", "note": "<1 sentence>" },
+    "workLifeBalance": { "score": <0-20>, "label": "<Healthy | Typical | Watch Out | Red Flag>", "note": "<1 sentence>" }
   },
-  "greenFlags": ["<specific positive signal from the JD>", "<another>"],
-  "yellowFlags": ["<something worth asking about in the interview>", "<another>"],
-  "interviewQuestions": [
-    "<specific question to ask based on what this JD reveals>",
-    "<another question>",
-    "<a third question>"
-  ]
-}
-
-Be honest and specific. Reference actual language from the job description where possible. Be helpful and constructive.`;
+  "greenFlags": ["<positive signal>", "<another>"],
+  "yellowFlags": ["<worth asking about>", "<another>"],
+  "interviewQuestions": ["<question 1>", "<question 2>", "<question 3>"]
+}`;
 
   try {
-    const ai = new GoogleGenAI({ apiKey });
-    const response = await ai.models.generateContent({
-      model: 'gemini-1.5-flash-latest',
-      contents: prompt,
-      config: { temperature: 0.3, maxOutputTokens: 1024 }
-    });
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { temperature: 0.3, maxOutputTokens: 1024 }
+        })
+      }
+    );
 
-    const text = response.text;
+    const data = await response.json();
+
+    if (response.status === 429) {
+      return res.status(429).json({ rateLimited: true, debug: 'Quota exceeded' });
+    }
+
+    if (!response.ok) {
+      return res.status(503).json({ rateLimited: true, debug: `API error ${response.status}: ${JSON.stringify(data)}` });
+    }
+
+    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
     if (!text) {
-      return res.status(503).json({ rateLimited: true });
+      return res.status(503).json({ rateLimited: true, debug: 'No text in response: ' + JSON.stringify(data) });
     }
 
     const clean = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
@@ -89,12 +71,6 @@ Be honest and specific. Reference actual language from the job description where
     return res.status(200).json(result);
 
   } catch (err) {
-    const msg = err?.message || String(err);
-    console.error('Fine Print error:', msg);
-    // Return the actual error message in development so we can debug
-    if (err?.message?.includes('429') || err?.message?.includes('quota')) {
-      return res.status(429).json({ rateLimited: true, debug: msg });
-    }
-    return res.status(503).json({ rateLimited: true, debug: msg });
+    return res.status(503).json({ rateLimited: true, debug: err?.message || String(err) });
   }
 };
