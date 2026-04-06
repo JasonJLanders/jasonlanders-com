@@ -1,6 +1,8 @@
 // api/fine-print.js
 // Vercel serverless function -- analyzes SE job descriptions via Gemini API
 
+const { GoogleGenAI } = require('@google/genai');
+
 module.exports = async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -9,7 +11,7 @@ module.exports = async function handler(req, res) {
   const { jobDescription } = req.body;
 
   if (!jobDescription || jobDescription.trim().length < 100) {
-    return res.status(400).json({ error: 'Please paste a complete job description (at least a few sentences).' });
+    return res.status(400).json({ error: 'Please paste a complete job description.' });
   }
 
   if (jobDescription.length > 8000) {
@@ -50,7 +52,7 @@ Return this exact JSON structure:
     "seMotion": {
       "score": <0-20>,
       "label": "<one of: Structured | Developing | Unclear | Concerning>",
-      "note": "<1 sentence about whether this company appears to have a real SE motion or is figuring it out>"
+      "note": "<1 sentence about whether this company appears to have a real SE motion>"
     },
     "workLifeBalance": {
       "score": <0-20>,
@@ -67,49 +69,30 @@ Return this exact JSON structure:
   ]
 }
 
-Be honest and specific. Reference actual language from the job description where possible. Be helpful and constructive -- the goal is to help SEs make informed decisions, not to scare them away from good opportunities.`;
+Be honest and specific. Reference actual language from the job description where possible. Be helpful and constructive.`;
 
   try {
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: {
-            temperature: 0.3,
-            maxOutputTokens: 1024,
-          }
-        })
-      }
-    );
+    const ai = new GoogleGenAI({ apiKey });
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.0-flash',
+      contents: prompt,
+      config: { temperature: 0.3, maxOutputTokens: 1024 }
+    });
 
-    if (response.status === 429) {
-      return res.status(429).json({ rateLimited: true });
-    }
-
-    if (!response.ok) {
-      const err = await response.text();
-      console.error('Gemini error:', err);
-      return res.status(503).json({ rateLimited: true });
-    }
-
-    const data = await response.json();
-    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-
+    const text = response.text;
     if (!text) {
       return res.status(503).json({ rateLimited: true });
     }
 
-    // Strip any markdown code fences if present
     const clean = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
     const result = JSON.parse(clean);
-
     return res.status(200).json(result);
 
   } catch (err) {
-    console.error('Fine Print API error:', err);
+    console.error('Fine Print error:', err?.message || err);
+    if (err?.message?.includes('429') || err?.message?.includes('quota')) {
+      return res.status(429).json({ rateLimited: true });
+    }
     return res.status(503).json({ rateLimited: true });
   }
-}
+};
