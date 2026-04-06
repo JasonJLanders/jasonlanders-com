@@ -545,9 +545,11 @@
 
     .toast.show { transform: translateX(-50%) translateY(0); }
 
+    .pack-grid { grid-template-columns: repeat(3, 1fr); }
+
     @media (min-width: 600px) {
       .phrase-grid { grid-template-columns: repeat(3, 1fr); }
-      .pack-grid { grid-template-columns: repeat(4, 1fr); }
+      .pack-grid { grid-template-columns: repeat(5, 1fr); }
     }
   </style>
 </head>
@@ -561,7 +563,7 @@
   <div class="setup-inner">
     <div class="brand-tag">Field Ready</div>
     <div class="setup-title">Filler Flags</div>
-    <div class="setup-sub">Tap every time you hear a filler phrase. See what your meetings are really made of.</div>
+    <div class="setup-sub">Tap every time you hear a filler phrase. Track meetings, demo practice, or your own presentation habits.</div>
 
     <div class="section-label">Choose a phrase pack</div>
     <div class="pack-grid" id="packGrid">
@@ -576,6 +578,10 @@
       <div class="pack-card" data-pack="allhands" onclick="selectPack(this)">
         <div class="pack-card-name">All Hands</div>
         <div class="pack-card-desc">Take that offline, per my last email...</div>
+      </div>
+      <div class="pack-card" data-pack="practice" onclick="selectPack(this)">
+        <div class="pack-card-name">Practice Mode</div>
+        <div class="pack-card-desc">Um, uh, so, right, you know, like...</div>
       </div>
       <div class="pack-card" data-pack="custom" onclick="selectPack(this)">
         <div class="pack-card-name">Custom</div>
@@ -681,6 +687,12 @@
       "Let's align on this", "Socialize that", "On my radar",
       "Hard stop at the hour", "Let's table that", "Moving the needle internally",
       "Keep all stakeholders informed", "Circle the wagons", "Net net"
+    ],
+    practice: [
+      "Um", "Uh", "So...", "Right?",
+      "You know", "Like", "Actually", "Basically",
+      "Kind of", "Sort of", "Honestly", "Literally",
+      "So on and so forth", "Et cetera", "And stuff"
     ],
     custom: []
   };
@@ -811,10 +823,13 @@
     document.getElementById('densityDesc').textContent = desc;
     document.getElementById('summaryEmoji').textContent = emoji;
     document.getElementById('summaryTitle').textContent = total === 0 ? 'Remarkably Clean' : 'Meeting Report';
+    const isPractice = selectedPack === 'practice';
     document.getElementById('summarySubtitle').textContent =
       total === 0
-        ? 'Not a single filler phrase. Either this meeting was exceptional or nobody was paying attention.'
-        : `${total} filler phrase${total !== 1 ? 's' : ''} flagged over ${durationMins} minute${durationMins !== 1 ? 's' : ''}`;
+        ? isPractice ? 'Clean delivery. Not a single filler word. Impressive.' : 'Not a single filler phrase. Either this meeting was exceptional or nobody was paying attention.'
+        : isPractice
+          ? `${total} filler word${total !== 1 ? 's' : ''} caught in ${durationMins} minute${durationMins !== 1 ? 's' : ''} of practice`
+          : `${total} filler phrase${total !== 1 ? 's' : ''} flagged over ${durationMins} minute${durationMins !== 1 ? 's' : ''}`;
 
     // Leaderboard
     const sorted = Object.entries(counts)
