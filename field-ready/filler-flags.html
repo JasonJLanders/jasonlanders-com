@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Filler Flags — Field Ready</title>
+  <meta name="description" content="Tap every time you hear a filler phrase. See what your meetings are really made of.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface2: #222533;
+      --border: #2d3148;
+      --text: #e2e4ef;
+      --muted: #6b7280;
+      --accent: #6366f1;
+      --accent-dark: #4f46e5;
+      --green: #22c55e;
+      --red: #ef4444;
+      --yellow: #eab308;
+      --font: 'Inter', system-ui, sans-serif;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      -webkit-tap-highlight-color: transparent;
+      overscroll-behavior: none;
+    }
+
+    /* ---- SCREENS ---- */
+    .screen { display: none; min-height: 100vh; flex-direction: column; }
+    .screen.active { display: flex; }
+
+    /* ---- SETUP SCREEN ---- */
+    #setup {
+      padding: 24px;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .setup-inner { width: 100%; max-width: 480px; }
+
+    .brand-tag {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 12px;
+    }
+
+    .setup-title {
+      font-size: 32px;
+      font-weight: 800;
+      letter-spacing: -1px;
+      color: #fff;
+      margin-bottom: 8px;
+    }
+
+    .setup-sub {
+      font-size: 15px;
+      color: var(--muted);
+      line-height: 1.6;
+      margin-bottom: 32px;
+    }
+
+    .section-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+
+    .pack-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+
+    .pack-card {
+      background: var(--surface);
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      padding: 14px;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+      user-select: none;
+    }
+
+    .pack-card.selected {
+      border-color: var(--accent);
+      background: rgba(99,102,241,0.1);
+    }
+
+    .pack-card-name {
+      font-size: 14px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 4px;
+    }
+
+    .pack-card-desc {
+      font-size: 11px;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+
+    .custom-section { margin-bottom: 28px; }
+
+    .custom-input-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .custom-input {
+      flex: 1;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 14px;
+      outline: none;
+    }
+
+    .custom-input:focus { border-color: var(--accent); }
+    .custom-input::placeholder { color: var(--muted); }
+
+    .custom-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 10px;
+    }
+
+    .chip {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      padding: 4px 12px;
+      font-size: 12px;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .chip-remove {
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 14px;
+      line-height: 1;
+    }
+
+    .chip-remove:hover { color: var(--red); }
+
+    .btn-add {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 16px;
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .btn-add:hover { border-color: var(--accent); }
+
+    .btn-start {
+      width: 100%;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      padding: 16px;
+      font-family: var(--font);
+      font-size: 17px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .btn-start:hover { background: var(--accent-dark); }
+    .btn-start:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* ---- TRACKER SCREEN ---- */
+    #tracker { flex-direction: column; }
+
+    .tracker-header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .tracker-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .tracker-meta {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .total-badge {
+      background: var(--accent);
+      color: #fff;
+      font-size: 14px;
+      font-weight: 700;
+      padding: 4px 12px;
+      border-radius: 100px;
+      min-width: 40px;
+      text-align: center;
+    }
+
+    .timer {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .btn-end {
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 6px 14px;
+      color: var(--muted);
+      font-family: var(--font);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: border-color 0.15s, color 0.15s;
+    }
+
+    .btn-end:hover { border-color: var(--red); color: var(--red); }
+
+    .phrase-grid {
+      flex: 1;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      padding: 16px;
+      align-content: start;
+    }
+
+    .phrase-btn {
+      background: var(--surface);
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: transform 0.1s, border-color 0.15s, background 0.15s;
+      user-select: none;
+      -webkit-user-select: none;
+      position: relative;
+      min-height: 90px;
+      justify-content: center;
+    }
+
+    .phrase-btn:active {
+      transform: scale(0.94);
+      background: rgba(99,102,241,0.15);
+      border-color: var(--accent);
+    }
+
+    .phrase-btn.has-count {
+      border-color: rgba(99,102,241,0.5);
+    }
+
+    .phrase-btn.high-count {
+      border-color: var(--yellow);
+      background: rgba(234,179,8,0.08);
+    }
+
+    .phrase-text {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      text-align: center;
+      line-height: 1.3;
+    }
+
+    .phrase-count {
+      font-size: 26px;
+      font-weight: 800;
+      color: var(--accent);
+      line-height: 1;
+      min-width: 36px;
+      text-align: center;
+    }
+
+    .phrase-btn.has-count .phrase-count { color: var(--accent); }
+    .phrase-btn.high-count .phrase-count { color: var(--yellow); }
+
+    .pulse {
+      animation: pulse 0.2s ease-out;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1.12); }
+      100% { transform: scale(1); }
+    }
+
+    /* ---- SUMMARY SCREEN ---- */
+    #summary {
+      padding: 24px;
+      align-items: center;
+      justify-content: flex-start;
+      overflow-y: auto;
+    }
+
+    .summary-inner { width: 100%; max-width: 480px; padding-bottom: 40px; }
+
+    .summary-header {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+
+    .summary-emoji { font-size: 48px; margin-bottom: 12px; }
+
+    .summary-title {
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      color: #fff;
+      margin-bottom: 6px;
+    }
+
+    .summary-subtitle {
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 10px;
+      text-align: center;
+    }
+
+    .stat-num {
+      font-size: 28px;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: -1px;
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+
+    .stat-label {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--muted);
+    }
+
+    .density-bar-wrap {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 24px;
+    }
+
+    .density-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+
+    .density-rating {
+      font-size: 20px;
+      font-weight: 800;
+      color: #fff;
+      margin-bottom: 6px;
+    }
+
+    .density-desc {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .leaderboard {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      margin-bottom: 24px;
+    }
+
+    .leaderboard-header {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--muted);
+    }
+
+    .leaderboard-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .leaderboard-row:last-child { border-bottom: none; }
+
+    .leaderboard-rank {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--muted);
+      width: 24px;
+    }
+
+    .leaderboard-rank.gold { color: #fbbf24; }
+    .leaderboard-rank.silver { color: #94a3b8; }
+    .leaderboard-rank.bronze { color: #b45309; }
+
+    .leaderboard-phrase {
+      flex: 1;
+      font-size: 14px;
+      color: var(--text);
+      padding: 0 10px;
+    }
+
+    .leaderboard-count {
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--accent);
+    }
+
+    .summary-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .btn-share {
+      width: 100%;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      padding: 15px;
+      font-family: var(--font);
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .btn-share:hover { background: var(--accent-dark); }
+
+    .btn-new {
+      width: 100%;
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 15px;
+      font-family: var(--font);
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: border-color 0.15s, color 0.15s;
+    }
+
+    .btn-new:hover { border-color: var(--text); color: var(--text); }
+
+    .field-ready-footer {
+      margin-top: 32px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+      text-align: center;
+    }
+
+    .field-ready-footer a {
+      font-size: 12px;
+      color: var(--muted);
+      text-decoration: none;
+    }
+
+    .field-ready-footer a:hover { color: var(--accent); }
+
+    /* Share toast */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--green);
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 100px;
+      font-size: 14px;
+      font-weight: 600;
+      transition: transform 0.3s ease;
+      pointer-events: none;
+      z-index: 100;
+    }
+
+    .toast.show { transform: translateX(-50%) translateY(0); }
+
+    @media (min-width: 600px) {
+      .phrase-grid { grid-template-columns: repeat(3, 1fr); }
+      .pack-grid { grid-template-columns: repeat(4, 1fr); }
+    }
+  </style>
+</head>
+<body>
+
+<!-- TOAST -->
+<div class="toast" id="toast">Copied to clipboard!</div>
+
+<!-- SETUP SCREEN -->
+<div class="screen active" id="setup">
+  <div class="setup-inner">
+    <div class="brand-tag">Field Ready</div>
+    <div class="setup-title">Filler Flags</div>
+    <div class="setup-sub">Tap every time you hear a filler phrase. See what your meetings are really made of.</div>
+
+    <div class="section-label">Choose a phrase pack</div>
+    <div class="pack-grid" id="packGrid">
+      <div class="pack-card selected" data-pack="corporate" onclick="selectPack(this)">
+        <div class="pack-card-name">Corporate Standard</div>
+        <div class="pack-card-desc">Circle back, synergy, bandwidth...</div>
+      </div>
+      <div class="pack-card" data-pack="sales" onclick="selectPack(this)">
+        <div class="pack-card-name">Sales Calls</div>
+        <div class="pack-card-desc">Just following up, quick question...</div>
+      </div>
+      <div class="pack-card" data-pack="allhands" onclick="selectPack(this)">
+        <div class="pack-card-name">All Hands</div>
+        <div class="pack-card-desc">Take that offline, per my last email...</div>
+      </div>
+      <div class="pack-card" data-pack="custom" onclick="selectPack(this)">
+        <div class="pack-card-name">Custom</div>
+        <div class="pack-card-desc">Add your own phrases</div>
+      </div>
+    </div>
+
+    <div class="custom-section" id="customSection" style="display:none;">
+      <div class="section-label">Add your phrases</div>
+      <div class="custom-input-row">
+        <input class="custom-input" id="customInput" type="text" placeholder='e.g. "move the needle"' maxlength="40" onkeydown="if(event.key==='Enter')addCustomPhrase()" />
+        <button class="btn-add" onclick="addCustomPhrase()">Add</button>
+      </div>
+      <div class="custom-chips" id="customChips"></div>
+    </div>
+
+    <button class="btn-start" id="startBtn" onclick="startSession()">Start Flagging</button>
+
+    <div class="field-ready-footer" style="margin-top:24px;">
+      <a href="/field-ready">Field Ready by Jason Landers</a>
+    </div>
+  </div>
+</div>
+
+<!-- TRACKER SCREEN -->
+<div class="screen" id="tracker">
+  <div class="tracker-header">
+    <div class="tracker-title">Filler Flags</div>
+    <div class="tracker-meta">
+      <div class="timer" id="timer">0:00</div>
+      <div class="total-badge" id="totalBadge">0</div>
+      <button class="btn-end" onclick="endSession()">End</button>
+    </div>
+  </div>
+  <div class="phrase-grid" id="phraseGrid"></div>
+</div>
+
+<!-- SUMMARY SCREEN -->
+<div class="screen" id="summary">
+  <div class="summary-inner">
+    <div class="summary-header">
+      <div class="summary-emoji" id="summaryEmoji">📊</div>
+      <div class="summary-title" id="summaryTitle">Meeting Report</div>
+      <div class="summary-subtitle" id="summarySubtitle"></div>
+    </div>
+
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="stat-num" id="statTotal">0</div>
+        <div class="stat-label">Flags</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="statDuration">0m</div>
+        <div class="stat-label">Duration</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="statRate">0</div>
+        <div class="stat-label">Per Min</div>
+      </div>
+    </div>
+
+    <div class="density-bar-wrap">
+      <div class="density-label">Filler Density</div>
+      <div class="density-rating" id="densityRating"></div>
+      <div class="density-desc" id="densityDesc"></div>
+    </div>
+
+    <div class="leaderboard">
+      <div class="leaderboard-header">Most Flagged Phrases</div>
+      <div id="leaderboardRows"></div>
+    </div>
+
+    <div class="summary-actions">
+      <button class="btn-share" onclick="shareResults()">Share This Report</button>
+      <button class="btn-new" onclick="newSession()">New Session</button>
+    </div>
+
+    <div class="field-ready-footer">
+      <a href="/field-ready">Field Ready by Jason Landers &nbsp;·&nbsp; jasonlanders.com</a>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ---- PHRASE PACKS ----
+  const PACKS = {
+    corporate: [
+      "Circle back", "Synergy", "Bandwidth", "Move the needle",
+      "Boil the ocean", "Low-hanging fruit", "Touch base", "Deep dive",
+      "Leverage", "At the end of the day", "Action item", "Game-changer",
+      "Ping me", "Value-add", "Going forward"
+    ],
+    sales: [
+      "Just following up", "Quick question", "Does that make sense?",
+      "Obviously", "To be honest", "Best-in-class", "Industry-leading",
+      "Disruptive", "Seamless", "Scalable", "Robust",
+      "Thought leadership", "Ecosystem", "Digital transformation",
+      "AI-powered"
+    ],
+    allhands: [
+      "Take that offline", "Per my last email", "As previously discussed",
+      "Going forward", "That's a great question", "I'll loop you in",
+      "Let's align on this", "Socialize that", "On my radar",
+      "Hard stop at the hour", "Let's table that", "Moving the needle internally",
+      "Keep all stakeholders informed", "Circle the wagons", "Net net"
+    ],
+    custom: []
+  };
+
+  // ---- STATE ----
+  let selectedPack = 'corporate';
+  let customPhrases = [];
+  let counts = {};
+  let startTime = null;
+  let timerInterval = null;
+  let sessionDuration = 0;
+
+  // ---- SETUP ----
+  function selectPack(el) {
+    document.querySelectorAll('.pack-card').forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
+    selectedPack = el.dataset.pack;
+    document.getElementById('customSection').style.display = selectedPack === 'custom' ? 'block' : 'none';
+    updateStartBtn();
+  }
+
+  function addCustomPhrase() {
+    const input = document.getElementById('customInput');
+    const val = input.value.trim();
+    if (!val || customPhrases.includes(val)) { input.value = ''; return; }
+    customPhrases.push(val);
+    input.value = '';
+    renderCustomChips();
+    updateStartBtn();
+  }
+
+  function removeCustomPhrase(phrase) {
+    customPhrases = customPhrases.filter(p => p !== phrase);
+    renderCustomChips();
+    updateStartBtn();
+  }
+
+  function renderCustomChips() {
+    const container = document.getElementById('customChips');
+    container.innerHTML = customPhrases.map(p =>
+      `<div class="chip">${p}<span class="chip-remove" onclick="removeCustomPhrase('${p.replace(/'/g, "\\'")}')">×</span></div>`
+    ).join('');
+  }
+
+  function updateStartBtn() {
+    const btn = document.getElementById('startBtn');
+    const phrases = selectedPack === 'custom' ? customPhrases : PACKS[selectedPack];
+    btn.disabled = phrases.length === 0;
+  }
+
+  // ---- SESSION ----
+  function startSession() {
+    const phrases = selectedPack === 'custom' ? customPhrases : PACKS[selectedPack];
+    counts = {};
+    phrases.forEach(p => counts[p] = 0);
+
+    renderPhraseGrid(phrases);
+    showScreen('tracker');
+
+    startTime = Date.now();
+    timerInterval = setInterval(updateTimer, 1000);
+    updateTimer();
+    updateTotal();
+  }
+
+  function renderPhraseGrid(phrases) {
+    const grid = document.getElementById('phraseGrid');
+    grid.innerHTML = phrases.map(p => `
+      <button class="phrase-btn" id="btn-${btoa(p).replace(/=/g,'')}" onclick="tap('${p.replace(/'/g, "\\'")}', this)">
+        <div class="phrase-count" id="count-${btoa(p).replace(/=/g,'')}">0</div>
+        <div class="phrase-text">${p}</div>
+      </button>
+    `).join('');
+  }
+
+  function tap(phrase, el) {
+    counts[phrase] = (counts[phrase] || 0) + 1;
+    const countEl = el.querySelector('.phrase-count');
+    countEl.textContent = counts[phrase];
+
+    // Pulse animation
+    countEl.classList.remove('pulse');
+    void countEl.offsetWidth;
+    countEl.classList.add('pulse');
+
+    // Style update
+    el.classList.add('has-count');
+    if (counts[phrase] >= 5) el.classList.add('high-count');
+
+    updateTotal();
+
+    // Haptic feedback on mobile
+    if (navigator.vibrate) navigator.vibrate(30);
+  }
+
+  function updateTotal() {
+    const total = Object.values(counts).reduce((a, b) => a + b, 0);
+    document.getElementById('totalBadge').textContent = total;
+  }
+
+  function updateTimer() {
+    const elapsed = Math.floor((Date.now() - startTime) / 1000);
+    const mins = Math.floor(elapsed / 60);
+    const secs = elapsed % 60;
+    document.getElementById('timer').textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+  }
+
+  function endSession() {
+    clearInterval(timerInterval);
+    sessionDuration = Math.max(1, Math.floor((Date.now() - startTime) / 1000));
+    buildSummary();
+    showScreen('summary');
+  }
+
+  // ---- SUMMARY ----
+  function buildSummary() {
+    const total = Object.values(counts).reduce((a, b) => a + b, 0);
+    const durationMins = Math.max(1, Math.round(sessionDuration / 60));
+    const perMin = (total / Math.max(1, sessionDuration / 60)).toFixed(1);
+
+    document.getElementById('statTotal').textContent = total;
+    document.getElementById('statDuration').textContent = durationMins + 'm';
+    document.getElementById('statRate').textContent = perMin;
+
+    // Density rating
+    const { rating, desc, emoji } = getDensityRating(parseFloat(perMin));
+    document.getElementById('densityRating').textContent = rating;
+    document.getElementById('densityDesc').textContent = desc;
+    document.getElementById('summaryEmoji').textContent = emoji;
+    document.getElementById('summaryTitle').textContent = total === 0 ? 'Remarkably Clean' : 'Meeting Report';
+    document.getElementById('summarySubtitle').textContent =
+      total === 0
+        ? 'Not a single filler phrase. Either this meeting was exceptional or nobody was paying attention.'
+        : `${total} filler phrase${total !== 1 ? 's' : ''} flagged over ${durationMins} minute${durationMins !== 1 ? 's' : ''}`;
+
+    // Leaderboard
+    const sorted = Object.entries(counts)
+      .filter(([,v]) => v > 0)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5);
+
+    const rankLabels = ['🥇', '🥈', '🥉', '4', '5'];
+    const rankClasses = ['gold', 'silver', 'bronze', '', ''];
+
+    const container = document.getElementById('leaderboardRows');
+    if (sorted.length === 0) {
+      container.innerHTML = `<div class="leaderboard-row"><div class="leaderboard-phrase" style="color:var(--muted)">No phrases flagged</div></div>`;
+    } else {
+      container.innerHTML = sorted.map(([phrase, count], i) => `
+        <div class="leaderboard-row">
+          <div class="leaderboard-rank ${rankClasses[i]}">${rankLabels[i]}</div>
+          <div class="leaderboard-phrase">${phrase}</div>
+          <div class="leaderboard-count">${count}</div>
+        </div>
+      `).join('');
+    }
+  }
+
+  function getDensityRating(perMin) {
+    if (perMin === 0) return {
+      rating: 'Pristine',
+      desc: 'Zero filler. Genuinely impressive.',
+      emoji: '✨'
+    };
+    if (perMin < 0.5) return {
+      rating: 'Light',
+      desc: 'Minimal filler. This was a focused meeting.',
+      emoji: '🟢'
+    };
+    if (perMin < 1.5) return {
+      rating: 'Moderate',
+      desc: 'Some filler but it stayed on track. Typical for most meetings.',
+      emoji: '🟡'
+    };
+    if (perMin < 3) return {
+      rating: 'Heavy',
+      desc: 'Filler was a consistent presence. The signal-to-noise ratio needs work.',
+      emoji: '🟠'
+    };
+    return {
+      rating: 'Dense',
+      desc: 'Filler dominated this meeting. Consider a direct communication workshop.',
+      emoji: '🔴'
+    };
+  }
+
+  // ---- SHARE ----
+  function shareResults() {
+    const total = Object.values(counts).reduce((a, b) => a + b, 0);
+    const durationMins = Math.max(1, Math.round(sessionDuration / 60));
+    const sorted = Object.entries(counts).filter(([,v]) => v > 0).sort((a, b) => b[1] - a[1]);
+    const top = sorted[0];
+    const { rating } = getDensityRating(total / Math.max(1, sessionDuration / 60));
+
+    let text = `Filler Flags report 🚩\n`;
+    text += `${total} phrases flagged in ${durationMins} min\n`;
+    text += `Filler density: ${rating}\n`;
+    if (top) text += `Most heard: "${top[0]}" (${top[1]}x)\n`;
+    text += `\ntry it: jasonlanders.com/field-ready/filler-flags`;
+
+    if (navigator.share) {
+      navigator.share({ text }).catch(() => copyToClipboard(text));
+    } else {
+      copyToClipboard(text);
+    }
+  }
+
+  function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(() => showToast()).catch(() => {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      showToast();
+    });
+  }
+
+  function showToast() {
+    const toast = document.getElementById('toast');
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2500);
+  }
+
+  // ---- NAVIGATION ----
+  function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    window.scrollTo(0, 0);
+  }
+
+  function newSession() {
+    counts = {};
+    customPhrases = [];
+    selectedPack = 'corporate';
+    document.querySelectorAll('.pack-card').forEach(c => c.classList.remove('selected'));
+    document.querySelector('[data-pack="corporate"]').classList.add('selected');
+    document.getElementById('customSection').style.display = 'none';
+    document.getElementById('customChips').innerHTML = '';
+    document.getElementById('startBtn').disabled = false;
+    showScreen('setup');
+  }
+</script>
+</body>
+</html>
