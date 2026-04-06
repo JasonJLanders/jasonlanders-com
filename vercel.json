@@ -1,0 +1,7 @@
+{
+  "functions": {
+    "api/fine-print.js": {
+      "maxDuration": 30
+    }
+  }
+}
