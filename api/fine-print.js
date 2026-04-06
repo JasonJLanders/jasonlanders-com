@@ -89,10 +89,12 @@ Be honest and specific. Reference actual language from the job description where
     return res.status(200).json(result);
 
   } catch (err) {
-    console.error('Fine Print error:', err?.message || err);
+    const msg = err?.message || String(err);
+    console.error('Fine Print error:', msg);
+    // Return the actual error message in development so we can debug
     if (err?.message?.includes('429') || err?.message?.includes('quota')) {
-      return res.status(429).json({ rateLimited: true });
+      return res.status(429).json({ rateLimited: true, debug: msg });
     }
-    return res.status(503).json({ rateLimited: true });
+    return res.status(503).json({ rateLimited: true, debug: msg });
   }
 };
