@@ -1,0 +1,17 @@
+﻿{
+    "icons":  [
+                  {
+                      "purpose":  "any maskable",
+                      "type":  "image/svg+xml",
+                      "sizes":  "any",
+                      "src":  "/favicon.svg"
+                  }
+              ],
+    "description":  "Analyze any SE job description",
+    "background_color":  "#0f1117",
+    "theme_color":  "#6366f1",
+    "name":  "The Fine Print",
+    "start_url":  "/field-ready/the-fine-print.html",
+    "display":  "standalone",
+    "short_name":  "Fine Print"
+}

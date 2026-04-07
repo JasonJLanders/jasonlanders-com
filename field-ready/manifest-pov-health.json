@@ -1,0 +1,17 @@
+﻿{
+    "icons":  [
+                  {
+                      "purpose":  "any maskable",
+                      "type":  "image/svg+xml",
+                      "sizes":  "any",
+                      "src":  "/favicon.svg"
+                  }
+              ],
+    "description":  "Check the health of your active evaluation",
+    "background_color":  "#0f1117",
+    "theme_color":  "#6366f1",
+    "name":  "POV Health Check",
+    "start_url":  "/field-ready/pov-health.html",
+    "display":  "standalone",
+    "short_name":  "POV Health"
+}
