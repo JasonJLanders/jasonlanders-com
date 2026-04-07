@@ -1,0 +1,17 @@
+{
+  "name": "Field Ready by Jason Landers",
+  "short_name": "Field Ready",
+  "description": "Free tools for Sales Engineers",
+  "start_url": "/field-ready",
+  "display": "standalone",
+  "background_color": "#0f1117",
+  "theme_color": "#6366f1",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
