@@ -1,0 +1,17 @@
+{
+  "name": "The SE Escape Room",
+  "short_name": "SE Escape",
+  "description": "A deal in trouble. Five decisions. Multiple endings.",
+  "start_url": "/field-ready/se-escape-room.html",
+  "display": "standalone",
+  "background_color": "#0a0d12",
+  "theme_color": "#6366f1",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
