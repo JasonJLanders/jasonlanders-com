@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -29,6 +29,15 @@
     html, body { min-height: 100%; font-family: var(--font); background: var(--bg); color: var(--text); }
 
     .page { max-width: 680px; margin: 0 auto; padding: 32px 20px 80px; }
+
+
+    /* Scene illustrations */
+    .scene-illustration {
+      width: 100%; border-radius: 12px; margin-bottom: 18px;
+      overflow: hidden; background: var(--surface2);
+      border: 1px solid var(--border);
+    }
+    .scene-illustration svg { display: block; width: 100%; height: auto; }
 
     /* Back link */
     .back-link { font-size: 12px; color: var(--muted); text-decoration: none; display: inline-block; margin-bottom: 24px; }
@@ -246,6 +255,7 @@ const SCENES = {
     context: "DAY 1 / Sarah forwards you the intro email. Meridian is evaluating you and two competitors.",
     heading: "The first call",
     text: `Sarah booked a discovery call with <strong>Marcus Webb</strong>, Meridian's VP of Engineering, and two of his senior staff. She wants to use the call to get into a demo as fast as possible.\n\n"They're already talking to Hyperion and Vertex," she tells you before the call. "We need to show them something impressive before they move on."\n\nMarcus opens the call. "We've got about 45 minutes. Sarah mentioned you wanted to show us the platform."`,
+illustration: `<svg viewBox="0 0 680 200" xmlns="http://www.w3.org/2000/svg"><rect width="680" height="200" fill="#111827"/><rect x="20" y="20" width="190" height="160" rx="8" fill="#1a2234" stroke="#2d3148" stroke-width="1.5"/><circle cx="115" cy="80" r="28" fill="#2d3148"/><rect x="80" y="118" width="70" height="8" rx="4" fill="#374151"/><rect x="90" y="134" width="50" height="6" rx="3" fill="#1e2d45"/><text x="115" y="168" text-anchor="middle" fill="#6366f1" font-size="11" font-family="Inter,sans-serif" font-weight="700">MARCUS WEBB</text><text x="115" y="182" text-anchor="middle" fill="#64748b" font-size="9" font-family="Inter,sans-serif">VP Engineering</text><rect x="230" y="20" width="190" height="160" rx="8" fill="#1a2234" stroke="#6366f1" stroke-width="2"/><circle cx="325" cy="80" r="28" fill="#2d3148"/><rect x="290" y="118" width="70" height="8" rx="4" fill="#374151"/><text x="325" y="168" text-anchor="middle" fill="#22c55e" font-size="11" font-family="Inter,sans-serif" font-weight="700">YOU</text><text x="325" y="182" text-anchor="middle" fill="#64748b" font-size="9" font-family="Inter,sans-serif">Sales Engineer</text><rect x="440" y="20" width="120" height="74" rx="8" fill="#1a2234" stroke="#2d3148" stroke-width="1.5"/><circle cx="500" cy="48" r="16" fill="#2d3148"/><text x="500" y="86" text-anchor="middle" fill="#64748b" font-size="9" font-family="Inter,sans-serif">Staff Eng.</text><rect x="440" y="106" width="120" height="74" rx="8" fill="#1a2234" stroke="#2d3148" stroke-width="1.5"/><circle cx="500" cy="134" r="16" fill="#2d3148"/><text x="500" y="172" text-anchor="middle" fill="#64748b" font-size="9" font-family="Inter,sans-serif">Staff Eng.</text><circle cx="115" cy="80" r="4" fill="#22c55e"><animate attributeName="opacity" values="1;0.3;1" dur="2s" repeatCount="indefinite"/></circle></svg>`,
     choices: [
       {
         label: "Launch into the demo. Sarah's right -- show them something impressive before the competition does.",
@@ -265,6 +275,7 @@ const SCENES = {
     context: "DAY 5 / Marcus wants to move forward. Sarah is pushing to skip straight to a POV.",
     heading: "The champion question",
     text: `Marcus emails you directly: "Good call last week. I'd like to get my team doing a proper evaluation. Can we set up a trial?"\n\nSarah is thrilled. "Let's get them into a POV before the weekend. Strike while it's hot."\n\nYou pull up Meridian's org chart. Marcus is technically the VP of Engineering, but you know the actual budget decision sits with <em>Dana Flores</em>, the CTO, who hasn't been mentioned once. Marcus reports to Dana.`,
+illustration: `<svg viewBox="0 0 680 200" xmlns="http://www.w3.org/2000/svg"><rect width="680" height="200" fill="#111827"/><rect x="280" y="20" width="120" height="44" rx="8" fill="#1a2234" stroke="#f59e0b" stroke-width="2"/><text x="340" y="37" text-anchor="middle" fill="#f59e0b" font-size="11" font-family="Inter,sans-serif" font-weight="700">DANA FLORES</text><text x="340" y="52" text-anchor="middle" fill="#64748b" font-size="9" font-family="Inter,sans-serif">CTO — Signs off</text><line x1="340" y1="64" x2="200" y2="100" stroke="#2d3148" stroke-width="2" stroke-dasharray="6,3"/><line x1="340" y1="64" x2="340" y2="100" stroke="#f59e0b" stroke-width="2"/><rect x="140" y="100" width="120" height="44" rx="8" fill="#1a2234" stroke="#2d3148" stroke-width="1.5"/><text x="200" y="117" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif" font-weight="600">SARAH CHEN</text><text x="200" y="131" text-anchor="middle" fill="#64748b" font-size="9" font-family="Inter,sans-serif">AE</text><rect x="280" y="100" width="120" height="44" rx="8" fill="#1a2234" stroke="#22c55e" stroke-width="2"/><text x="340" y="117" text-anchor="middle" fill="#22c55e" font-size="10" font-family="Inter,sans-serif" font-weight="700">MARCUS WEBB</text><text x="340" y="131" text-anchor="middle" fill="#64748b" font-size="9" font-family="Inter,sans-serif">VP Eng — Your contact</text><text x="340" y="175" text-anchor="middle" fill="#f59e0b" font-size="11" font-family="Inter,sans-serif" font-weight="600">The budget is one level up</text></svg>`,
     choices: [
       {
         label: "Move fast. Marcus is on board and enthusiastic -- a POV this week keeps momentum.",
@@ -303,6 +314,7 @@ const SCENES = {
     context: "WEEK 2 / POV kickoff scheduled. Dana and Marcus both attending.",
     heading: "The success criteria moment",
     text: `The POV kickoff is going well. Dana and Marcus are both engaged. You have 20 minutes left and it's time to set the success criteria.\n\nSarah passes you a document under the table -- a pre-written success criteria template your company always uses. "Just walk them through this," she whispers.\n\nYou look at the template. It's technically correct. It's also completely generic -- nothing in it reflects what Marcus told you about reliability or what Dana asked about compliance.`,
+illustration: `<svg viewBox="0 0 680 200" xmlns="http://www.w3.org/2000/svg"><rect width="680" height="200" fill="#111827"/><rect x="160" y="20" width="360" height="160" rx="10" fill="#1a2234" stroke="#2d3148" stroke-width="1.5"/><rect x="185" y="40" width="180" height="10" rx="5" fill="#2d3148"/><rect x="185" y="58" width="140" height="8" rx="4" fill="#1e2d45"/><rect x="185" y="80" width="260" height="6" rx="3" fill="#1e2d45"/><rect x="185" y="94" width="220" height="6" rx="3" fill="#1e2d45"/><rect x="185" y="108" width="240" height="6" rx="3" fill="#1e2d45"/><rect x="185" y="130" width="120" height="28" rx="6" fill="#1e2d45" stroke="#374151"/><text x="245" y="149" text-anchor="middle" fill="#64748b" font-size="10" font-family="Inter,sans-serif">VENDOR TEMPLATE</text><path d="M490 60 L510 80 L500 150 L480 140 Z" fill="#374151" stroke="#6366f1" stroke-width="1.5"/><path d="M505 65 L520 55 L515 75 Z" fill="#6366f1"/><text x="340" y="183" text-anchor="middle" fill="#f59e0b" font-size="11" font-family="Inter,sans-serif" font-weight="600">Whose criteria are these?</text></svg>`,
     choices: [
       {
         label: "Use the template. It covers all the bases and keeps things moving.",
@@ -360,6 +372,7 @@ const SCENES = {
     context: "WEEK 4 / POV results are strong. Dana is engaged. Close date is 2 weeks away.",
     heading: "The unexpected complication",
     text: `Everything is tracking. The POV results are solid. Dana is engaged. Marcus is your champion. Sarah has a verbal from Marcus that they're leaning your direction.\n\nThen: an email from your product team. A feature Meridian specifically tested -- the compliance reporting module -- has a known bug that won't be patched until next quarter. Dana asked about this feature by name in the kickoff.\n\n<em>You could mention it proactively. Or wait and see if anyone asks.</em>`,
+illustration: `<svg viewBox="0 0 680 200" xmlns="http://www.w3.org/2000/svg"><rect width="680" height="200" fill="#111827"/><text x="340" y="30" text-anchor="middle" fill="#64748b" font-size="11" font-family="Inter,sans-serif" font-weight="600">DEAL MOMENTUM</text><polyline points="80,160 160,140 240,120 320,90 400,70 480,55 560,45" fill="none" stroke="#22c55e" stroke-width="3" stroke-linecap="round"/><circle cx="80" cy="160" r="5" fill="#22c55e"/><circle cx="240" cy="120" r="5" fill="#22c55e"/><circle cx="400" cy="70" r="5" fill="#22c55e"/><circle cx="560" cy="45" r="7" fill="#22c55e" stroke="#111827" stroke-width="2"/><line x1="80" y1="170" x2="600" y2="170" stroke="#1e2d45" stroke-width="1"/><text x="80" y="186" fill="#64748b" font-size="9" font-family="Inter,sans-serif">Kickoff</text><text x="230" y="186" fill="#64748b" font-size="9" font-family="Inter,sans-serif">POV Week 2</text><text x="380" y="186" fill="#64748b" font-size="9" font-family="Inter,sans-serif">Week 4</text><text x="520" y="186" fill="#22c55e" font-size="9" font-family="Inter,sans-serif" font-weight="600">Now</text><text x="560" y="35" text-anchor="middle" fill="#22c55e" font-size="10" font-family="Inter,sans-serif">BUG</text><path d="M560 38 L560 43" stroke="#f59e0b" stroke-width="2"/><circle cx="560" cy="45" r="3" fill="#f59e0b"/></svg>`,
     choices: [
       {
         label: "Wait. The bug might not affect their specific use case. No point raising concerns that aren't raised.",
@@ -417,6 +430,7 @@ const SCENES = {
     context: "CLOSE WEEK / Dana is bought in. Marcus is championing internally. Paperwork is moving.",
     heading: "The close",
     text: `Sarah forwards you an email from Marcus: "We've made our decision. Moving forward with your team. Dana asked me to pass along that she appreciated the transparency throughout the process."\n\nLegal is reviewing the contract. There's one sticking point: procurement wants net-60 payment terms. Your standard is net-30. Sarah is asking you to decide whether to hold firm or accommodate.\n\n<em>You've won the technical and business case. This is a commercial question.</em>`,
+illustration: `<svg viewBox="0 0 680 200" xmlns="http://www.w3.org/2000/svg"><rect width="680" height="200" fill="#111827"/><rect x="200" y="30" width="280" height="140" rx="12" fill="#1a2234" stroke="#22c55e" stroke-width="2"/><text x="340" y="60" text-anchor="middle" fill="#22c55e" font-size="13" font-family="Inter,sans-serif" font-weight="800">MERIDIAN HEALTH</text><text x="340" y="78" text-anchor="middle" fill="#64748b" font-size="10" font-family="Inter,sans-serif">Master Subscription Agreement</text><rect x="225" y="90" width="230" height="8" rx="4" fill="#1e2d45"/><rect x="225" y="106" width="190" height="8" rx="4" fill="#1e2d45"/><rect x="225" y="122" width="210" height="8" rx="4" fill="#1e2d45"/><line x1="225" y1="152" x2="355" y2="152" stroke="#374151" stroke-width="1.5"/><text x="290" y="165" text-anchor="middle" fill="#64748b" font-size="9" font-family="Inter,sans-serif">Dana Flores, CTO</text><path d="M240 148 Q255 140 270 148 Q260 144 270 148" fill="none" stroke="#6366f1" stroke-width="2" stroke-linecap="round"/><rect x="500" y="70" width="100" height="60" rx="8" fill="#1a2234" stroke="#2d3148"/><text x="550" y="96" text-anchor="middle" fill="#fff" font-size="16" font-family="Inter,sans-serif" font-weight="800">$180K</text><text x="550" y="114" text-anchor="middle" fill="#22c55e" font-size="10" font-family="Inter,sans-serif" font-weight="600">CLOSED</text><text x="340" y="188" text-anchor="middle" fill="#22c55e" font-size="11" font-family="Inter,sans-serif" font-weight="600">Net-30. Full value. Q2.</text></svg>`,
     choices: [
       {
         label: "Hold firm on net-30. You've earned the deal on value, not concessions.",
@@ -579,8 +593,10 @@ function loadScene(id) {
 
 function renderScene() {
   const s = currentScene;
+  const illus = s.illustration ? `<div class="scene-illustration">${s.illustration}</div>` : "";
   document.getElementById('sceneContainer').innerHTML = `
     <div class="scene-block">
+      ${illus}
       <div class="scene-context">${s.context}</div>
       <div class="scene-heading">${s.heading}</div>
       <div class="scene-text">${s.text.replace(/\n/g, '<br><br>')}</div>
