@@ -278,7 +278,8 @@ function buildColumns() {
 function buildControls() {
   const ctrl = document.getElementById('controls');
   ctrl.innerHTML = COLUMNS.map(col => `
-    <button class="ctrl-btn" onclick="dropTo('${col.id}')">
+    <button class="ctrl-btn" onclick="dropTo('${col.id}')"
+      style="background:${col.bg};border:2px solid ${col.border};color:${col.color};">
       ${col.emoji}<br><span style="font-size:11px">${col.label}</span>
     </button>
   `).join('');
@@ -295,7 +296,7 @@ function spawnBlock() {
   if (blockIndex >= blockQueue.length) { blockQueue = shuffleBlocks(); blockIndex = 0; }
   currentBlock = blockQueue[blockIndex++];
 
-  dropY = 100; // Start below the HUD
+  dropY = 60; // Start just below HUD
   const col = COLUMNS.find(c => c.id === currentBlock.col);
 
   if (fallingEl) fallingEl.remove();
@@ -318,17 +319,18 @@ function spawnBlock() {
 }
 
 function tick(timestamp) {
-  if (!gameActive) return;
+  if (!gameActive || !currentBlock) return;
   if (lastFrameTime === 0) lastFrameTime = timestamp;
-  const delta = Math.min((timestamp - lastFrameTime) / 1000, 0.05); // seconds, capped at 50ms
+  const delta = Math.min((timestamp - lastFrameTime) / 1000, 0.033); // cap at 33ms (~30fps min)
   lastFrameTime = timestamp;
 
   dropY += dropSpeed * delta;
-  if (fallingEl) fallingEl.style.top = dropY + 'px';
+  if (fallingEl) fallingEl.style.top = Math.round(dropY) + 'px';
 
-  const threshold = window.innerHeight - 120;
+  const threshold = window.innerHeight - 100;
   if (dropY > threshold) {
     cancelAnimationFrame(rafHandle);
+    rafHandle = null;
     miss();
     return;
   }
@@ -338,6 +340,7 @@ function tick(timestamp) {
 function dropTo(colId) {
   if (!gameActive || !currentBlock) return;
   cancelAnimationFrame(rafHandle);
+  rafHandle = null;
 
   const correct = colId === currentBlock.col;
   const pts = currentBlock.points;
