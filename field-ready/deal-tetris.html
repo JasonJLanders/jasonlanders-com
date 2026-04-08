@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -485,6 +485,42 @@ function showScreen(id) {
   document.getElementById(id).classList.add('active');
   window.scrollTo(0, 0);
 }
+</script>
+
+<div id="installHint" style="display:none;position:fixed;bottom:0;left:0;right:0;background:#1a1d27;border-top:1px solid #2d3148;padding:12px 20px;text-align:center;z-index:200;">
+  <p style="font-size:13px;color:#9ca3af;margin:0;">
+    <span style="margin-right:8px;">📱</span>
+    Add to your home screen for quick access
+    <button onclick="installApp()" id="installBtn" style="display:none;margin-left:10px;background:#6366f1;color:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;">Install</button>
+    <span id="iosHint" style="display:none;margin-left:8px;color:#6b7280;">Tap Share then "Add to Home Screen"</span>
+    <button onclick="document.getElementById('installHint').style.display='none'" style="margin-left:12px;background:transparent;border:none;color:#6b7280;cursor:pointer;font-size:16px;">x</button>
+  </p>
+</div>
+<script>
+  if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+    if (/iPhone|iPad|iPod/i.test(navigator.userAgent) && !window.navigator.standalone) {
+      document.getElementById('installHint').style.display = 'block';
+      document.getElementById('iosHint').style.display = 'inline';
+    }
+  }
+  let deferredPrompt;
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault(); deferredPrompt = e;
+    document.getElementById('installHint').style.display = 'block';
+    document.getElementById('installBtn').style.display = 'inline-block';
+  });
+  function installApp() {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then(() => {
+        document.getElementById('installHint').style.display = 'none';
+        deferredPrompt = null;
+      });
+    }
+  }
+  window.addEventListener('appinstalled', () => {
+    document.getElementById('installHint').style.display = 'none';
+  });
 </script>
 </body>
 </html>
