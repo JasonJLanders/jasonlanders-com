@@ -432,7 +432,7 @@ let lives = 3;
 let correct = 0;
 let total = 0;
 let timeLimit = 4000;
-let timerHandle = null;
+let timerHandles = [];
 let timerStart = null;
 let animHandle = null;
 let usedIndices = [];
@@ -500,7 +500,8 @@ function loadObjection() {
   bar.style.transition = 'none';
   bar.style.background = '#4b5563';
   bar.className = 'timer-bar';
-  setTimeout(() => startTimer(), 4000);
+  const readHandle = setTimeout(() => startTimer(), 4000);
+  timerHandles.push(readHandle);
 }
 
 function startTimer() {
@@ -520,22 +521,22 @@ function startTimer() {
   const warningAt = timeLimit * 0.4;
   const dangerAt = timeLimit * 0.2;
 
-  timerHandle = setTimeout(() => {
+  timerHandles.push(setTimeout(() => {
     bar.className = 'timer-bar warning';
-  }, timeLimit - warningAt);
+  }, timeLimit - warningAt));
 
-  setTimeout(() => {
+  timerHandles.push(setTimeout(() => {
     if (!waitingForNext) bar.className = 'timer-bar danger';
-  }, timeLimit - dangerAt);
+  }, timeLimit - dangerAt));
 
-  setTimeout(() => {
+  timerHandles.push(setTimeout(() => {
     if (!waitingForNext) timeUp();
-  }, timeLimit);
+  }, timeLimit));
 }
 
 function clearTimer() {
-  clearTimeout(timerHandle);
-  timerHandle = null;
+  timerHandles.forEach(h => clearTimeout(h));
+  timerHandles = [];
 }
 
 function timeUp() {
