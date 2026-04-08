@@ -240,9 +240,10 @@ let stacks = { people: [], process: [], commercial: [], risk: [] };
 let currentBlock = null;
 let fallingEl = null;
 let gameActive = false;
-let dropInterval = null;
+let rafHandle = null;
 let dropY = 0;
-let dropSpeed = 3;
+let dropSpeed = 80; // pixels per second
+let lastFrameTime = 0;
 let blockQueue = [];
 let blockIndex = 0;
 
@@ -311,26 +312,32 @@ function spawnBlock() {
   fallingEl.textContent = currentBlock.label;
   document.body.appendChild(fallingEl);
 
-  clearInterval(dropInterval);
-  dropInterval = setInterval(tick, 16);
+  cancelAnimationFrame(rafHandle);
+  lastFrameTime = 0;
+  rafHandle = requestAnimationFrame(tick);
 }
 
-function tick() {
+function tick(timestamp) {
   if (!gameActive) return;
-  dropY += dropSpeed;
+  if (lastFrameTime === 0) lastFrameTime = timestamp;
+  const delta = Math.min((timestamp - lastFrameTime) / 1000, 0.05); // seconds, capped at 50ms
+  lastFrameTime = timestamp;
+
+  dropY += dropSpeed * delta;
   if (fallingEl) fallingEl.style.top = dropY + 'px';
 
-  // Use window height as reference so it's stable regardless of layout
   const threshold = window.innerHeight - 120;
   if (dropY > threshold) {
-    clearInterval(dropInterval);
+    cancelAnimationFrame(rafHandle);
     miss();
+    return;
   }
+  rafHandle = requestAnimationFrame(tick);
 }
 
 function dropTo(colId) {
   if (!gameActive || !currentBlock) return;
-  clearInterval(dropInterval);
+  cancelAnimationFrame(rafHandle);
 
   const correct = colId === currentBlock.col;
   const pts = currentBlock.points;
@@ -377,7 +384,7 @@ function dropTo(colId) {
       gameOver();
     } else {
       // Speed up over time
-      dropSpeed = 2.5 + (level * 0.3);
+      dropSpeed = 80 + (level * 20); // pixels per second
       setTimeout(spawnBlock, 600);
     }
   }, 250);
@@ -437,7 +444,7 @@ function showCombo(text) {
 
 function gameOver() {
   gameActive = false;
-  clearInterval(dropInterval);
+  cancelAnimationFrame(rafHandle);
   if (fallingEl) { fallingEl.remove(); fallingEl = null; }
 
   showScreen('gameover');
