@@ -440,7 +440,7 @@ let currentObj = null;
 let waitingForNext = false;
 
 const DIFFICULTY = {
-  normal: { time: 4000, lives: 3, points: 100 },
+  normal: { time: 5000, lives: 3, points: 100 },
   hard: { time: 2800, lives: 2, points: 150 },
   brutal: { time: 1800, lives: 1, points: 200 }
 };
@@ -500,7 +500,7 @@ function loadObjection() {
   bar.style.transition = 'none';
   bar.style.background = '#4b5563';
   bar.className = 'timer-bar';
-  setTimeout(() => startTimer(), 2000);
+  setTimeout(() => startTimer(), 4000);
 }
 
 function startTimer() {
