@@ -465,7 +465,7 @@ function startGame() {
 }
 
 function nextRound() {
-  if (waitingForNext) return;
+  waitingForNext = false;
   document.getElementById('verdict').classList.remove('show');
   document.getElementById('btnNext').classList.remove('show');
   loadObjection();
@@ -493,8 +493,14 @@ function loadObjection() {
     </button>
   `).join('');
 
-  startTimer();
   waitingForNext = false;
+  // Give 2 seconds to read before timer starts
+  const bar = document.getElementById('timerBar');
+  bar.style.width = '100%';
+  bar.style.transition = 'none';
+  bar.style.background = '#4b5563';
+  bar.className = 'timer-bar';
+  setTimeout(() => startTimer(), 2000);
 }
 
 function startTimer() {
