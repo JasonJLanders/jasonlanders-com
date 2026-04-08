@@ -295,7 +295,7 @@ function spawnBlock() {
   if (blockIndex >= blockQueue.length) { blockQueue = shuffleBlocks(); blockIndex = 0; }
   currentBlock = blockQueue[blockIndex++];
 
-  dropY = 80;
+  dropY = 100; // Start below the HUD
   const col = COLUMNS.find(c => c.id === currentBlock.col);
 
   if (fallingEl) fallingEl.remove();
@@ -320,10 +320,10 @@ function tick() {
   dropY += dropSpeed;
   if (fallingEl) fallingEl.style.top = dropY + 'px';
 
-  const arenaBottom = document.getElementById('arena').getBoundingClientRect().bottom;
-  if (dropY > arenaBottom - 60) {
+  // Use window height as reference so it's stable regardless of layout
+  const threshold = window.innerHeight - 120;
+  if (dropY > threshold) {
     clearInterval(dropInterval);
-    // Missed -- counts as wrong column
     miss();
   }
 }
