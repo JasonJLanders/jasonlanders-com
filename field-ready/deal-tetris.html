@@ -214,21 +214,21 @@ const COLUMNS = [
 ];
 
 const BLOCKS = [
-  { label: '🏆 Champion', col: 'people', points: 150, good: true },
-  { label: '👤 Economic Buyer', col: 'people', points: 120, good: true },
-  { label: '🔬 Technical Win', col: 'process', points: 100, good: true },
-  { label: '📋 POV Criteria', col: 'process', points: 110, good: true },
-  { label: '💰 Budget Approved', col: 'commercial', points: 140, good: true },
-  { label: '📅 Timeline Set', col: 'commercial', points: 90, good: true },
-  { label: '⚔️ Competitor', col: 'risk', points: -80, good: false },
-  { label: '🚫 No Champion', col: 'risk', points: -100, good: false },
-  { label: '❓ Vague Criteria', col: 'risk', points: -90, good: false },
-  { label: '📊 Exec Sponsor', col: 'people', points: 130, good: true },
-  { label: '🤝 Contract Agreed', col: 'commercial', points: 160, good: true },
-  { label: '⏰ Stalled', col: 'risk', points: -70, good: false },
-  { label: '🔍 Discovery Done', col: 'process', points: 100, good: true },
-  { label: '💸 Budget Risk', col: 'risk', points: -60, good: false },
-  { label: '✅ Success Criteria', col: 'process', points: 120, good: true }
+  { label: '🏆 Champion', col: 'people', points: 150, good: true, hint: 'Who is it?' },
+  { label: '👤 Economic Buyer', col: 'people', points: 120, good: true, hint: 'Budget owner' },
+  { label: '🔬 Technical Win', col: 'process', points: 100, good: true, hint: 'Validated!' },
+  { label: '📋 POV Criteria', col: 'process', points: 110, good: true, hint: 'Defined?' },
+  { label: '💰 Budget Approved', col: 'commercial', points: 140, good: true, hint: 'It is there' },
+  { label: '📅 Timeline Set', col: 'commercial', points: 90, good: true, hint: 'By when?' },
+  { label: '⚔️ Competitor', col: 'risk', points: -80, good: false, hint: 'Handle it' },
+  { label: '🚫 No Champion', col: 'risk', points: -100, good: false, hint: 'Big problem' },
+  { label: '❓ Vague Criteria', col: 'risk', points: -90, good: false, hint: 'Danger zone' },
+  { label: '📊 Exec Sponsor', col: 'people', points: 130, good: true, hint: 'Leadership' },
+  { label: '🤝 Contract Agreed', col: 'commercial', points: 160, good: true, hint: 'Almost done' },
+  { label: '⏰ Stalled', col: 'risk', points: -70, good: false, hint: 'No urgency' },
+  { label: '🔍 Discovery Done', col: 'process', points: 100, good: true, hint: 'Know the pain' },
+  { label: '💸 Budget Risk', col: 'risk', points: -60, good: false, hint: 'Watch out' },
+  { label: '✅ Success Criteria', col: 'process', points: 120, good: true, hint: 'Agreed on it' }
 ];
 
 // ---- STATE ----
@@ -420,11 +420,9 @@ function checkDealClose() {
     lives = Math.min(lives + 1, 3);
 
     // Clear stacked blocks visually
-    COLUMNS.forEach(col => {
-      const colEl = document.getElementById('col-' + col.id);
-      const blocks = colEl.querySelectorAll('.stacked-block');
-      blocks.forEach(b => b.remove());
-    });
+    document.querySelectorAll('.stacked-block').forEach(b => b.remove());
+    // Reset stacks
+    stacks = { people: [], process: [], commercial: [], risk: [] };
 
     showCombo(`DEAL CLOSED! +${500 * level}`);
     document.getElementById('warningBar').style.display = 'none';
