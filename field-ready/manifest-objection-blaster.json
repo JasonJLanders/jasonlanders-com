@@ -1,0 +1,17 @@
+﻿{
+    "icons":  [
+                  {
+                      "purpose":  "any maskable",
+                      "type":  "image/svg+xml",
+                      "sizes":  "any",
+                      "src":  "/favicon.svg"
+                  }
+              ],
+    "description":  "Field Ready tool for Sales Engineers",
+    "background_color":  "#0a0d12",
+    "theme_color":  "#6366f1",
+    "name":  "Objection Blaster",
+    "start_url":  "/field-ready/objection-blaster.html",
+    "display":  "standalone",
+    "short_name":  "Obj Blaster"
+}

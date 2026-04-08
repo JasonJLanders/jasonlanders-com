@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="manifest" href="/field-ready/manifest-champion.json" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="Champion or Not?" />
+  <meta name="theme-color" content="#6366f1" />
+  <title>Champion or Not? | Field Ready</title>
+  <meta name="description" content="10 rounds. Can you tell a real champion from a friendly face? The distinction closes deals.">
+  <script defer src="https://umami-tau-drab.vercel.app/script.js" data-website-id="23015384-bcae-4732-9665-a39f261647e1"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0a0d12; --surface: #111827; --surface2: #1a2234; --border: #1e2d45;
+      --text: #e2e8f0; --muted: #64748b; --accent: #6366f1;
+      --green: #10b981; --red: #ef4444; --yellow: #f59e0b;
+      --font: 'Inter', system-ui, sans-serif;
+    }
+    html, body { min-height: 100%; font-family: var(--font); background: var(--bg); color: var(--text); }
+    .page { max-width: 540px; margin: 0 auto; padding: 32px 20px 80px; }
+    .back-link { font-size: 12px; color: var(--muted); text-decoration: none; display: inline-block; margin-bottom: 24px; }
+    .back-link:hover { color: var(--accent); }
+
+    /* INTRO */
+    #intro { text-align: center; }
+    .brand-tag { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--accent); margin-bottom: 12px; }
+    .intro-title { font-size: clamp(30px, 7vw, 44px); font-weight: 900; letter-spacing: -1.5px; color: #fff; line-height: 1.1; margin-bottom: 10px; }
+    .intro-sub { font-size: 15px; color: var(--muted); line-height: 1.65; margin-bottom: 28px; }
+    .btn-start { background: var(--accent); color: #fff; border: none; border-radius: 14px; padding: 16px 44px; font-family: var(--font); font-size: 17px; font-weight: 800; cursor: pointer; transition: background 0.15s; }
+    .btn-start:hover { background: #4f46e5; }
+    .intro-note { font-size: 13px; color: var(--muted); margin-top: 12px; }
+
+    /* QUIZ */
+    #quiz { display: none; }
+    .progress-wrap { margin-bottom: 24px; }
+    .progress-bg { background: var(--surface); border-radius: 100px; height: 5px; margin-bottom: 8px; overflow: hidden; }
+    .progress-fill { background: var(--accent); height: 100%; border-radius: 100px; transition: width 0.4s ease; }
+    .progress-label { font-size: 12px; color: var(--muted); font-weight: 600; text-align: right; }
+
+    .card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
+      padding: 24px; margin-bottom: 20px; animation: fadeUp 0.3s ease;
+    }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+    .card-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: var(--accent); margin-bottom: 14px; }
+
+    .person-row { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
+    .person-avatar {
+      width: 52px; height: 52px; border-radius: 50%; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; background: var(--surface2); border: 2px solid var(--border);
+    }
+    .person-name { font-size: 17px; font-weight: 800; color: #fff; margin-bottom: 3px; }
+    .person-title { font-size: 13px; color: var(--muted); }
+
+    .signals { display: flex; flex-direction: column; gap: 8px; }
+    .signal-item { display: flex; align-items: flex-start; gap: 10px; font-size: 14px; color: var(--text); line-height: 1.5; }
+    .signal-icon { flex-shrink: 0; font-size: 16px; margin-top: 1px; }
+
+    .quote-block {
+      background: var(--surface2); border-left: 3px solid var(--border); border-radius: 0 8px 8px 0;
+      padding: 12px 14px; margin-top: 14px; font-size: 14px; font-style: italic;
+      color: var(--muted); line-height: 1.6;
+    }
+
+    .verdict-prompt { font-size: 18px; font-weight: 800; color: #fff; text-align: center; margin-bottom: 16px; }
+
+    .answer-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .answer-btn {
+      border: 3px solid var(--border); border-radius: 14px; padding: 20px 10px;
+      font-family: var(--font); font-size: 15px; font-weight: 800; cursor: pointer;
+      transition: all 0.15s; display: flex; flex-direction: column; align-items: center; gap: 6px;
+      background: var(--surface2);
+    }
+    .answer-btn-icon { font-size: 28px; }
+    .champion-btn { color: var(--green); }
+    .champion-btn:hover { border-color: var(--green); background: rgba(16,185,129,0.08); }
+    .not-btn { color: var(--red); }
+    .not-btn:hover { border-color: var(--red); background: rgba(239,68,68,0.08); }
+    .answer-btn:active { transform: scale(0.96); }
+    .answer-btn:disabled { pointer-events: none; }
+    .answer-btn.correct-pick { border-color: var(--green); background: rgba(16,185,129,0.12); }
+    .answer-btn.wrong-pick { border-color: var(--red); background: rgba(239,68,68,0.12); }
+    .answer-btn.reveal-correct { border-color: var(--green); background: rgba(16,185,129,0.06); }
+
+    .result-card {
+      border-radius: 12px; padding: 16px; margin-bottom: 16px; display: none;
+      border: 1px solid var(--border); animation: fadeUp 0.25s ease;
+    }
+    .result-card.show { display: block; }
+    .result-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+    .result-label.correct { color: var(--green); }
+    .result-label.wrong { color: var(--red); }
+    .result-verdict { font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 6px; }
+    .result-explain { font-size: 14px; color: var(--muted); line-height: 1.6; }
+
+    .btn-next { background: var(--accent); color: #fff; border: none; border-radius: 10px; padding: 14px; font-family: var(--font); font-size: 15px; font-weight: 700; cursor: pointer; width: 100%; display: none; transition: background 0.15s; }
+    .btn-next.show { display: block; animation: fadeUp 0.2s ease; }
+    .btn-next:hover { background: #4f46e5; }
+
+    /* RESULT SCREEN */
+    #results { display: none; text-align: center; }
+    .result-emoji-big { font-size: 56px; margin-bottom: 14px; }
+    .result-title { font-size: 28px; font-weight: 900; color: #fff; letter-spacing: -1px; margin-bottom: 6px; }
+    .result-score-line { font-size: 16px; color: var(--muted); margin-bottom: 24px; }
+    .score-pills { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-bottom: 24px; }
+    .score-pill { background: var(--surface); border: 1px solid var(--border); border-radius: 100px; padding: 8px 18px; font-size: 14px; font-weight: 600; }
+    .takeaway-box { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 18px; text-align: left; margin-bottom: 20px; }
+    .takeaway-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: var(--accent); margin-bottom: 10px; }
+    .takeaway-text { font-size: 14px; color: var(--muted); line-height: 1.65; }
+    .takeaway-text strong { color: var(--text); }
+    .nl-box { background: var(--accent); border-radius: 14px; padding: 20px; margin-bottom: 16px; }
+    .nl-box h3 { font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 6px; }
+    .nl-box p { font-size: 13px; color: rgba(255,255,255,0.8); margin-bottom: 14px; }
+    .nl-form { display: flex; gap: 8px; flex-wrap: wrap; }
+    .nl-input { flex: 1; min-width: 160px; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); border-radius: 8px; padding: 10px 14px; color: #fff; font-family: var(--font); font-size: 14px; outline: none; }
+    .nl-input::placeholder { color: rgba(255,255,255,0.6); }
+    .nl-btn { background: #fff; color: var(--accent); border: none; border-radius: 8px; padding: 10px 16px; font-family: var(--font); font-size: 14px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+    .result-actions { display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px; }
+    .btn-again { background: var(--accent); color: #fff; border: none; border-radius: 12px; padding: 14px; font-family: var(--font); font-size: 15px; font-weight: 700; cursor: pointer; }
+    .btn-again:hover { background: #4f46e5; }
+    .btn-share-r { background: var(--surface); color: var(--text); border: 1px solid var(--border); border-radius: 12px; padding: 13px; font-family: var(--font); font-size: 14px; font-weight: 600; cursor: pointer; transition: border-color 0.15s; }
+    .btn-share-r:hover { border-color: var(--accent); }
+    .field-ready-footer { margin-top: 8px; }
+    .field-ready-footer a { font-size: 12px; color: var(--muted); text-decoration: none; }
+    @media (max-width: 380px) { .nl-form { flex-direction: column; } }
+  </style>
+</head>
+<body>
+<div class="page">
+  <a href="/field-ready" class="back-link">&#8592; Field Ready</a>
+
+  <!-- INTRO -->
+  <div id="intro">
+    <div class="brand-tag">Field Ready</div>
+    <h1 class="intro-title">Champion<br>or Not?</h1>
+    <p class="intro-sub">You'll be shown someone at an account. Read the signals. One tap: are they a real champion, or just a friendly face? 10 rounds. The distinction closes deals.</p>
+    <button class="btn-start" onclick="startQuiz()">Start reading</button>
+    <p class="intro-note">10 rounds &nbsp;·&nbsp; Instant reveal &nbsp;·&nbsp; No time pressure</p>
+  </div>
+
+  <!-- QUIZ -->
+  <div id="quiz">
+    <div class="progress-wrap">
+      <div class="progress-bg"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+      <div class="progress-label" id="progressLabel">1 / 10</div>
+    </div>
+    <div id="quizContent"></div>
+  </div>
+
+  <!-- RESULTS -->
+  <div id="results">
+    <div class="result-emoji-big" id="resEmoji"></div>
+    <div class="result-title" id="resTitle"></div>
+    <div class="result-score-line" id="resScoreLine"></div>
+    <div class="score-pills" id="resPills"></div>
+    <div class="takeaway-box">
+      <div class="takeaway-title">The core distinction</div>
+      <div class="takeaway-text" id="resTakeaway"></div>
+    </div>
+    <div class="nl-box">
+      <h3>Want the full champion framework?</h3>
+      <p>The SE Edge covers deal strategy and champion qualification weekly.</p>
+      <form class="nl-form" action="https://magic.beehiiv.com/v1/ed62bc9e-56bd-41ca-be98-5ab6463a12bf" method="get" target="_blank">
+        <input class="nl-input" type="email" name="email" placeholder="your@email.com" required />
+        <button class="nl-btn" type="submit">Subscribe</button>
+      </form>
+    </div>
+    <div class="result-actions">
+      <button class="btn-again" onclick="restart()">Play again</button>
+      <button class="btn-share-r" onclick="shareResult()">Share result</button>
+    </div>
+    <div class="field-ready-footer">
+      <a href="/field-ready">Field Ready by Jason Landers &nbsp;·&nbsp; jasonlanders.com</a>
+    </div>
+  </div>
+</div>
+
+<script>
+const PEOPLE = [
+  {
+    name: "Marcus Webb", title: "VP of Engineering", avatar: "👨‍💻", isChampion: true,
+    signals: ["Reached out directly after your demo to ask a specific technical question", "Shared your one-pager with two colleagues unprompted", "Asked if he could have a reference call with one of your existing customers"],
+    quote: "I've been pushing for something like this for two years. If it works the way you showed, this is exactly what we need.",
+    verdict: "Champion",
+    explain: "Marcus shows three hallmarks of a real champion: proactive internal sharing, voluntary advocacy, and reference-seeking. He wants you to win."
+  },
+  {
+    name: "Jennifer Park", title: "Senior Engineer", avatar: "👩‍💼", isChampion: false,
+    signals: ["Asks detailed technical questions in every meeting", "Has attended all four of your sessions", "Responds to your emails within hours"],
+    quote: "This is really interesting technology. I've enjoyed learning about how it works.",
+    verdict: "Not a champion",
+    explain: "Jennifer is engaged and curious, but engagement isn't advocacy. She hasn't shared internally, hasn't advocated to leadership, and hasn't shown any stake in the outcome. Friendly, not fighting for you."
+  },
+  {
+    name: "Dana Torres", title: "CTO", avatar: "👩‍💼", isChampion: true,
+    signals: ["Mentioned the product in her quarterly all-hands as a potential solution to a known problem", "Connected you with their CISO proactively to unblock a security review", "Asked your AE directly about implementation timelines"],
+    quote: "I need this to work. We've been stuck on this problem for too long.",
+    verdict: "Champion",
+    explain: "Dana has used her organizational influence -- publicly in an all-hands and by unblocking a security review -- to advance the deal. She's not just interested. She's invested."
+  },
+  {
+    name: "Kevin Liu", title: "Director of IT", avatar: "👨‍💼", isChampion: false,
+    signals: ["Attends meetings but rarely speaks", "Said 'I'll pass this along to the right people' twice", "Has not introduced you to anyone else in the org"],
+    quote: "Let me think about it and get back to you.",
+    verdict: "Not a champion",
+    explain: "'I'll pass this along' is one of the most reliable non-champion signals. Real champions make introductions. They don't delegate upward."
+  },
+  {
+    name: "Priya Nair", title: "Engineering Manager", avatar: "👩‍💻", isChampion: true,
+    signals: ["Added the evaluation to her team's Q2 roadmap without being asked", "Escalated an internal objection from her director directly to you so you could address it", "Asked for a proposal template she could customize for her VP"],
+    quote: "I need to make this happen. What do you need from me to make it easier to say yes?",
+    verdict: "Champion",
+    explain: "Priya is doing internal sales work on your behalf -- managing objections, creating budget pathways, and asking what she can do to help. That's a champion."
+  },
+  {
+    name: "Tom Bradley", title: "VP of Sales", avatar: "👨‍💼", isChampion: false,
+    signals: ["Enthusiastic in every meeting", "Said 'this could be game-changing for us' three times", "Has not mentioned the product in any internal communications you're aware of"],
+    quote: "I love it. I'm going to tell everyone about this.",
+    verdict: "Not a champion",
+    explain: "Enthusiasm in meetings without internal advocacy is performance, not partnership. Tom talks a great game but there's no evidence of him actually advancing the deal internally."
+  },
+  {
+    name: "Rachel Kim", title: "CFO", avatar: "👩‍💼", isChampion: true,
+    signals: ["Requested a line item breakdown to include in next quarter's budget planning", "Asked for case studies from companies in your revenue range", "Scheduled a follow-up call at her own initiative"],
+    quote: "I've got budget set aside. I need to make sure this solves the problem before I commit it.",
+    verdict: "Champion",
+    explain: "A CFO who is actively budgeting, seeking validation, and self-scheduling follow-ups is doing the internal work to make a purchase happen. Proceed with urgency."
+  },
+  {
+    name: "Alex Morgan", title: "Product Manager", avatar: "🧑‍💼", isChampion: false,
+    signals: ["Said the product 'aligns with our roadmap vision'", "Was added to the eval by someone else, not by choice", "Has mentioned three times that the decision 'isn't really mine to make'"],
+    quote: "I can see how this would be useful. You'd really need to convince my VP.",
+    verdict: "Not a champion",
+    explain: "Someone who explicitly says the decision isn't theirs and hasn't volunteered to help you get to the decision-maker is not a champion. They're a bystander with a friendly face."
+  },
+  {
+    name: "James Chen", title: "Director of Engineering", avatar: "👨‍💻", isChampion: true,
+    signals: ["Arranged a meeting with his VP without you asking", "Pushed back on procurement's objection to the contract terms on your behalf", "Texted your AE directly to say 'we need to make this happen'"],
+    quote: "I'm going to fight for this internally. Just tell me what ammunition you can give me.",
+    verdict: "Champion",
+    explain: "James is using his political capital for you -- arranging executive access, handling procurement, and asking for help winning internally. This is what an activated champion looks like."
+  },
+  {
+    name: "Sarah Foster", title: "Head of IT Security", avatar: "👩‍💼", isChampion: false,
+    signals: ["Completed your 40-page security questionnaire thoroughly", "Raised three significant technical concerns about your architecture", "Said she needs to 'escalate her concerns before anything moves forward'"],
+    quote: "I have some serious questions that need to be answered before I can sign off on this.",
+    verdict: "Not a champion",
+    explain: "Sarah is a gatekeeper, not a champion. Gatekeepers block -- champions unblock. She needs to be satisfied, not championed. Treat her as a technical stakeholder to win over, not an ally."
+  }
+];
+
+let current = 0;
+let score = 0;
+let shuffled = [];
+
+function startQuiz() {
+  current = 0; score = 0;
+  shuffled = [...PEOPLE].sort(() => Math.random() - 0.5).slice(0, 10);
+  document.getElementById('intro').style.display = 'none';
+  document.getElementById('quiz').style.display = 'block';
+  render();
+}
+
+function render() {
+  const p = shuffled[current];
+  const pct = (current / 10) * 100;
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressLabel').textContent = `${current + 1} / 10`;
+
+  document.getElementById('quizContent').innerHTML = `
+    <div class="card">
+      <div class="card-title">Read the signals</div>
+      <div class="person-row">
+        <div class="person-avatar">${p.avatar}</div>
+        <div>
+          <div class="person-name">${p.name}</div>
+          <div class="person-title">${p.title}</div>
+        </div>
+      </div>
+      <div class="signals">
+        ${p.signals.map(s => `<div class="signal-item"><span class="signal-icon">•</span><span>${s}</span></div>`).join('')}
+      </div>
+      <div class="quote-block">"${p.quote}"</div>
+    </div>
+    <div class="verdict-prompt">Champion or not?</div>
+    <div class="answer-row">
+      <button class="answer-btn champion-btn" onclick="answer(true, this)" id="champBtn">
+        <span class="answer-btn-icon">🏆</span>
+        Champion
+      </button>
+      <button class="answer-btn not-btn" onclick="answer(false, this)" id="notBtn">
+        <span class="answer-btn-icon">🚫</span>
+        Not a champion
+      </button>
+    </div>
+    <div class="result-card" id="resultCard">
+      <div class="result-label" id="resultLabel"></div>
+      <div class="result-verdict" id="resultVerdict"></div>
+      <div class="result-explain" id="resultExplain"></div>
+    </div>
+    <button class="btn-next" id="btnNext" onclick="next()">
+      ${current < 9 ? 'Next person &rarr;' : 'See your results'}
+    </button>
+  `;
+}
+
+function answer(isChampion, btn) {
+  const p = shuffled[current];
+  const correct = isChampion === p.isChampion;
+  if (correct) score++;
+
+  document.getElementById('champBtn').disabled = true;
+  document.getElementById('notBtn').disabled = true;
+
+  if (isChampion) {
+    document.getElementById('champBtn').classList.add(correct ? 'correct-pick' : 'wrong-pick');
+    if (!correct) document.getElementById('notBtn').classList.add('reveal-correct');
+  } else {
+    document.getElementById('notBtn').classList.add(correct ? 'correct-pick' : 'wrong-pick');
+    if (!correct) document.getElementById('champBtn').classList.add('reveal-correct');
+  }
+
+  const card = document.getElementById('resultCard');
+  card.classList.add('show');
+  card.style.background = correct ? 'rgba(16,185,129,0.05)' : 'rgba(239,68,68,0.05)';
+  card.style.borderColor = correct ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)';
+
+  document.getElementById('resultLabel').textContent = correct ? 'Correct' : 'Incorrect';
+  document.getElementById('resultLabel').className = 'result-label ' + (correct ? 'correct' : 'wrong');
+  document.getElementById('resultVerdict').textContent = p.verdict;
+  document.getElementById('resultExplain').textContent = p.explain;
+  document.getElementById('btnNext').classList.add('show');
+}
+
+function next() {
+  current++;
+  if (current >= 10) {
+    showResults();
+  } else {
+    render();
+    window.scrollTo(0, 0);
+  }
+}
+
+function showResults() {
+  document.getElementById('quiz').style.display = 'none';
+  document.getElementById('results').style.display = 'block';
+  window.scrollTo(0, 0);
+
+  const pct = Math.round((score / 10) * 100);
+  let emoji, title, sub;
+  if (pct >= 90) { emoji = '🏆'; title = 'Champion Detector'; sub = `${score}/10 correct. You can read a room.`; }
+  else if (pct >= 70) { emoji = '🎯'; title = 'Sharp Eye'; sub = `${score}/10 correct. Strong instincts with a few misses.`; }
+  else if (pct >= 50) { emoji = '📖'; title = 'Getting There'; sub = `${score}/10 correct. The patterns are becoming clearer.`; }
+  else { emoji = '💪'; title = 'Keep Watching'; sub = `${score}/10 correct. Champion identification is a learnable skill.`; }
+
+  document.getElementById('resEmoji').textContent = emoji;
+  document.getElementById('resTitle').textContent = title;
+  document.getElementById('resScoreLine').textContent = sub;
+  document.getElementById('resPills').innerHTML = `
+    <div class="score-pill">${score}/10 correct</div>
+    <div class="score-pill">${pct}% accuracy</div>
+  `;
+  document.getElementById('resTakeaway').innerHTML = `
+    <strong>A champion isn't someone who likes your product.</strong> A champion is someone who uses their organizational influence to help you win. The test: are they doing internal work on your behalf -- sharing, advocating, unblocking -- when you are not in the room? If not, they are a friendly face, not a champion. Treat them accordingly.
+  `;
+
+  window._champResult = { score, pct };
+}
+
+function shareResult() {
+  const r = window._champResult;
+  if (!r) return;
+  const text = `Champion or Not? -- ${r.score}/10 correct (${r.pct}% accuracy)\n\nCan you tell a real champion from a friendly face? jasonlanders.com/field-ready/champion-or-not.html`;
+  if (navigator.share) {
+    navigator.share({ text }).catch(() => copyText(text));
+  } else { copyText(text); }
+}
+
+function copyText(text) {
+  navigator.clipboard.writeText(text).catch(() => {});
+  document.querySelector('.btn-share-r').textContent = 'Copied!';
+  setTimeout(() => document.querySelector('.btn-share-r').textContent = 'Share result', 2000);
+}
+
+function restart() {
+  document.getElementById('results').style.display = 'none';
+  startQuiz();
+}
+</script>
+</body>
+</html>
