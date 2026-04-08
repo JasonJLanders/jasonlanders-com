@@ -270,7 +270,7 @@ function buildColumns() {
   const area = document.getElementById('stackArea');
   area.innerHTML = COLUMNS.map(col => `
     <div class="column" id="col-${col.id}">
-      <div class="col-label" style="color:${col.color}">${col.emoji} ${col.label}</div>
+      <div class="col-label">${col.emoji} ${col.label}</div>
     </div>
   `).join('');
 }
@@ -278,9 +278,8 @@ function buildColumns() {
 function buildControls() {
   const ctrl = document.getElementById('controls');
   ctrl.innerHTML = COLUMNS.map(col => `
-    <button class="ctrl-btn" onclick="dropTo('${col.id}')"
-      style="background:${col.bg};border:2px solid ${col.border};color:${col.color};">
-      ${col.emoji}<br>${col.label}
+    <button class="ctrl-btn" onclick="dropTo('${col.id}')">
+      ${col.emoji}<br><span style="font-size:11px">${col.label}</span>
     </button>
   `).join('');
 }
@@ -308,9 +307,10 @@ function spawnBlock() {
     border-color: #4b5563;
     color: #e2e8f0;
     padding: 10px 16px;
+    z-index: 100;
   `;
   fallingEl.textContent = currentBlock.label;
-  document.body.appendChild(fallingEl);
+  document.getElementById('game').appendChild(fallingEl);
 
   cancelAnimationFrame(rafHandle);
   lastFrameTime = 0;
@@ -413,9 +413,11 @@ function checkCombo(colId) {
 }
 
 function checkDealClose() {
-  const people = stacks.people.filter(s => s.correct).length;
-  const process = stacks.process.filter(s => s.correct).length;
-  const commercial = stacks.commercial.filter(s => s.correct).length;
+  // Count only good blocks placed in correct column
+  const people = stacks.people.filter(s => s.correct && s.block.good).length;
+  const process = stacks.process.filter(s => s.correct && s.block.good).length;
+  const commercial = stacks.commercial.filter(s => s.correct && s.block.good).length;
+  console.log('Deal check:', people, process, commercial);
 
   if (people >= 2 && process >= 2 && commercial >= 2) {
     // Deal closed!
