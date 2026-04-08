@@ -493,17 +493,22 @@ function showScreen(id) {
   </p>
 </div>
 <script>
-  if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-    if (/iPhone|iPad|iPod/i.test(navigator.userAgent) && !window.navigator.standalone) {
-      document.getElementById('installHint').style.display = 'block';
+  // Show install hint on any mobile browser
+  if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent) && !window.navigator.standalone) {
+    document.getElementById('installHint').style.display = 'block';
+    if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
       document.getElementById('iosHint').style.display = 'inline';
+    } else {
+      // Android -- show generic hint, upgrade to native prompt if available
+      document.getElementById('iosHint').style.display = 'inline';
+      document.getElementById('iosHint').textContent = 'Tap menu (\u22ee) then "Add to Home screen"';
     }
   }
   let deferredPrompt;
   window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault(); deferredPrompt = e;
-    document.getElementById('installHint').style.display = 'block';
     document.getElementById('installBtn').style.display = 'inline-block';
+    document.getElementById('iosHint').style.display = 'none';
   });
   function installApp() {
     if (deferredPrompt) {
