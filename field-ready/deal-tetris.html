@@ -252,7 +252,7 @@ function startGame() {
   stacks = { people: [], process: [], commercial: [], risk: [] };
   blockQueue = shuffleBlocks();
   blockIndex = 0;
-  dropSpeed = 2.5;
+  dropSpeed = 80; // pixels per second
   gameActive = true;
 
   showScreen('game');
@@ -341,9 +341,11 @@ function dropTo(colId) {
   if (!gameActive || !currentBlock) return;
   cancelAnimationFrame(rafHandle);
   rafHandle = null;
+  const blockToPlace = currentBlock;
+  currentBlock = null; // prevent tick from running further
 
-  const correct = colId === currentBlock.col;
-  const pts = currentBlock.points;
+  const correct = colId === blockToPlace.col;
+  const pts = blockToPlace.points;
 
   // Animate block to column
   const colEl = document.getElementById('col-' + colId);
@@ -361,10 +363,10 @@ function dropTo(colId) {
     const blockEl = document.createElement('div');
     blockEl.className = 'stacked-block';
     blockEl.style.cssText = `background:${col.bg};border-color:${col.border};color:${col.color};`;
-    blockEl.textContent = currentBlock.label;
+    blockEl.textContent = blockToPlace.label;
     colEl.insertBefore(blockEl, colEl.querySelector('.col-label'));
 
-    stacks[colId].push({ block: currentBlock, correct });
+    stacks[colId].push({ block: blockToPlace, correct });
 
     if (correct && pts > 0) {
       score += pts;
