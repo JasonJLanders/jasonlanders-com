@@ -439,6 +439,7 @@ function checkDealClose() {
       stacks[colId] = stacks[colId].filter(s => !s.correct);
     });
 
+    dropSpeed = 80 + (deals * 15); // speed up with each deal closed
     showCombo(`DEAL CLOSED! +${500 * level}`);
     document.getElementById('warningBar').style.display = 'none';
     updateHUD();
