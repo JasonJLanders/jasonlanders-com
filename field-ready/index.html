@@ -44,7 +44,29 @@
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
       gap: 20px;
-      padding: 48px 0 80px;
+    }
+    .section-group {
+      padding: 40px 0 0;
+    }
+    .section-group:last-child {
+      padding-bottom: 80px;
+    }
+    .group-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--muted);
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .group-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
     }
     .tool-card {
       background: var(--white);
@@ -131,65 +153,77 @@
   </div>
 
   <div class="container">
-    <div class="tools-grid">
 
-      <a href="/field-ready/objection-blaster.html" class="tool-card">
-        <div class="tool-emoji">💥</div>
-        <div class="tool-name">Objection Blaster</div>
-        <div class="tool-desc">Objections incoming. 3 seconds. Pick the right response. Miss too many and the deal is lost. How long can you last?</div>
-        <div class="tool-cta">Start blasting &rarr;</div>
-      </a>
+    <div class="section-group">
+      <div class="group-label">🛠️ Assessment Tools</div>
+      <div class="tools-grid">
 
-      <a href="/field-ready/champion-or-not.html" class="tool-card">
-        <div class="tool-emoji">🤔</div>
-        <div class="tool-name">Champion or Not?</div>
-        <div class="tool-desc">Read the signals. One tap: real champion or friendly face? 10 rounds. The distinction closes deals.</div>
-        <div class="tool-cta">Start reading &rarr;</div>
-      </a>
+        <a href="/field-ready/filler-flags.html" class="tool-card">
+          <div class="tool-emoji">🚩</div>
+          <div class="tool-name">Filler Flags</div>
+          <div class="tool-desc">Tap every time you hear a filler phrase. See what your meetings are really made of. Mobile-friendly, so you can open it during your next call.</div>
+          <div class="tool-cta">Open &rarr;</div>
+        </a>
 
-      <a href="/field-ready/deal-tetris.html" class="tool-card">
-        <div class="tool-emoji">🎮</div>
-        <div class="tool-name">Deal Tetris</div>
-        <div class="tool-desc">Deal elements are falling. Stack the right ones in the right columns to close. Stack wrong combinations and it collapses.</div>
-        <div class="tool-cta">Start stacking &rarr;</div>
-      </a>
+        <a href="/field-ready/se-quiz.html" class="tool-card">
+          <div class="tool-emoji">🎯</div>
+          <div class="tool-name">SE Personality Quiz</div>
+          <div class="tool-desc">Ten questions, six archetypes. A quick way to understand your own strengths and the different styles on your team.</div>
+          <div class="tool-cta">Take the quiz &rarr;</div>
+        </a>
 
-      <a href="/field-ready/se-escape-room.html" class="tool-card">
-        <div class="tool-emoji">🚪</div>
-        <div class="tool-name">The SE Escape Room</div>
-        <div class="tool-desc">A deal in trouble. Five decisions. Multiple endings. How you handle each moment reveals more about your SE instincts than any training session.</div>
-        <div class="tool-cta">Enter the deal &rarr;</div>
-      </a>
+        <a href="/field-ready/pov-health.html" class="tool-card">
+          <div class="tool-emoji">🩺</div>
+          <div class="tool-name">POV Health Check</div>
+          <div class="tool-desc">8 questions about your active evaluation. Get an instant read on what's working, what's at risk, and the one thing worth addressing this week.</div>
+          <div class="tool-cta">Check your POV &rarr;</div>
+        </a>
 
-      <a href="/field-ready/pov-health.html" class="tool-card">
-        <div class="tool-emoji">🩺</div>
-        <div class="tool-name">POV Health Check</div>
-        <div class="tool-desc">8 questions about your active evaluation. Get an instant read on what's working, what's at risk, and the one thing worth addressing this week.</div>
-        <div class="tool-cta">Check your POV &rarr;</div>
-      </a>
+        <a href="/field-ready/the-fine-print.html" class="tool-card">
+          <div class="tool-emoji">🔍</div>
+          <div class="tool-name">The Fine Print</div>
+          <div class="tool-desc">Paste in a job description. Get an honest assessment of the compensation structure, technical depth, career path clarity, and things worth asking about in the interview.</div>
+          <div class="tool-cta">Read the fine print &rarr;</div>
+        </a>
 
-      <a href="/field-ready/filler-flags.html" class="tool-card">
-        <div class="tool-emoji">🚩</div>
-        <div class="tool-name">Filler Flags</div>
-        <div class="tool-desc">Tap every time you hear a filler phrase. See what your meetings are really made of. Mobile-friendly, so you can open it during your next call.</div>
-        <div class="tool-cta">Open Filler Flags →</div>
-      </a>
-
-      <a href="/field-ready/se-quiz.html" class="tool-card">
-        <div class="tool-emoji">🎯</div>
-        <div class="tool-name">SE Personality Quiz</div>
-        <div class="tool-desc">Ten questions, six archetypes. A quick way to understand your own strengths and the different styles on your team.</div>
-        <div class="tool-cta">Take the quiz →</div>
-      </a>
-
-      <a href="/field-ready/the-fine-print.html" class="tool-card">
-        <div class="tool-emoji">🔍</div>
-        <div class="tool-name">The Fine Print</div>
-        <div class="tool-desc">Paste in a job description. Get an honest assessment of the compensation structure, technical depth, career path clarity, and things worth asking about in the interview.</div>
-        <div class="tool-cta">Read the fine print →</div>
-      </a>
-
+      </div>
     </div>
+
+    <div class="section-group">
+      <div class="group-label">🎮 Games &amp; Simulations</div>
+      <div class="tools-grid">
+
+        <a href="/field-ready/objection-blaster.html" class="tool-card">
+          <div class="tool-emoji">💥</div>
+          <div class="tool-name">Objection Blaster</div>
+          <div class="tool-desc">Objections incoming. 3 seconds. Pick the right response. How long can you last?</div>
+          <div class="tool-cta">Start blasting &rarr;</div>
+        </a>
+
+        <a href="/field-ready/champion-or-not.html" class="tool-card">
+          <div class="tool-emoji">🤔</div>
+          <div class="tool-name">Champion or Not?</div>
+          <div class="tool-desc">Read the signals. One tap: real champion or friendly face? 10 rounds. The distinction closes deals.</div>
+          <div class="tool-cta">Start reading &rarr;</div>
+        </a>
+
+        <a href="/field-ready/deal-tetris.html" class="tool-card">
+          <div class="tool-emoji">🎮</div>
+          <div class="tool-name">Deal Tetris</div>
+          <div class="tool-desc">Deal elements are falling. Stack the right ones to close. Let the wrong ones pile up and it's game over.</div>
+          <div class="tool-cta">Start stacking &rarr;</div>
+        </a>
+
+        <a href="/field-ready/se-escape-room.html" class="tool-card">
+          <div class="tool-emoji">🚪</div>
+          <div class="tool-name">The SE Escape Room</div>
+          <div class="tool-desc">A deal in trouble. Five decisions. Multiple endings. How you handle each moment reveals more about your instincts than any training session.</div>
+          <div class="tool-cta">Enter the deal &rarr;</div>
+        </a>
+
+      </div>
+    </div>
+
   </div>
 
   <footer class="footer">
