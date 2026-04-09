@@ -452,23 +452,17 @@ function checkColumnOverflow() {
   const arenaTop = arena.getBoundingClientRect().top;
   for (const colId of ['people','process','commercial','risk']) {
     const colEl = document.getElementById('col-' + colId);
-    const blocks = colEl.querySelectorAll('.stacked-block');
-    if (blocks.length > 0) {
-      const topBlock = blocks[blocks.length - 1]; // last inserted = topmost visually
+    // Use visual check only -- first .stacked-block is the topmost one
+    const topBlock = colEl.querySelector('.stacked-block');
+    if (topBlock) {
       const blockTop = topBlock.getBoundingClientRect().top;
-      if (blockTop <= arenaTop + 20) {
+      if (blockTop <= arenaTop + 10) {
         gameActive = false;
         cancelAnimationFrame(rafHandle);
+        rafHandle = null;
         setTimeout(gameOver, 400);
         return;
       }
-    }
-    // Also check stack array length as fallback
-    if (stacks[colId].length >= 8) {
-      gameActive = false;
-      cancelAnimationFrame(rafHandle);
-      setTimeout(gameOver, 400);
-      return;
     }
   }
 }
