@@ -330,11 +330,33 @@ function spawnBlock() {
 function tick(timestamp) {
   if (!gameActive || !currentBlock) return;
   if (lastFrameTime === 0) lastFrameTime = timestamp;
-  const delta = Math.min((timestamp - lastFrameTime) / 1000, 0.033); // cap at 33ms (~30fps min)
+  const delta = Math.min((timestamp - lastFrameTime) / 1000, 0.033);
   lastFrameTime = timestamp;
 
   dropY += dropSpeed * delta;
   if (fallingEl) fallingEl.style.top = Math.round(dropY) + 'px';
+
+  // Check if falling block hits top of any stacked column
+  const fallingRect = fallingEl ? fallingEl.getBoundingClientRect() : null;
+  if (fallingRect) {
+    for (const col of COLUMNS) {
+      const colEl = document.getElementById('col-' + col.id);
+      const topBlock = colEl.querySelector('.stacked-block');
+      if (topBlock) {
+        const topRect = topBlock.getBoundingClientRect();
+        const colRect = colEl.getBoundingClientRect();
+        // If falling block bottom overlaps the top of the stacked blocks and is within column width
+        if (fallingRect.bottom >= topRect.top &&
+            fallingRect.left < colRect.right &&
+            fallingRect.right > colRect.left) {
+          cancelAnimationFrame(rafHandle);
+          rafHandle = null;
+          dropTo(col.id);
+          return;
+        }
+      }
+    }
+  }
 
   const threshold = window.innerHeight - 100;
   if (dropY > threshold) {
