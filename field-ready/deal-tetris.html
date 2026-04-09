@@ -390,7 +390,13 @@ function dropTo(colId) {
       }, 600);
     }
 
-    colEl.insertBefore(blockEl, colEl.querySelector('.col-label'));
+    // Insert after any existing stacked blocks so new blocks appear on top
+    const firstBlock = colEl.querySelector('.stacked-block');
+    if (firstBlock) {
+      colEl.insertBefore(blockEl, firstBlock);
+    } else {
+      colEl.insertBefore(blockEl, colEl.querySelector('.col-label'));
+    }
     stacks[colId].push({ block: blockToPlace, correct });
 
     updateHUD();
