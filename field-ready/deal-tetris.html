@@ -381,10 +381,15 @@ function dropTo(colId) {
   // Animate block to column
   const colEl = document.getElementById('col-' + colId);
   const colRect = colEl.getBoundingClientRect();
+  // Fly to top of existing stack, or bottom of column if empty
+  const topBlock = colEl.querySelector('.stacked-block');
+  const targetY = topBlock
+    ? topBlock.getBoundingClientRect().top - 10
+    : colRect.bottom - 60;
   if (fallingEl) {
     fallingEl.style.transition = 'top 0.2s ease, left 0.2s ease';
     fallingEl.style.left = (colRect.left + colRect.width / 2) + 'px';
-    fallingEl.style.top = (colRect.bottom - 60) + 'px';
+    fallingEl.style.top = targetY + 'px';
   }
 
   setTimeout(() => {
