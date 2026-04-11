@@ -18,7 +18,8 @@
     }
     html, body { height: 100%; font-family: var(--font); background: var(--bg); color: var(--text); overflow: hidden; }
 
-    .app { display: grid; grid-template-rows: 52px 1fr; grid-template-columns: 320px 1fr; height: 100vh; }
+    .app { display: grid; grid-template-rows: 52px 1fr; grid-template-columns: 320px 1fr; height: 100vh; min-height: 0; overflow: hidden; }
+    .app.sidebar-collapsed { grid-template-columns: 0 1fr; }
 
     /* HEADER */
     .header { grid-column: 1/-1; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 20px; gap: 16px; }
@@ -36,8 +37,9 @@
     .btn-danger:hover { background: rgba(239,68,68,0.25); }
 
     /* SIDEBAR */
-    .sidebar { background: var(--surface); border-right: 1px solid var(--border); overflow-y: auto; display: flex; flex-direction: column; }
-    .sidebar-section { padding: 14px 16px; border-bottom: 1px solid var(--border); }
+    .sidebar { background: var(--surface); border-right: 1px solid var(--border); overflow-y: auto; display: flex; flex-direction: column; min-height: 0; transition: width 0.2s ease; }
+    .app.sidebar-collapsed .sidebar { overflow: hidden; width: 0; border: none; }
+    .sidebar-section { padding: 14px 16px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
     .section-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); margin-bottom: 10px; }
 
     /* Stats */
@@ -139,8 +141,18 @@
     .cp-swatch { width: 28px; height: 28px; border-radius: 6px; cursor: pointer; border: 2px solid transparent; transition: border-color 0.1s; }
     .cp-swatch:hover { border-color: #fff; }
 
+    /* SIDEBAR TOGGLE */
+    .sidebar-toggle {
+      position: absolute; left: 0; top: 50%; transform: translateY(-50%);
+      z-index: 1000; background: var(--surface); border: 1px solid var(--border);
+      border-left: none; border-radius: 0 6px 6px 0;
+      width: 18px; height: 48px; display: flex; align-items: center; justify-content: center;
+      cursor: pointer; color: var(--muted); font-size: 10px; transition: color 0.15s;
+    }
+    .sidebar-toggle:hover { color: var(--text); background: var(--surface2); }
+
     /* MAP */
-    #map { position: relative; }
+    #map { position: relative; min-height: 0; overflow: hidden; }
     .leaflet-container { background: #0a0d12 !important; }
     .leaflet-control-attribution { display: none; }
     .leaflet-control-zoom a { background: var(--surface) !important; color: var(--text) !important; border-color: var(--border) !important; }
@@ -198,7 +210,7 @@
     </div>
 
     <!-- SETUP PANEL -->
-    <div id="setupPanel" class="sidebar-section" style="flex:1;overflow-y:auto;">
+    <div id="setupPanel" class="sidebar-section" style="flex:1;overflow-y:auto;min-height:0;">
       <div class="section-label">Territories</div>
       <div id="regionCards"></div>
       <button class="btn-add-region" onclick="addRegion()">+ Add Territory</button>
@@ -226,6 +238,7 @@
 
   <!-- MAP -->
   <div id="map" style="position:relative;">
+    <div class="sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()" title="Toggle sidebar">◀</div>
     <div class="map-banner" id="mapBanner">Click states to assign them to the selected territory</div>
     <div class="map-legend" id="mapLegend" style="display:none;">
       <div class="legend-title">Coverage Health</div>
@@ -627,6 +640,15 @@ function resetAll() {
   if (!confirm('Reset all territories?')) return;
   regions = []; nextId = 1; activeEditRegion = null;
   renderSidebar(); refreshMap(); updateBanner();
+}
+
+// ---- SIDEBAR TOGGLE ----
+function toggleSidebar() {
+  const app = document.querySelector('.app');
+  const btn = document.getElementById('sidebarToggle');
+  app.classList.toggle('sidebar-collapsed');
+  btn.textContent = app.classList.contains('sidebar-collapsed') ? '\u25ba' : '\u25c0';
+  setTimeout(() => map.invalidateSize(), 250);
 }
 
 // ---- INIT ----
