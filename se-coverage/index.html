@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SE Coverage Planner — Interactive Map</title>
+  <meta name="description" content="Visualize your SE coverage across territories. Identify gaps, model headcount scenarios, and build the ROI case for your next hire.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0f1117; --surface: #1a1d27; --surface2: #222533; --border: #2d3148;
+      --text: #e2e4ef; --muted: #6b7280; --accent: #6366f1;
+      --green: #10b981; --yellow: #f59e0b; --red: #ef4444; --blue: #3b82f6;
+      --font: 'Inter', system-ui, sans-serif;
+    }
+    html, body { height: 100%; font-family: var(--font); background: var(--bg); color: var(--text); overflow: hidden; }
+
+    /* LAYOUT */
+    .app { display: grid; grid-template-rows: 52px 1fr; grid-template-columns: 340px 1fr; height: 100vh; }
+
+    /* HEADER */
+    .header {
+      grid-column: 1 / -1; background: var(--surface); border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between; padding: 0 20px;
+    }
+    .header-brand { font-size: 15px; font-weight: 800; color: #fff; letter-spacing: -0.5px; display: flex; align-items: center; gap: 10px; }
+    .header-tag { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--accent); background: rgba(99,102,241,0.15); padding: 2px 8px; border-radius: 100px; }
+    .header-actions { display: flex; gap: 10px; align-items: center; }
+    .btn-sm { font-size: 12px; font-weight: 700; padding: 6px 14px; border-radius: 6px; cursor: pointer; border: none; font-family: var(--font); transition: all 0.15s; }
+    .btn-primary-sm { background: var(--accent); color: #fff; }
+    .btn-primary-sm:hover { background: #4f46e5; }
+    .btn-ghost-sm { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+    .btn-ghost-sm:hover { color: var(--text); border-color: var(--text); }
+
+    /* SIDEBAR */
+    .sidebar { background: var(--surface); border-right: 1px solid var(--border); overflow-y: auto; display: flex; flex-direction: column; }
+
+    .sidebar-section { padding: 16px; border-bottom: 1px solid var(--border); }
+    .sidebar-section:last-child { border-bottom: none; flex: 1; }
+    .section-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); margin-bottom: 12px; }
+
+    /* View toggle */
+    .view-toggle { display: flex; gap: 4px; background: var(--surface2); border-radius: 8px; padding: 3px; margin-bottom: 0; }
+    .view-btn { flex: 1; padding: 6px; border: none; background: transparent; color: var(--muted); font-family: var(--font); font-size: 12px; font-weight: 600; cursor: pointer; border-radius: 6px; transition: all 0.15s; text-align: center; }
+    .view-btn.active { background: var(--accent); color: #fff; }
+
+    /* Region rows */
+    .region-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid rgba(45,49,72,0.5); cursor: pointer; transition: background 0.1s; border-radius: 6px; padding: 8px; }
+    .region-row:hover { background: var(--surface2); }
+    .region-row:last-child { border-bottom: none; }
+    .region-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .region-name { font-size: 13px; font-weight: 600; color: var(--text); flex: 1; }
+    .region-badge { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 100px; }
+    .badge-green { background: rgba(16,185,129,0.15); color: var(--green); }
+    .badge-yellow { background: rgba(245,158,11,0.15); color: var(--yellow); }
+    .badge-red { background: rgba(239,68,68,0.15); color: var(--red); }
+    .badge-blue { background: rgba(59,130,246,0.15); color: var(--blue); }
+
+    /* Input rows */
+    .input-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+    .input-label { font-size: 12px; color: var(--muted); flex: 1; }
+    .input-num { width: 52px; background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 5px 8px; color: var(--text); font-family: var(--font); font-size: 13px; font-weight: 700; text-align: center; outline: none; }
+    .input-num:focus { border-color: var(--accent); }
+
+    /* Stats bar */
+    .stats-bar { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .stat-cell { background: var(--surface2); border-radius: 8px; padding: 10px; text-align: center; }
+    .stat-val { font-size: 20px; font-weight: 800; color: #fff; letter-spacing: -0.5px; }
+    .stat-key { font-size: 10px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
+
+    /* Scenario controls */
+    .scenario-ctrl { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+    .scenario-label { font-size: 12px; color: var(--muted); flex: 1; }
+    .scenario-val { font-size: 13px; font-weight: 700; color: var(--accent); min-width: 24px; text-align: right; }
+    input[type=range] { flex: 1; accent-color: var(--accent); }
+
+    /* Detail panel */
+    .detail-panel { background: var(--surface2); border-radius: 10px; padding: 14px; margin-top: 12px; display: none; }
+    .detail-panel.show { display: block; }
+    .detail-title { font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; }
+    .detail-close { font-size: 16px; color: var(--muted); cursor: pointer; }
+    .detail-close:hover { color: var(--text); }
+    .detail-row { display: flex; justify-content: space-between; font-size: 12px; padding: 4px 0; border-bottom: 1px solid var(--border); }
+    .detail-row:last-child { border-bottom: none; }
+    .detail-key { color: var(--muted); }
+    .detail-val { font-weight: 700; color: var(--text); }
+    .detail-val.good { color: var(--green); }
+    .detail-val.warn { color: var(--yellow); }
+    .detail-val.bad { color: var(--red); }
+
+    /* MAP */
+    #map { z-index: 1; }
+
+    /* Legend */
+    .map-legend {
+      position: absolute; bottom: 20px; right: 20px; z-index: 1000;
+      background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+      padding: 12px 16px; pointer-events: none;
+    }
+    .legend-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 8px; }
+    .legend-row { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); margin-bottom: 5px; }
+    .legend-row:last-child { margin-bottom: 0; }
+    .legend-dot { width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0; }
+
+    /* Map tooltip */
+    .leaflet-tooltip { background: var(--surface) !important; border: 1px solid var(--border) !important; color: var(--text) !important; font-family: var(--font) !important; font-size: 12px !important; border-radius: 8px !important; box-shadow: 0 4px 12px rgba(0,0,0,0.4) !important; padding: 8px 12px !important; }
+    .leaflet-tooltip::before { display: none !important; }
+    .tt-name { font-weight: 700; font-size: 13px; color: #fff; margin-bottom: 4px; }
+    .tt-stat { display: flex; justify-content: space-between; gap: 16px; }
+    .tt-key { color: var(--muted); }
+    .tt-val { font-weight: 700; }
+
+    .leaflet-container { background: #0a0d12 !important; }
+    .leaflet-control-attribution { display: none; }
+    .leaflet-control-zoom a { background: var(--surface) !important; color: var(--text) !important; border-color: var(--border) !important; }
+  </style>
+</head>
+<body>
+<div class="app">
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="header-brand">
+      <span>SE Coverage Planner</span>
+      <span class="header-tag">Beta</span>
+    </div>
+    <div class="header-actions">
+      <button class="btn-sm btn-ghost-sm" onclick="exportData()">Export CSV</button>
+      <button class="btn-sm btn-primary-sm" onclick="showROI()">View ROI Report</button>
+    </div>
+  </header>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+
+    <!-- View toggle -->
+    <div class="sidebar-section">
+      <div class="view-toggle">
+        <button class="view-btn active" onclick="setView('coverage', this)">Coverage</button>
+        <button class="view-btn" onclick="setView('scenario', this)">Scenario</button>
+        <button class="view-btn" onclick="setView('burnout', this)">Burnout Risk</button>
+      </div>
+    </div>
+
+    <!-- Summary stats -->
+    <div class="sidebar-section">
+      <div class="section-label">Team Summary</div>
+      <div class="stats-bar">
+        <div class="stat-cell"><div class="stat-val" id="totalSEs">0</div><div class="stat-key">SEs</div></div>
+        <div class="stat-cell"><div class="stat-val" id="totalAEs">0</div><div class="stat-key">AEs</div></div>
+        <div class="stat-cell"><div class="stat-val" id="overallRatio">0</div><div class="stat-key">Ratio</div></div>
+      </div>
+    </div>
+
+    <!-- Region list -->
+    <div class="sidebar-section" id="coveragePanel">
+      <div class="section-label">Regions</div>
+      <div id="regionList"></div>
+    </div>
+
+    <!-- Scenario panel -->
+    <div class="sidebar-section" id="scenarioPanel" style="display:none;">
+      <div class="section-label">Scenario: Add Headcount</div>
+      <div class="scenario-ctrl">
+        <div class="scenario-label">Additional SEs to add</div>
+        <input type="range" min="0" max="10" value="0" id="addSEs" oninput="runScenario()">
+        <div class="scenario-val" id="addSEsVal">0</div>
+      </div>
+      <div id="scenarioResult" style="font-size:13px;color:var(--muted);line-height:1.6;"></div>
+    </div>
+
+    <!-- Burnout panel -->
+    <div class="sidebar-section" id="burnoutPanel" style="display:none;">
+      <div class="section-label">Burnout Risk by Region</div>
+      <div id="burnoutList"></div>
+    </div>
+
+    <!-- Detail panel -->
+    <div class="sidebar-section">
+      <div class="detail-panel" id="detailPanel">
+        <div class="detail-title">
+          <span id="detailName">Region</span>
+          <span class="detail-close" onclick="closeDetail()">x</span>
+        </div>
+        <div id="detailRows"></div>
+        <div style="margin-top:12px;">
+          <div class="section-label" style="margin-bottom:8px;">Edit</div>
+          <div class="input-row"><div class="input-label">SEs</div><input type="number" class="input-num" id="editSEs" min="0" max="50" oninput="updateRegion('ses',this.value)"></div>
+          <div class="input-row"><div class="input-label">AEs</div><input type="number" class="input-num" id="editAEs" min="0" max="100" oninput="updateRegion('aes',this.value)"></div>
+          <div class="input-row"><div class="input-label">Pipeline ($M)</div><input type="number" class="input-num" id="editPipeline" min="0" max="999" oninput="updateRegion('pipeline',this.value)"></div>
+        </div>
+      </div>
+    </div>
+
+  </aside>
+
+  <!-- MAP -->
+  <div id="map"></div>
+
+</div>
+
+<!-- Legend -->
+<div class="map-legend">
+  <div class="legend-title">Coverage Health</div>
+  <div class="legend-row"><div class="legend-dot" style="background:rgba(16,185,129,0.7)"></div>Healthy (1:1 to 1:3)</div>
+  <div class="legend-row"><div class="legend-dot" style="background:rgba(245,158,11,0.7)"></div>Stretched (1:3 to 1:5)</div>
+  <div class="legend-row"><div class="legend-dot" style="background:rgba(239,68,68,0.7)"></div>Understaffed (&gt;1:5)</div>
+  <div class="legend-row"><div class="legend-dot" style="background:rgba(59,130,246,0.7)"></div>No SE Coverage</div>
+  <div class="legend-row"><div class="legend-dot" style="background:rgba(99,102,241,0.4)"></div>Expansion Opportunity</div>
+</div>
+
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+// ---- DATA MODEL ----
+const REGIONS = [
+  { id: 'west', name: 'West', ses: 3, aes: 9, pipeline: 28, states: ['WA','OR','CA','NV','ID','MT','WY','UT','CO','AZ','NM','AK','HI'] },
+  { id: 'central', name: 'Central', ses: 2, aes: 8, pipeline: 18, states: ['ND','SD','NE','KS','MN','IA','MO','WI','IL','IN','MI','OH','TX','OK','AR','LA','MS','AL'] },
+  { id: 'east', name: 'East', ses: 3, aes: 10, pipeline: 31, states: ['ME','NH','VT','MA','RI','CT','NY','NJ','PA','DE','MD','DC','VA','WV','NC','SC','GA','FL','KY','TN'] },
+  { id: 'south', name: 'South Central', ses: 0, aes: 4, pipeline: 9, states: ['TX','OK','AR','LA','MS','AL','TN','KY'] },
+  { id: 'northeast', name: 'Northeast', ses: 1, aes: 3, pipeline: 12, states: ['ME','NH','VT','MA','RI','CT','NY','NJ'] }
+];
+
+// Simplified approach: use state-to-region mapping for coloring
+const STATE_REGION = {};
+const REGION_DATA = {};
+REGIONS.forEach(r => {
+  REGION_DATA[r.id] = { ...r };
+  r.states.forEach(s => STATE_REGION[s] = r.id);
+});
+
+let currentView = 'coverage';
+let selectedRegion = null;
+let geoLayer = null;
+let map;
+
+// ---- MAP SETUP ----
+map = L.map('map', {
+  center: [38.5, -96],
+  zoom: 4,
+  zoomControl: true,
+  scrollWheelZoom: true,
+  preferCanvas: true
+});
+
+// Dark tile layer
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png', {
+  maxZoom: 8,
+  minZoom: 3
+}).addTo(map);
+
+// ---- LOAD US STATES GEOJSON ----
+fetch('https://raw.githubusercontent.com/PublicaMundi/MappingAPI/master/data/geojson/us-states.json')
+  .then(r => r.json())
+  .then(data => {
+    geoLayer = L.geoJSON(data, {
+      style: feature => getStyle(feature.properties.name),
+      onEachFeature: (feature, layer) => {
+        layer.on({
+          mouseover: e => highlightFeature(e, feature),
+          mouseout: e => resetHighlight(e, feature),
+          click: e => selectRegion(feature)
+        });
+      }
+    }).addTo(map);
+    renderSidebar();
+    updateStats();
+  });
+
+// ---- COLOR LOGIC ----
+function getRegionForState(stateName) {
+  // Map full state names to abbreviations
+  const nameToAbbr = {
+    'Alabama':'AL','Alaska':'AK','Arizona':'AZ','Arkansas':'AR','California':'CA',
+    'Colorado':'CO','Connecticut':'CT','Delaware':'DE','Florida':'FL','Georgia':'GA',
+    'Hawaii':'HI','Idaho':'ID','Illinois':'IL','Indiana':'IN','Iowa':'IA','Kansas':'KS',
+    'Kentucky':'KY','Louisiana':'LA','Maine':'ME','Maryland':'MD','Massachusetts':'MA',
+    'Michigan':'MI','Minnesota':'MN','Mississippi':'MS','Missouri':'MO','Montana':'MT',
+    'Nebraska':'NE','Nevada':'NV','New Hampshire':'NH','New Jersey':'NJ','New Mexico':'NM',
+    'New York':'NY','North Carolina':'NC','North Dakota':'ND','Ohio':'OH','Oklahoma':'OK',
+    'Oregon':'OR','Pennsylvania':'PA','Rhode Island':'RI','South Carolina':'SC',
+    'South Dakota':'SD','Tennessee':'TN','Texas':'TX','Utah':'UT','Vermont':'VT',
+    'Virginia':'VA','Washington':'WA','West Virginia':'WV','Wisconsin':'WI','Wyoming':'WY',
+    'District of Columbia':'DC'
+  };
+  const abbr = nameToAbbr[stateName];
+  return abbr ? STATE_REGION[abbr] : null;
+}
+
+function getCoverageColor(regionId) {
+  if (!regionId) return 'rgba(30,40,60,0.6)';
+  const r = REGION_DATA[regionId];
+  if (!r) return 'rgba(30,40,60,0.6)';
+  if (r.ses === 0) return 'rgba(59,130,246,0.55)';
+  const ratio = r.aes / r.ses;
+  if (ratio <= 3) return 'rgba(16,185,129,0.55)';
+  if (ratio <= 5) return 'rgba(245,158,11,0.55)';
+  return 'rgba(239,68,68,0.55)';
+}
+
+function getBurnoutColor(regionId) {
+  if (!regionId) return 'rgba(30,40,60,0.6)';
+  const r = REGION_DATA[regionId];
+  if (!r || r.ses === 0) return 'rgba(30,40,60,0.6)';
+  const util = r.ses > 0 ? Math.min(100, (r.aes / (r.ses * 3)) * 100) : 100;
+  if (util < 70) return 'rgba(16,185,129,0.55)';
+  if (util < 85) return 'rgba(245,158,11,0.55)';
+  return 'rgba(239,68,68,0.55)';
+}
+
+function getStyle(stateName) {
+  const regionId = getRegionForState(stateName);
+  const isSelected = selectedRegion && regionId === selectedRegion;
+  const fill = currentView === 'burnout' ? getBurnoutColor(regionId) : getCoverageColor(regionId);
+  return {
+    fillColor: fill,
+    weight: isSelected ? 2 : 0.8,
+    opacity: 1,
+    color: isSelected ? '#6366f1' : '#1a2234',
+    fillOpacity: 1
+  };
+}
+
+function highlightFeature(e, feature) {
+  const layer = e.target;
+  layer.setStyle({ weight: 2, color: '#818cf8' });
+  const regionId = getRegionForState(feature.properties.name);
+  if (regionId && REGION_DATA[regionId]) {
+    const r = REGION_DATA[regionId];
+    const ratio = r.ses > 0 ? (r.aes / r.ses).toFixed(1) : 'No SE';
+    layer.bindTooltip(`
+      <div class="tt-name">${r.name}</div>
+      <div class="tt-stat"><span class="tt-key">SEs</span><span class="tt-val">${r.ses}</span></div>
+      <div class="tt-stat"><span class="tt-key">AEs</span><span class="tt-val">${r.aes}</span></div>
+      <div class="tt-stat"><span class="tt-key">SE:AE</span><span class="tt-val">1:${ratio}</span></div>
+      <div class="tt-stat"><span class="tt-key">Pipeline</span><span class="tt-val">$${r.pipeline}M</span></div>
+    `, { sticky: true }).openTooltip(e.latlng);
+  }
+}
+
+function resetHighlight(e, feature) {
+  if (geoLayer) geoLayer.resetStyle(e.target);
+  e.target.closeTooltip();
+  refreshStyles();
+}
+
+function refreshStyles() {
+  if (!geoLayer) return;
+  geoLayer.eachLayer(layer => {
+    if (layer.feature) layer.setStyle(getStyle(layer.feature.properties.name));
+  });
+}
+
+function selectRegion(feature) {
+  const regionId = getRegionForState(feature.properties.name);
+  if (!regionId) return;
+  selectedRegion = regionId;
+  refreshStyles();
+  showDetail(regionId);
+}
+
+// ---- SIDEBAR RENDERING ----
+function renderSidebar() {
+  renderRegionList();
+  renderBurnoutList();
+  updateStats();
+}
+
+function renderRegionList() {
+  const container = document.getElementById('regionList');
+  container.innerHTML = Object.values(REGION_DATA).map(r => {
+    const ratio = r.ses > 0 ? (r.aes / r.ses).toFixed(1) : '0';
+    let badge, color;
+    if (r.ses === 0) { badge = 'No SE'; color = 'badge-blue'; }
+    else if (r.aes / r.ses <= 3) { badge = 'Healthy'; color = 'badge-green'; }
+    else if (r.aes / r.ses <= 5) { badge = 'Stretched'; color = 'badge-yellow'; }
+    else { badge = 'Critical'; color = 'badge-red'; }
+    const dotColor = r.ses === 0 ? '#3b82f6' : r.aes/r.ses <= 3 ? '#10b981' : r.aes/r.ses <= 5 ? '#f59e0b' : '#ef4444';
+    return `<div class="region-row" onclick="showDetail('${r.id}')">
+      <div class="region-dot" style="background:${dotColor}"></div>
+      <div class="region-name">${r.name}</div>
+      <div class="region-badge ${color}">${badge}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderBurnoutList() {
+  const container = document.getElementById('burnoutList');
+  container.innerHTML = Object.values(REGION_DATA).map(r => {
+    const util = r.ses > 0 ? Math.min(100, Math.round((r.aes / (r.ses * 3)) * 100)) : 100;
+    let badge, color;
+    if (r.ses === 0) { badge = 'No data'; color = 'badge-blue'; }
+    else if (util < 70) { badge = `${util}% util`; color = 'badge-green'; }
+    else if (util < 85) { badge = `${util}% util`; color = 'badge-yellow'; }
+    else { badge = `${util}% util`; color = 'badge-red'; }
+    return `<div class="region-row" onclick="showDetail('${r.id}')">
+      <div class="region-dot" style="background:${color === 'badge-green' ? '#10b981' : color === 'badge-yellow' ? '#f59e0b' : color === 'badge-red' ? '#ef4444' : '#3b82f6'}"></div>
+      <div class="region-name">${r.name}</div>
+      <div class="region-badge ${color}">${badge}</div>
+    </div>`;
+  }).join('');
+}
+
+function updateStats() {
+  const totalSEs = Object.values(REGION_DATA).reduce((s, r) => s + r.ses, 0);
+  const totalAEs = Object.values(REGION_DATA).reduce((s, r) => s + r.aes, 0);
+  document.getElementById('totalSEs').textContent = totalSEs;
+  document.getElementById('totalAEs').textContent = totalAEs;
+  document.getElementById('overallRatio').textContent = totalSEs > 0 ? `1:${(totalAEs/totalSEs).toFixed(1)}` : 'N/A';
+}
+
+// ---- DETAIL PANEL ----
+function showDetail(regionId) {
+  selectedRegion = regionId;
+  refreshStyles();
+  const r = REGION_DATA[regionId];
+  const ratio = r.ses > 0 ? (r.aes / r.ses).toFixed(1) : 'N/A';
+  const util = r.ses > 0 ? Math.min(100, Math.round((r.aes / (r.ses * 3)) * 100)) : 0;
+  const pipelinePerSE = r.ses > 0 ? (r.pipeline / r.ses).toFixed(1) : r.pipeline;
+  const ratioClass = !r.ses ? 'bad' : r.aes/r.ses <= 3 ? 'good' : r.aes/r.ses <= 5 ? 'warn' : 'bad';
+  const utilClass = util < 70 ? 'good' : util < 85 ? 'warn' : 'bad';
+
+  document.getElementById('detailName').textContent = r.name;
+  document.getElementById('detailRows').innerHTML = `
+    <div class="detail-row"><span class="detail-key">SE:AE Ratio</span><span class="detail-val ${ratioClass}">1:${ratio}</span></div>
+    <div class="detail-row"><span class="detail-key">SEs</span><span class="detail-val">${r.ses}</span></div>
+    <div class="detail-row"><span class="detail-key">AEs</span><span class="detail-val">${r.aes}</span></div>
+    <div class="detail-row"><span class="detail-key">Pipeline</span><span class="detail-val">$${r.pipeline}M</span></div>
+    <div class="detail-row"><span class="detail-key">Pipeline/SE</span><span class="detail-val">$${pipelinePerSE}M</span></div>
+    <div class="detail-row"><span class="detail-key">Utilization</span><span class="detail-val ${utilClass}">${util}%</span></div>
+  `;
+  document.getElementById('editSEs').value = r.ses;
+  document.getElementById('editAEs').value = r.aes;
+  document.getElementById('editPipeline').value = r.pipeline;
+  document.getElementById('detailPanel').classList.add('show');
+}
+
+function closeDetail() {
+  selectedRegion = null;
+  document.getElementById('detailPanel').classList.remove('show');
+  refreshStyles();
+}
+
+function updateRegion(field, val) {
+  if (!selectedRegion) return;
+  const v = parseFloat(val) || 0;
+  if (field === 'ses') REGION_DATA[selectedRegion].ses = v;
+  if (field === 'aes') REGION_DATA[selectedRegion].aes = v;
+  if (field === 'pipeline') REGION_DATA[selectedRegion].pipeline = v;
+  showDetail(selectedRegion);
+  renderSidebar();
+  refreshStyles();
+}
+
+// ---- VIEW SWITCHING ----
+function setView(view, btn) {
+  currentView = view;
+  document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('coveragePanel').style.display = view === 'coverage' ? '' : 'none';
+  document.getElementById('scenarioPanel').style.display = view === 'scenario' ? '' : 'none';
+  document.getElementById('burnoutPanel').style.display = view === 'burnout' ? '' : 'none';
+  refreshStyles();
+  if (view === 'scenario') runScenario();
+}
+
+// ---- SCENARIO PLANNING ----
+function runScenario() {
+  const add = parseInt(document.getElementById('addSEs').value);
+  document.getElementById('addSEsVal').textContent = add;
+
+  if (add === 0) {
+    document.getElementById('scenarioResult').innerHTML = 'Move the slider to model adding SEs to your team.';
+    return;
+  }
+
+  // Find most understaffed region(s)
+  const sorted = Object.values(REGION_DATA)
+    .filter(r => r.aes > 0)
+    .sort((a, b) => (b.aes / Math.max(b.ses,1)) - (a.aes / Math.max(a.ses,1)));
+
+  const avgWinRateLift = 0.22;
+  const avgDealSize = 85000;
+  const seCost = 287500;
+  const incrementalDeals = add * sorted[0].aes * avgWinRateLift;
+  const incrementalARR = Math.round(incrementalDeals * avgDealSize);
+  const netValue = incrementalARR - (add * seCost);
+
+  document.getElementById('scenarioResult').innerHTML = `
+    <strong style="color:#fff">Adding ${add} SE${add > 1 ? 's' : ''}</strong><br><br>
+    Best placement: <strong style="color:#818cf8">${sorted[0].name}</strong> (ratio 1:${(sorted[0].aes/Math.max(sorted[0].ses,1)).toFixed(1)})<br><br>
+    Estimated incremental ARR: <strong style="color:#10b981">$${(incrementalARR/1000).toFixed(0)}K</strong><br>
+    SE cost (loaded): <strong style="color:#f59e0b">$${((add * seCost)/1000).toFixed(0)}K</strong><br>
+    Net value Year 1: <strong style="color:${netValue > 0 ? '#10b981' : '#ef4444'}">$${(netValue/1000).toFixed(0)}K</strong><br>
+    ROI: <strong style="color:#6366f1">${Math.round((netValue/((add*seCost)))*100)}%</strong>
+  `;
+}
+
+// ---- EXPORT / ROI ----
+function exportData() {
+  const rows = [['Region','SEs','AEs','SE:AE Ratio','Pipeline ($M)','Pipeline/SE ($M)','Utilization %']];
+  Object.values(REGION_DATA).forEach(r => {
+    const ratio = r.ses > 0 ? (r.aes/r.ses).toFixed(1) : 'N/A';
+    const util = r.ses > 0 ? Math.min(100, Math.round((r.aes/(r.ses*3))*100)) : 0;
+    rows.push([r.name, r.ses, r.aes, `1:${ratio}`, r.pipeline, r.ses > 0 ? (r.pipeline/r.ses).toFixed(1) : r.pipeline, util]);
+  });
+  const csv = rows.map(r => r.join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'se-coverage-plan.csv';
+  a.click();
+}
+
+function showROI() {
+  const totalSEs = Object.values(REGION_DATA).reduce((s, r) => s + r.ses, 0);
+  const totalAEs = Object.values(REGION_DATA).reduce((s, r) => s + r.aes, 0);
+  const totalPipeline = Object.values(REGION_DATA).reduce((s, r) => s + r.pipeline, 0);
+  const roi = totalSEs > 0 ? Math.round(((totalPipeline * 0.42 * 85000) - (totalSEs * 287500)) / (totalSEs * 287500) * 100) : 0;
+  alert(`SE Coverage ROI Summary\n\nTeam: ${totalSEs} SEs supporting ${totalAEs} AEs\nOverall ratio: 1:${(totalAEs/totalSEs).toFixed(1)}\nTotal pipeline: $${totalPipeline}M\n\nEstimated annual ROI from SE investment: ${roi}%\n\n(Full report available in the complete SE Coverage Planner)`);
+}
+</script>
+</body>
+</html>
