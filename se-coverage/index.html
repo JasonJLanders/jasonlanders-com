@@ -16,9 +16,9 @@
       --green: #10b981; --yellow: #f59e0b; --red: #ef4444; --blue: #3b82f6;
       --font: 'Inter', system-ui, sans-serif;
     }
-    html, body { height: 100%; font-family: var(--font); background: var(--bg); color: var(--text); overflow: hidden; }
+    html, body { height: 100%; max-height: 100%; font-family: var(--font); background: var(--bg); color: var(--text); overflow: hidden; position: fixed; width: 100%; top: 0; left: 0; }
 
-    .app { display: grid; grid-template-rows: 52px 1fr; grid-template-columns: 320px 1fr; height: 100vh; overflow: hidden; }
+    .app { display: grid; grid-template-rows: 52px 1fr; grid-template-columns: 320px 1fr; position: fixed; top: 0; left: 0; right: 0; bottom: 0; overflow: hidden; }
     .app.sidebar-collapsed { grid-template-columns: 0 1fr; }
 
     /* HEADER */
@@ -154,7 +154,7 @@
     .sidebar-toggle:hover { color: var(--text); background: var(--surface2); }
 
     /* MAP */
-    #map { position: relative; min-height: 0; overflow: hidden; }
+    #map { position: relative; overflow: hidden; min-height: 0; }
     .leaflet-container { background: #0a0d12 !important; }
     .leaflet-control-attribution { display: none; }
     .leaflet-control-zoom a { background: var(--surface) !important; color: var(--text) !important; border-color: var(--border) !important; }
