@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -18,7 +18,7 @@
     }
     html, body { height: 100%; font-family: var(--font); background: var(--bg); color: var(--text); overflow: hidden; }
 
-    .app { display: grid; grid-template-rows: 52px 1fr; grid-template-columns: 320px 1fr; height: 100vh; min-height: 0; overflow: hidden; }
+    .app { display: grid; grid-template-rows: 52px 1fr; grid-template-columns: 320px 1fr; height: 100vh; overflow: hidden; }
     .app.sidebar-collapsed { grid-template-columns: 0 1fr; }
 
     /* HEADER */
@@ -37,8 +37,10 @@
     .btn-danger:hover { background: rgba(239,68,68,0.25); }
 
     /* SIDEBAR */
-    .sidebar { background: var(--surface); border-right: 1px solid var(--border); overflow-y: auto; display: flex; flex-direction: column; min-height: 0; transition: width 0.2s ease; }
-    .app.sidebar-collapsed .sidebar { overflow: hidden; width: 0; border: none; }
+    .sidebar { background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; height: 100%; overflow: hidden; transition: all 0.2s ease; }
+    .app.sidebar-collapsed .sidebar { width: 0; border: none; }
+    .sidebar-fixed { flex-shrink: 0; }
+    .sidebar-scroll { flex: 1; overflow-y: auto; min-height: 0; display: flex; flex-direction: column; }
     .sidebar-section { padding: 14px 16px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
     .section-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); margin-bottom: 10px; }
 
@@ -200,7 +202,9 @@
 
   <!-- SIDEBAR -->
   <aside class="sidebar">
-    <div class="sidebar-section">
+
+    <!-- Stats: fixed, always visible -->
+    <div class="sidebar-section" style="flex-shrink:0;">
       <div class="section-label">Team Overview</div>
       <div class="stats-bar">
         <div class="stat-cell"><div class="stat-val" id="totalSEs">0</div><div class="stat-key">Total SEs</div></div>
@@ -209,22 +213,24 @@
       </div>
     </div>
 
-    <!-- SETUP PANEL -->
-    <div id="setupPanel" class="sidebar-section" style="flex:1;overflow-y:auto;min-height:0;">
-      <div class="section-label">Territories</div>
-      <div id="regionCards"></div>
-      <button class="btn-add-region" onclick="addRegion()">+ Add Territory</button>
-    </div>
+    <!-- Scrollable content -->
+    <div style="flex:1;overflow-y:auto;min-height:0;display:flex;flex-direction:column;">
 
-    <!-- ANALYSIS PANEL -->
-    <div id="analysisPanel" class="sidebar-section" style="display:none;flex:1;overflow-y:auto;">
-      <div class="section-label">Coverage by Territory</div>
-      <div id="analysisList"></div>
-    </div>
+      <!-- SETUP PANEL -->
+      <div id="setupPanel" style="padding:14px 16px;display:flex;flex-direction:column;flex:1;">
+        <div class="section-label">Territories</div>
+        <div id="regionCards"></div>
+        <button class="btn-add-region" onclick="addRegion()" style="flex-shrink:0;margin-top:8px;">+ Add Territory</button>
+      </div>
 
-    <!-- SCENARIO PANEL -->
-    <div id="scenarioPanel" style="display:none;">
-      <div class="sidebar-section">
+      <!-- ANALYSIS PANEL -->
+      <div id="analysisPanel" style="display:none;padding:14px 16px;">
+        <div class="section-label">Coverage by Territory</div>
+        <div id="analysisList"></div>
+      </div>
+
+      <!-- SCENARIO PANEL -->
+      <div id="scenarioPanel" style="display:none;padding:14px 16px;">
         <div class="section-label">Scenario Planning</div>
         <div class="scenario-ctrl">
           <div class="scenario-label">Additional SEs to add</div>
@@ -233,6 +239,7 @@
         </div>
         <div class="scenario-result" id="scenarioResult">Move the slider to model adding SEs to your team.</div>
       </div>
+
     </div>
   </aside>
 
