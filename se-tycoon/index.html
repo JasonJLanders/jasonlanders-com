@@ -96,6 +96,11 @@
     .event-tag.market { color: var(--yellow); }
     .event-title { font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 5px; }
     .event-desc { font-size: 13px; color: var(--muted); line-height: 1.6; }
+    .event-effects { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); }
+    .effect-pill { font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 100px; }
+    .ep-pos { background: rgba(16,185,129,0.15); color: var(--green); }
+    .ep-neg { background: rgba(239,68,68,0.15); color: var(--red); }
+    .ep-neu { background: rgba(99,102,241,0.15); color: #818cf8; }
 
     /* GLOBAL ACTIONS */
     .global-section { padding: 0 16px 14px; }
@@ -435,6 +440,16 @@ function renderEvent() {
   document.getElementById('eventTitle').textContent = e.title;
   document.getElementById('eventDesc').textContent = e.desc;
   document.getElementById('eventCard').style.borderLeftColor = colors[e.type];
+  // Show what the event actually did
+  const pills = buildEffectPills(e.effect);
+  let effectsEl = document.getElementById('eventEffects');
+  if (!effectsEl) {
+    effectsEl = document.createElement('div');
+    effectsEl.id = 'eventEffects';
+    effectsEl.className = 'event-effects';
+    document.getElementById('eventCard').appendChild(effectsEl);
+  }
+  effectsEl.innerHTML = pills;
 }
 
 // ---- ACTIONS ----
@@ -554,6 +569,35 @@ function nextQuarter() {
   renderHUD(); renderRegions(); renderEvent(); renderGlobalActions();
   closeRegionPanel();
   showScreen('game');
+}
+
+function buildEffectPills(ef) {
+  if (!ef) return '';
+  const pills = [];
+  if (ef.budget) pills.push(`<span class="effect-pill ep-pos">+${fmt(ef.budget)} budget</span>`);
+  if (ef.pipeline) Object.entries(ef.pipeline).forEach(([r,v]) => {
+    const name = gs.regions[r]?.name || r;
+    pills.push(`<span class="effect-pill ${v>0?'ep-pos':'ep-neg'}">${v>0?'+':''}${v}M pipeline in ${name}</span>`);
+  });
+  if (ef.morale) Object.entries(ef.morale).forEach(([r,v]) => {
+    const name = gs.regions[r]?.name || r;
+    pills.push(`<span class="effect-pill ${v>0?'ep-pos':'ep-neg'}">${v>0?'+':''}${v} morale in ${name}</span>`);
+  });
+  if (ef.winRate) Object.entries(ef.winRate).forEach(([r,v]) => {
+    const name = gs.regions[r]?.name || r;
+    const pct = Math.round(v*100);
+    pills.push(`<span class="effect-pill ${v>0?'ep-pos':'ep-neg'}">${v>0?'+':''}${pct}% win rate in ${name}</span>`);
+  });
+  if (ef.aes) Object.entries(ef.aes).forEach(([r,v]) => {
+    const name = gs.regions[r]?.name || r;
+    pills.push(`<span class="effect-pill ep-neg">+${v} AEs in ${name} (SE ratio worsens)</span>`);
+  });
+  if (ef.leaveRisk) Object.keys(ef.leaveRisk).forEach(r => {
+    const name = gs.regions[r]?.name || r;
+    pills.push(`<span class="effect-pill ep-neg">Attrition risk in ${name}</span>`);
+  });
+  if (ef.aiAvailable) pills.push(`<span class="effect-pill ep-neu">AI tools available this quarter</span>`);
+  return pills.join('');
 }
 
 function applyEventEffects(ef) {
