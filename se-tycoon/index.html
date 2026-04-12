@@ -550,7 +550,9 @@ function resolveQuarter() {
   const onTrack = gs.revenue >= (gs.target * gs.quarter / 4);
   document.getElementById('resEmoji').textContent = quarterRev >= gs.target/4*0.8 ? '📈' : '📉';
   document.getElementById('resTitle').textContent = quarterRev >= gs.target/4*0.8 ? 'Strong quarter' : 'Below target';
-  document.getElementById('resSub').textContent = `Q${gs.quarter} closed. ${fmt(quarterRev)} revenue generated.`;
+  // Debug: show actual vs expected in subtitle
+  const qTarget = Math.round(gs.target / 4);
+  document.getElementById('resSub').textContent = `Q${gs.quarter} closed. Generated ${fmt(quarterRev)} of ${fmt(qTarget)} quarterly target.`;
 
   const rows = [
     { k: 'Revenue this quarter', v: fmt(quarterRev), c: quarterRev >= gs.target/4*0.8 ? 'pos' : 'neg' },
