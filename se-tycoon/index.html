@@ -273,14 +273,14 @@ const REGION_DEFS = [
 
 // ---- EVENTS ----
 const EVENTS = [
-  { type:'opportunity', title:'Pipeline surge in Central', desc:'Three enterprise accounts just entered evaluation in Central. You have only 1 SE there -- win rates will suffer without better coverage.', effect:{ pipeline:{ central:10 }, winRate:{ central:-0.08 } } },
+  { type:'opportunity', title:'Pipeline surge in Central', desc:'Three enterprise accounts just entered evaluation in Central. Win rates will suffer if the team is stretched thin.', effect:{ pipeline:{ central:10 }, winRate:{ central:-0.08 } } },
   { type:'opportunity', title:'Competitor lost two SEs', desc:"Your main competitor's East team lost two SEs. Their accounts are in play. If your East team has capacity, this is a window.", effect:{ pipeline:{ east:7 } } },
   { type:'opportunity', title:'AI tools just launched', desc:'New AI demo automation tools are available. Teams that adopt them are reporting 20% more capacity without adding headcount.', effect:{ aiAvailable:true } },
   { type:'opportunity', title:'Strong inbound quarter', desc:'Industry tailwinds are strong. Inbound pipeline is up 15% across all regions. More to work with -- but also more to manage.', effect:{ pipeline:{ west:4, central:3, east:5 } } },
-  { type:'disruption', title:'Your top SE in West got a competing offer', desc:'Your best SE in West received an offer 25% above their current comp. If you do nothing, there is a real chance they leave this quarter.', effect:{ morale:{ west:-18 }, leaveRisk:{ west:true } } },
+  { type:'disruption', title:'Your top SE in West got a competing offer', descFn: gs => `Your best SE in West received an offer 25% above their current comp. West currently has ${gs.regions.west.ses} SE${gs.regions.west.ses !== 1 ? 's' : ''} -- losing one would hurt. If you do nothing, there is a real chance they leave.`, effect:{ morale:{ west:-18 }, leaveRisk:{ west:true } } },
   { type:'opportunity', title:'Board approved expansion budget', desc:'Your CFO approved an additional \ for SE headcount this quarter. The timing is good -- several regions are stretched.', effect:{ budget:200 } },
   { type:'disruption', title:'POV stall in East', desc:'Three major POVs in East have gone quiet for 6 weeks. Champions may have changed roles. Your East team morale is suffering.', effect:{ pipeline:{ east:-8 }, morale:{ east:-14 } } },
-  { type:'disruption', title:'AE team doubled in West', desc:'Sales hired 5 new AEs in West with no SE adjustment. SE:AE ratio jumped to 1:4.3. Win rates will fall this quarter if you do nothing.', effect:{ aes:{ west:5 }, winRate:{ west:-0.10 } } },
+  { type:'disruption', title:'AE team doubled in West', descFn: gs => { const r = gs.regions.west; const newRatio = ((r.aes+5)/Math.max(r.ses,1)).toFixed(1); return `Sales just hired 5 new AEs in West with no SE adjustment. Your SE:AE ratio there jumps to 1:${newRatio}. Win rates will fall this quarter if you do nothing.`; }, effect:{ aes:{ west:5 }, winRate:{ west:-0.10 } } },
   { type:'market', title:'Macro slowdown', desc:'Deal cycles are extending 30 days industry-wide. Budget approvals are slower. Close rates are declining across the board.', effect:{ winRate:{ west:-0.05, central:-0.05, east:-0.05 } } },
   { type:'market', title:'New competitor entered your market', desc:'A well-funded startup is disrupting your core market with aggressive pricing. Win rates down 8% in competitive deals.', effect:{ winRate:{ west:-0.08, central:-0.08, east:-0.08 } } },
   { type:'market', title:'Analyst report favors your category', desc:'A major analyst published favorably on your solution category. Discovery call volume is up 25%. Your SEs have more to work with.', effect:{ pipeline:{ west:5, central:4, east:6 } } }
@@ -439,7 +439,7 @@ function renderEvent() {
   document.getElementById('eventTag').textContent = e.type.toUpperCase();
   document.getElementById('eventTag').className = `event-tag ${e.type}`;
   document.getElementById('eventTitle').textContent = e.title;
-  document.getElementById('eventDesc').textContent = e.desc;
+  document.getElementById('eventDesc').textContent = e.descFn ? e.descFn(gs) : e.desc;
   document.getElementById('eventCard').style.borderLeftColor = colors[e.type];
   // Show what the event actually did
   const pills = buildEffectPills(e.effect);
