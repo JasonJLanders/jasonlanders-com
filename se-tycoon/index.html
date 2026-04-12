@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>SE Manager Tycoon</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #080c14; --surface: #111827; --surface2: #1a2234; --border: #1e2d45;
+      --text: #e2e8f0; --muted: #64748b; --accent: #6366f1; --accent-dark: #4f46e5;
+      --green: #10b981; --yellow: #f59e0b; --red: #ef4444; --orange: #f97316; --blue: #3b82f6;
+      --font: 'Inter', system-ui, sans-serif;
+    }
+    html, body { height: 100%; font-family: var(--font); background: var(--bg); color: var(--text); overflow-x: hidden; }
+
+    /* ---- SCREENS ---- */
+    .screen { display: none; }
+    .screen.active { display: flex; flex-direction: column; min-height: 100vh; }
+
+    /* ---- SHARED ---- */
+    .btn {
+      border: none; border-radius: 10px; font-family: var(--font); font-weight: 700;
+      cursor: pointer; transition: all 0.15s; display: inline-flex; align-items: center;
+      justify-content: center; gap: 8px;
+    }
+    .btn-accent { background: var(--accent); color: #fff; padding: 14px 28px; font-size: 15px; }
+    .btn-accent:hover { background: var(--accent-dark); }
+    .btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); padding: 10px 18px; font-size: 13px; }
+    .btn-ghost:hover { border-color: var(--text); color: var(--text); }
+    .btn-green { background: rgba(16,185,129,0.15); color: var(--green); border: 1px solid rgba(16,185,129,0.4); padding: 12px 20px; font-size: 14px; }
+    .btn-green:hover { background: rgba(16,185,129,0.25); }
+    .btn-yellow { background: rgba(245,158,11,0.15); color: var(--yellow); border: 1px solid rgba(245,158,11,0.4); padding: 12px 20px; font-size: 14px; }
+    .btn-yellow:hover { background: rgba(245,158,11,0.25); }
+    .btn-red { background: rgba(239,68,68,0.15); color: var(--red); border: 1px solid rgba(239,68,68,0.4); padding: 12px 20px; font-size: 14px; }
+    .btn-red:hover { background: rgba(239,68,68,0.25); }
+    .btn-disabled { opacity: 0.4; pointer-events: none; }
+
+    /* ---- INTRO ---- */
+    #intro {
+      align-items: center; justify-content: center; text-align: center;
+      padding: 40px 24px;
+      background: radial-gradient(ellipse at 50% 20%, rgba(99,102,241,0.18) 0%, transparent 60%), var(--bg);
+    }
+    .intro-tag { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--accent); margin-bottom: 14px; }
+    .intro-title { font-size: clamp(38px, 8vw, 64px); font-weight: 900; letter-spacing: -2.5px; color: #fff; line-height: 1.0; margin-bottom: 10px; }
+    .intro-subtitle { font-size: 17px; color: var(--muted); line-height: 1.65; margin-bottom: 32px; max-width: 480px; }
+    .intro-stats { display: flex; gap: 24px; justify-content: center; flex-wrap: wrap; margin-bottom: 36px; }
+    .intro-stat { text-align: center; }
+    .intro-stat-val { font-size: 28px; font-weight: 900; color: #fff; letter-spacing: -1px; }
+    .intro-stat-key { font-size: 11px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+    .intro-note { font-size: 13px; color: var(--muted); margin-top: 14px; }
+
+    /* ---- GAME ---- */
+    #game { padding: 0; }
+
+    /* HUD */
+    .hud {
+      background: var(--surface); border-bottom: 1px solid var(--border);
+      padding: 10px 16px; display: flex; align-items: center; gap: 12px;
+      flex-wrap: wrap; flex-shrink: 0;
+    }
+    .hud-item { display: flex; flex-direction: column; align-items: center; min-width: 56px; }
+    .hud-val { font-size: 18px; font-weight: 900; color: #fff; letter-spacing: -0.5px; line-height: 1; }
+    .hud-key { font-size: 9px; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
+    .hud-divider { width: 1px; height: 32px; background: var(--border); }
+    .hud-spacer { flex: 1; }
+    .quarter-badge { background: var(--accent); color: #fff; font-size: 11px; font-weight: 700; padding: 4px 12px; border-radius: 100px; }
+
+    /* MAP */
+    .map-section { background: var(--surface2); border-bottom: 1px solid var(--border); padding: 14px 16px; }
+    .map-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; }
+    .region-tile {
+      border-radius: 10px; padding: 12px; border: 2px solid transparent;
+      cursor: pointer; transition: all 0.15s; position: relative; overflow: hidden;
+    }
+    .region-tile:hover { transform: translateY(-1px); }
+    .region-tile.selected { border-color: #fff !important; }
+    .region-tile.healthy { background: rgba(16,185,129,0.12); border-color: rgba(16,185,129,0.35); }
+    .region-tile.stretched { background: rgba(245,158,11,0.10); border-color: rgba(245,158,11,0.35); }
+    .region-tile.critical { background: rgba(239,68,68,0.12); border-color: rgba(239,68,68,0.35); }
+    .region-tile.empty { background: rgba(59,130,246,0.08); border-color: rgba(59,130,246,0.3); border-style: dashed; }
+    .region-tile.opportunity { animation: pulse-blue 2s infinite; }
+    @keyframes pulse-blue { 0%,100%{ border-color:rgba(99,102,241,0.5); } 50%{ border-color:rgba(99,102,241,1); } }
+    .rt-name { font-size: 12px; font-weight: 700; color: #fff; margin-bottom: 6px; }
+    .rt-stats { display: flex; gap: 8px; flex-wrap: wrap; }
+    .rt-stat { font-size: 11px; color: var(--muted); }
+    .rt-stat span { font-weight: 700; color: var(--text); }
+    .rt-badge { position: absolute; top: 8px; right: 8px; font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 100px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .rt-badge.healthy { background: rgba(16,185,129,0.2); color: var(--green); }
+    .rt-badge.stretched { background: rgba(245,158,11,0.2); color: var(--yellow); }
+    .rt-badge.critical { background: rgba(239,68,68,0.2); color: var(--red); }
+    .rt-badge.empty { background: rgba(59,130,246,0.2); color: var(--blue); }
+    .rt-morale { margin-top: 8px; }
+    .morale-bar-bg { background: rgba(255,255,255,0.08); border-radius: 100px; height: 4px; }
+    .morale-bar-fill { height: 100%; border-radius: 100px; transition: width 0.5s ease; }
+
+    /* EVENT SECTION */
+    .event-section { padding: 14px 16px; border-bottom: 1px solid var(--border); }
+    .event-card {
+      background: var(--surface); border-radius: 12px; padding: 16px;
+      border-left: 4px solid var(--accent); animation: slideIn 0.3s ease;
+    }
+    @keyframes slideIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+    .event-tag { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+    .event-tag.opportunity { color: var(--green); }
+    .event-tag.disruption { color: var(--red); }
+    .event-tag.market { color: var(--yellow); }
+    .event-title { font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 6px; }
+    .event-desc { font-size: 14px; color: var(--muted); line-height: 1.6; }
+
+    /* ACTIONS */
+    .actions-section { padding: 14px 16px; }
+    .actions-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); margin-bottom: 12px; }
+    .actions-label span { color: var(--accent); }
+    .actions-grid { display: flex; flex-direction: column; gap: 8px; }
+    .action-btn {
+      display: flex; align-items: center; gap: 12px; padding: 12px 14px;
+      background: var(--surface); border: 1.5px solid var(--border); border-radius: 10px;
+      cursor: pointer; transition: all 0.15s; text-align: left; font-family: var(--font);
+    }
+    .action-btn:hover:not(.used):not(.locked) { border-color: var(--accent); background: rgba(99,102,241,0.08); }
+    .action-btn.used { opacity: 0.4; pointer-events: none; }
+    .action-btn.locked { opacity: 0.3; pointer-events: none; }
+    .action-icon { font-size: 22px; flex-shrink: 0; }
+    .action-content { flex: 1; }
+    .action-name { font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 2px; }
+    .action-desc { font-size: 12px; color: var(--muted); line-height: 1.4; }
+    .action-cost { font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 100px; flex-shrink: 0; }
+    .cost-budget { background: rgba(239,68,68,0.12); color: var(--red); }
+    .cost-time { background: rgba(245,158,11,0.12); color: var(--yellow); }
+    .cost-free { background: rgba(16,185,129,0.12); color: var(--green); }
+
+    .resolve-btn-wrap { padding: 16px; border-top: 1px solid var(--border); }
+    .resolve-btn { width: 100%; padding: 16px; border-radius: 12px; background: var(--accent); color: #fff; border: none; font-family: var(--font); font-size: 16px; font-weight: 800; cursor: pointer; transition: background 0.15s; }
+    .resolve-btn:hover { background: var(--accent-dark); }
+
+    /* RESOLUTION ---- */
+    #resolution { padding: 24px; }
+    .resolution-header { text-align: center; margin-bottom: 24px; }
+    .resolution-emoji { font-size: 48px; margin-bottom: 12px; }
+    .resolution-title { font-size: 26px; font-weight: 900; color: #fff; letter-spacing: -0.5px; margin-bottom: 6px; }
+    .resolution-sub { font-size: 15px; color: var(--muted); }
+    .resolution-results { display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px; }
+    .result-row { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px; display: flex; justify-content: space-between; align-items: center; }
+    .result-label { font-size: 14px; color: var(--muted); }
+    .result-val { font-size: 16px; font-weight: 800; }
+    .result-val.positive { color: var(--green); }
+    .result-val.negative { color: var(--red); }
+    .result-val.neutral { color: var(--text); }
+
+    /* GAME OVER ---- */
+    #gameover {
+      align-items: center; justify-content: flex-start; padding: 32px 24px 60px;
+      background: radial-gradient(ellipse at 50% 0%, rgba(99,102,241,0.12) 0%, transparent 60%), var(--bg);
+    }
+    .go-inner { width: 100%; max-width: 480px; margin: 0 auto; }
+    .go-header { text-align: center; margin-bottom: 28px; }
+    .go-emoji { font-size: 56px; margin-bottom: 14px; }
+    .go-title { font-size: 30px; font-weight: 900; color: #fff; letter-spacing: -1px; margin-bottom: 8px; }
+    .go-sub { font-size: 15px; color: var(--muted); line-height: 1.6; }
+    .score-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 20px; }
+    .score-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px; text-align: center; }
+    .score-num { font-size: 26px; font-weight: 900; color: #fff; letter-spacing: -1px; }
+    .score-lbl { font-size: 10px; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 3px; }
+    .lesson-box { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 18px; margin-bottom: 20px; }
+    .lesson-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: var(--accent); margin-bottom: 10px; }
+    .lesson-text { font-size: 14px; color: var(--muted); line-height: 1.65; }
+    .lesson-text strong { color: var(--text); }
+    .cta-box { background: var(--accent); border-radius: 14px; padding: 22px; text-align: center; margin-bottom: 16px; }
+    .cta-box h3 { font-size: 17px; font-weight: 700; color: #fff; margin-bottom: 6px; }
+    .cta-box p { font-size: 13px; color: rgba(255,255,255,0.8); margin-bottom: 16px; line-height: 1.5; }
+    .cta-btn { display: inline-block; background: #fff; color: var(--accent); padding: 12px 24px; border-radius: 8px; font-weight: 700; font-size: 14px; text-decoration: none; }
+    .go-actions { display: flex; flex-direction: column; gap: 10px; }
+    .btn-play-again { background: var(--accent); color: #fff; border: none; border-radius: 12px; padding: 15px; font-family: var(--font); font-size: 16px; font-weight: 800; cursor: pointer; }
+    .btn-play-again:hover { background: var(--accent-dark); }
+  </style>
+</head>
+<body>
+
+<!-- INTRO -->
+<div class="screen active" id="intro">
+  <div class="intro-tag">Field Ready</div>
+  <h1 class="intro-title">SE Manager<br>Tycoon</h1>
+  <p class="intro-subtitle">You're the new Director of Sales Engineering. Four quarters. Limited budget. Randomized events. Can you hit your revenue target without burning out your team?</p>
+  <div class="intro-stats">
+    <div class="intro-stat"><div class="intro-stat-val">4</div><div class="intro-stat-key">Quarters</div></div>
+    <div class="intro-stat"><div class="intro-stat-val">5</div><div class="intro-stat-key">Regions</div></div>
+    <div class="intro-stat"><div class="intro-stat-val">20+</div><div class="intro-stat-key">Events</div></div>
+    <div class="intro-stat"><div class="intro-stat-val">4</div><div class="intro-stat-key">Endings</div></div>
+  </div>
+  <button class="btn btn-accent" onclick="startGame()" style="font-size:18px;padding:18px 48px;">Start your first quarter</button>
+  <p class="intro-note">Based on real SE management challenges &nbsp;·&nbsp; Field Ready by Jason Landers</p>
+</div>
+
+<!-- GAME -->
+<div class="screen" id="game">
+  <!-- HUD -->
+  <div class="hud">
+    <div class="hud-item"><div class="hud-val" id="hudRevenue">$0</div><div class="hud-key">Revenue</div></div>
+    <div class="hud-divider"></div>
+    <div class="hud-item"><div class="hud-val" id="hudTarget">$0</div><div class="hud-key">Target</div></div>
+    <div class="hud-divider"></div>
+    <div class="hud-item"><div class="hud-val" id="hudBudget">$0</div><div class="hud-key">SE Budget</div></div>
+    <div class="hud-divider"></div>
+    <div class="hud-item"><div class="hud-val" id="hudMorale">😊</div><div class="hud-key">Morale</div></div>
+    <div class="hud-spacer"></div>
+    <div class="quarter-badge" id="quarterBadge">Q1</div>
+  </div>
+
+  <!-- REGIONS MAP -->
+  <div class="map-section">
+    <div class="map-grid" id="mapGrid"></div>
+  </div>
+
+  <!-- EVENT -->
+  <div class="event-section">
+    <div class="event-card" id="eventCard">
+      <div class="event-tag" id="eventTag"></div>
+      <div class="event-title" id="eventTitle"></div>
+      <div class="event-desc" id="eventDesc"></div>
+    </div>
+  </div>
+
+  <!-- ACTIONS -->
+  <div class="actions-section">
+    <div class="actions-label">Choose your actions <span id="actionsLeft">(2 remaining)</span></div>
+    <div class="actions-grid" id="actionsGrid"></div>
+  </div>
+
+  <div class="resolve-btn-wrap">
+    <button class="resolve-btn" id="resolveBtn" onclick="resolveQuarter()">End Quarter →</button>
+  </div>
+</div>
+
+<!-- RESOLUTION -->
+<div class="screen" id="resolution">
+  <div class="resolution-header">
+    <div class="resolution-emoji" id="resEmoji"></div>
+    <div class="resolution-title" id="resTitle"></div>
+    <div class="resolution-sub" id="resSub"></div>
+  </div>
+  <div class="resolution-results" id="resResults"></div>
+  <div style="padding:0 0 20px;">
+    <button class="btn btn-accent" style="width:100%" onclick="nextQuarter()">Continue →</button>
+  </div>
+</div>
+
+<!-- GAME OVER -->
+<div class="screen" id="gameover">
+  <div class="go-inner">
+    <div class="go-header">
+      <div class="go-emoji" id="goEmoji"></div>
+      <div class="go-title" id="goTitle"></div>
+      <div class="go-sub" id="goSub"></div>
+    </div>
+    <div class="score-grid">
+      <div class="score-card"><div class="score-num" id="goRevenue"></div><div class="score-lbl">Final Revenue</div></div>
+      <div class="score-card"><div class="score-num" id="goAttain"></div><div class="score-lbl">Attainment</div></div>
+      <div class="score-card"><div class="score-num" id="goMorale"></div><div class="score-lbl">Avg Morale</div></div>
+      <div class="score-card"><div class="score-num" id="goTurnover"></div><div class="score-lbl">SE Turnover</div></div>
+    </div>
+    <div class="lesson-box">
+      <div class="lesson-title">What this run taught you</div>
+      <div class="lesson-text" id="goLesson"></div>
+    </div>
+    <div class="cta-box">
+      <h3>Make these decisions with real data</h3>
+      <p>The SE Coverage Planner gives you the actual models behind this game -- territory design, headcount ROI, and burnout risk -- so you can make these calls with numbers, not instinct.</p>
+      <a href="https://jasonlanders.com/se-coverage" class="cta-btn">Try the real tool →</a>
+    </div>
+    <div class="go-actions">
+      <button class="btn-play-again" onclick="restartGame()">Play again</button>
+    </div>
+    <div style="text-align:center;margin-top:20px;">
+      <a href="https://jasonlanders.com/field-ready" style="font-size:12px;color:var(--muted);text-decoration:none;">← Field Ready by Jason Landers</a>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// GAME DATA
+// ============================================================
+
+const INITIAL_REGIONS = [
+  { id: 'west', name: 'West', ses: 3, aes: 8, morale: 80, winRate: 0.44, pipeline: 26 },
+  { id: 'central', name: 'Central', ses: 1, aes: 7, morale: 65, winRate: 0.33, pipeline: 18 },
+  { id: 'east', name: 'East', ses: 3, aes: 10, morale: 70, winRate: 0.40, pipeline: 30 },
+  { id: 'south', name: 'South', ses: 0, aes: 5, morale: 50, winRate: 0.20, pipeline: 12 },
+  { id: 'apac', name: 'APAC', ses: 1, aes: 3, morale: 75, winRate: 0.38, pipeline: 8 }
+];
+
+const EVENTS = [
+  // OPPORTUNITY
+  { type: 'opportunity', title: 'Pipeline surge in Central', desc: 'Three major enterprise accounts just entered evaluation in Central. Your team there has capacity, but only one SE. Win rates will suffer without more coverage.', effect: { regionPipeline: { central: +12 }, winRateDebuff: { central: -0.10 } } },
+  { type: 'opportunity', title: 'Competitor lost two SEs', desc: 'Your main competitor\'s East team lost two SEs this week. Their accounts are now in play. Your East team is well-positioned if they have capacity.', effect: { regionPipeline: { east: +8 } } },
+  { type: 'opportunity', title: 'Series C company in South', desc: 'A $200M Series C company just entered your ICP in the South. No SE coverage there. This is a $400K opportunity sitting undefended.', effect: { regionPipeline: { south: +15 }, urgent: true } },
+  { type: 'opportunity', title: 'AI demo tool launch', desc: 'A new AI demo automation tool is available. Teams that adopt it are reporting 20% more demo capacity. Your team could handle more accounts without hiring.', effect: { capacityBoost: true } },
+  // DISRUPTION
+  { type: 'disruption', title: 'Your best SE got a competing offer', desc: 'Your top-performing SE in West received an offer at 25% above their current comp. Morale in West is fragile. If they leave, win rates drop immediately.', effect: { regionMorale: { west: -20 }, leaveRisk: { west: true } } },
+  { type: 'disruption', title: 'CFO wants to cut 1 SE headcount', desc: 'Finance is pushing for a 10% cost reduction. They\'re targeting your SE budget. You can protect all headcount or sacrifice one to hit the number.', effect: { budgetPressure: true } },
+  { type: 'disruption', title: 'POV stall in East', desc: 'Three major POVs in East have gone quiet. All three champions may have changed roles internally. Your East SE team is demoralized after the silence.', effect: { regionPipeline: { east: -10 }, regionMorale: { east: -15 } } },
+  { type: 'disruption', title: 'Engineering org reorg', desc: 'Your company\'s engineering team reorganized. Several SEs are now unclear on their reporting structure and career path. Morale is dropping across the board.', effect: { globalMorale: -10 } },
+  { type: 'disruption', title: 'AE team doubled in West', desc: 'Sales just hired 5 new AEs in West with no SE headcount adjustment. SE:AE ratio jumped to 1:5.5. Win rates will fall this quarter if not addressed.', effect: { regionAEs: { west: 5 }, winRateDebuff: { west: -0.12 } } },
+  // MARKET
+  { type: 'market', title: 'Macro slowdown', desc: 'Deal cycles are extending 30 days industry-wide. Budget approvals are slower. Your pipeline coverage needs to increase to compensate for lower close rates.', effect: { globalWinRate: -0.05 } },
+  { type: 'market', title: 'New competitor entered your market', desc: 'A well-funded startup entered your core market with aggressive pricing. Win rates are dropping 8% in competitive situations. Your SEs need competitive prep.', effect: { globalWinRate: -0.08 } },
+  { type: 'market', title: 'Strong demand quarter', desc: 'Industry tailwinds are strong this quarter. Inbound pipeline is up 20% across most regions. Your SEs have more to work with but also more to manage.', effect: { globalPipeline: 0.15 } },
+  { type: 'market', title: 'Analyst report favors your category', desc: 'A major analyst published a favorable report on your solution category. Discovery call volume is up, but close rates haven\'t moved yet. Pipeline is building.', effect: { globalPipeline: 0.20 } }
+];
+
+const ACTIONS = [
+  { id: 'hire', icon: '👤', name: 'Hire an SE', desc: 'Add 1 SE to your most understaffed region. Takes 1 quarter to ramp.', cost: '$290K budget', costType: 'budget',
+    apply: (gs) => {
+      const worst = getWorstRegion(gs);
+      gs.regions[worst].ses += 1;
+      gs.regions[worst].morale = Math.min(100, gs.regions[worst].morale + 10);
+      gs.budget -= 290;
+      gs.pendingRamp = gs.pendingRamp || {};
+      gs.pendingRamp[worst] = (gs.pendingRamp[worst] || 0) + 1;
+      return `Hired 1 SE for ${gs.regions[worst].name}. They will be ramped next quarter.`;
+    }
+  },
+  { id: 'reallocate', icon: '🔄', name: 'Reallocate an SE', desc: 'Move an SE from your most overstaffed region to the most understaffed.', cost: '1 quarter productivity', costType: 'time',
+    apply: (gs) => {
+      const best = getBestRegion(gs);
+      const worst = getWorstRegion(gs);
+      if (gs.regions[best].ses <= 1) return 'Cannot reallocate -- no region has spare SEs.';
+      gs.regions[best].ses -= 1;
+      gs.regions[worst].ses += 1;
+      gs.regions[worst].morale -= 10; // adjustment period
+      return `Moved 1 SE from ${gs.regions[best].name} to ${gs.regions[worst].name}. Expect a productivity dip this quarter.`;
+    }
+  },
+  { id: 'ai_tools', icon: '🤖', name: 'Deploy AI toolkit', desc: 'Give your SEs CoWork-style AI tools. Each SE handles 15% more capacity this quarter.', cost: '$40K one-time', costType: 'budget',
+    apply: (gs) => {
+      if (gs.aiDeployed) return 'AI toolkit already deployed this year.';
+      gs.aiDeployed = true;
+      gs.budget -= 40;
+      Object.keys(gs.regions).forEach(r => gs.regions[r].winRate = Math.min(0.65, gs.regions[r].winRate + 0.05));
+      return 'AI toolkit deployed across all regions. Win rates up 5% this quarter from better prep and faster follow-up.';
+    }
+  },
+  { id: 'focus_fire', icon: '🎯', name: 'Focus fire a deal', desc: 'Assign your best SE full-time to one major opportunity this quarter.', cost: 'Free this quarter', costType: 'free',
+    apply: (gs) => {
+      const boost = 120;
+      gs.focusFireBoost = (gs.focusFireBoost || 0) + boost;
+      return `Focus fire activated. One major deal gets full SE attention -- expect $${boost}K additional ARR this quarter if it closes.`;
+    }
+  },
+  { id: 'summit', icon: '🏔️', name: 'Run an SE summit', desc: 'Organize a team summit to rebuild morale and share best practices. Takes a full week.', cost: '1 quarter capacity', costType: 'time',
+    apply: (gs) => {
+      Object.keys(gs.regions).forEach(r => {
+        gs.regions[r].morale = Math.min(100, gs.regions[r].morale + 20);
+        gs.regions[r].winRate = Math.min(0.65, gs.regions[r].winRate + 0.03);
+      });
+      gs.budget -= 30;
+      return 'Summit completed. Team morale up 20 across all regions. Win rates improved from shared best practices.';
+    }
+  },
+  { id: 'nothing', icon: '💰', name: 'Hold budget', desc: 'Take no action this quarter. Bank the budget and build goodwill with finance.', cost: 'Free', costType: 'free',
+    apply: (gs) => {
+      gs.budget += 50;
+      gs.cfoCred = (gs.cfoCred || 0) + 1;
+      return 'Budget held. Finance appreciates the discipline. You\'ve built goodwill for a future headcount request.';
+    }
+  }
+];
+
+// ============================================================
+// GAME STATE
+// ============================================================
+
+let gs = {};
+
+function initGameState() {
+  gs = {
+    quarter: 1,
+    revenue: 0,
+    target: 8000, // $8M annual target
+    budget: 1500, // $1.5M SE budget
+    totalTurnover: 0,
+    moraleHistory: [],
+    actionsUsed: [],
+    actionsAllowed: 2,
+    currentEvent: null,
+    pendingRamp: {},
+    focusFireBoost: 0,
+    aiDeployed: false,
+    cfoCred: 0,
+    regions: {}
+  };
+  INITIAL_REGIONS.forEach(r => {
+    gs.regions[r.id] = { ...r };
+  });
+}
+
+// ============================================================
+// HELPERS
+// ============================================================
+
+function getWorstRegion(state) {
+  return Object.entries(state.regions)
+    .sort((a, b) => (b[1].aes / Math.max(b[1].ses, 1)) - (a[1].aes / Math.max(a[1].ses, 1)))[0][0];
+}
+
+function getBestRegion(state) {
+  return Object.entries(state.regions)
+    .filter(([,r]) => r.ses > 1)
+    .sort((a, b) => (a[1].aes / Math.max(a[1].ses, 1)) - (b[1].aes / Math.max(b[1].ses, 1)))[0]?.[0] || 'west';
+}
+
+function getRegionStatus(r) {
+  if (r.ses === 0) return 'empty';
+  const ratio = r.aes / r.ses;
+  if (ratio <= 3) return 'healthy';
+  if (ratio <= 5) return 'stretched';
+  return 'critical';
+}
+
+function getMoraleEmoji(avg) {
+  if (avg >= 75) return '😊';
+  if (avg >= 55) return '😐';
+  if (avg >= 35) return '😟';
+  return '😰';
+}
+
+function formatMoney(k) {
+  if (k >= 1000) return `$${(k/1000).toFixed(1)}M`;
+  return `$${k}K`;
+}
+
+// ============================================================
+// RENDER
+// ============================================================
+
+function renderMap() {
+  const grid = document.getElementById('mapGrid');
+  grid.innerHTML = Object.values(gs.regions).map(r => {
+    const status = getRegionStatus(r);
+    const ratio = r.ses > 0 ? `1:${(r.aes/r.ses).toFixed(1)}` : 'No SE';
+    const moraleColor = r.morale >= 70 ? '#10b981' : r.morale >= 45 ? '#f59e0b' : '#ef4444';
+    return `
+      <div class="region-tile ${status}" onclick="selectRegion('${r.id}')">
+        <div class="rt-badge ${status}">${status === 'empty' ? 'Uncovered' : status}</div>
+        <div class="rt-name">${r.name}</div>
+        <div class="rt-stats">
+          <div class="rt-stat"><span>${r.ses}</span> SEs</div>
+          <div class="rt-stat"><span>${r.aes}</span> AEs</div>
+          <div class="rt-stat"><span>${ratio}</span></div>
+        </div>
+        <div class="rt-morale">
+          <div class="morale-bar-bg"><div class="morale-bar-fill" style="width:${r.morale}%;background:${moraleColor}"></div></div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderEvent() {
+  const e = gs.currentEvent;
+  document.getElementById('eventTag').textContent = e.type.toUpperCase();
+  document.getElementById('eventTag').className = `event-tag ${e.type}`;
+  document.getElementById('eventTitle').textContent = e.title;
+  document.getElementById('eventDesc').textContent = e.desc;
+  const colors = { opportunity: '#10b981', disruption: '#ef4444', market: '#f59e0b' };
+  document.getElementById('eventCard').style.borderLeftColor = colors[e.type] || '#6366f1';
+}
+
+function renderActions() {
+  const grid = document.getElementById('actionsGrid');
+  const remaining = gs.actionsAllowed - gs.actionsUsed.length;
+  document.getElementById('actionsLeft').textContent = `(${remaining} remaining)`;
+
+  grid.innerHTML = ACTIONS.map(a => {
+    const isUsed = gs.actionsUsed.includes(a.id);
+    const isLocked = !isUsed && remaining === 0;
+    const costClass = { budget: 'cost-budget', time: 'cost-time', free: 'cost-free' }[a.costType];
+    return `
+      <button class="action-btn ${isUsed ? 'used' : ''} ${isLocked ? 'locked' : ''}" onclick="takeAction('${a.id}')">
+        <div class="action-icon">${a.icon}</div>
+        <div class="action-content">
+          <div class="action-name">${a.name}</div>
+          <div class="action-desc">${a.desc}</div>
+        </div>
+        <div class="action-cost ${costClass}">${a.cost}</div>
+      </button>
+    `;
+  }).join('');
+}
+
+function renderHUD() {
+  const avgMorale = Math.round(Object.values(gs.regions).reduce((s,r) => s+r.morale, 0) / Object.values(gs.regions).length);
+  document.getElementById('hudRevenue').textContent = formatMoney(gs.revenue);
+  document.getElementById('hudTarget').textContent = formatMoney(gs.target);
+  document.getElementById('hudBudget').textContent = formatMoney(gs.budget);
+  document.getElementById('hudMorale').textContent = getMoraleEmoji(avgMorale);
+  document.getElementById('quarterBadge').textContent = `Q${gs.quarter}`;
+}
+
+// ============================================================
+// GAME LOGIC
+// ============================================================
+
+function startGame() {
+  initGameState();
+  loadNextQuarter();
+  showScreen('game');
+}
+
+function loadNextQuarter() {
+  // Apply pending ramp completions
+  if (gs.pendingRamp) {
+    Object.keys(gs.pendingRamp).forEach(r => {
+      gs.regions[r].winRate = Math.min(0.65, gs.regions[r].winRate + 0.02 * gs.pendingRamp[r]);
+    });
+    gs.pendingRamp = {};
+  }
+
+  // Pick random event
+  const pool = EVENTS.filter(e => e.title !== gs.currentEvent?.title);
+  gs.currentEvent = pool[Math.floor(Math.random() * pool.length)];
+  applyEventEffects(gs.currentEvent.effect);
+
+  gs.actionsUsed = [];
+  gs.focusFireBoost = 0;
+
+  renderHUD();
+  renderMap();
+  renderEvent();
+  renderActions();
+}
+
+function applyEventEffects(effect) {
+  if (!effect) return;
+  if (effect.regionPipeline) Object.entries(effect.regionPipeline).forEach(([r,v]) => { if (gs.regions[r]) gs.regions[r].pipeline = Math.max(0, gs.regions[r].pipeline + v); });
+  if (effect.regionMorale) Object.entries(effect.regionMorale).forEach(([r,v]) => { if (gs.regions[r]) gs.regions[r].morale = Math.max(0, Math.min(100, gs.regions[r].morale + v)); });
+  if (effect.regionAEs) Object.entries(effect.regionAEs).forEach(([r,v]) => { if (gs.regions[r]) gs.regions[r].aes += v; });
+  if (effect.winRateDebuff) Object.entries(effect.winRateDebuff).forEach(([r,v]) => { if (gs.regions[r]) gs.regions[r].winRate = Math.max(0.1, gs.regions[r].winRate + v); });
+  if (effect.globalMorale) Object.keys(gs.regions).forEach(r => gs.regions[r].morale = Math.max(0, Math.min(100, gs.regions[r].morale + effect.globalMorale)));
+  if (effect.globalWinRate) Object.keys(gs.regions).forEach(r => gs.regions[r].winRate = Math.max(0.1, gs.regions[r].winRate + effect.globalWinRate));
+  if (effect.globalPipeline) Object.keys(gs.regions).forEach(r => gs.regions[r].pipeline = Math.round(gs.regions[r].pipeline * (1 + effect.globalPipeline)));
+}
+
+function takeAction(actionId) {
+  if (gs.actionsUsed.includes(actionId)) return;
+  if (gs.actionsUsed.length >= gs.actionsAllowed) return;
+  const action = ACTIONS.find(a => a.id === actionId);
+  if (!action) return;
+  const msg = action.apply(gs);
+  gs.actionsUsed.push(actionId);
+  renderHUD();
+  renderMap();
+  renderActions();
+  // Brief flash feedback
+  const btn = document.querySelector(`[onclick="takeAction('${actionId}')"]`);
+  if (btn) { btn.style.borderColor = '#10b981'; setTimeout(() => renderActions(), 800); }
+}
+
+function selectRegion(id) {
+  // Future: show region detail on tap
+}
+
+function resolveQuarter() {
+  // Calculate quarterly revenue
+  let quarterRevenue = 0;
+  const results = [];
+  let burnoutCount = 0;
+
+  Object.values(gs.regions).forEach(r => {
+    if (r.ses === 0) return;
+
+    // Morale affects win rate
+    const moraleMultiplier = r.morale >= 70 ? 1.0 : r.morale >= 50 ? 0.9 : r.morale >= 30 ? 0.75 : 0.55;
+    // Ratio affects win rate
+    const ratio = r.aes / r.ses;
+    const ratioMultiplier = ratio <= 2 ? 1.1 : ratio <= 3 ? 1.0 : ratio <= 5 ? 0.85 : 0.65;
+
+    const effectiveWinRate = r.winRate * moraleMultiplier * ratioMultiplier;
+    const deals = Math.round(r.pipeline * effectiveWinRate / 85); // avg $85K deal
+    const rev = deals * 85;
+    quarterRevenue += rev;
+
+    // Morale decay from overload
+    const moraleChange = ratio > 5 ? -15 : ratio > 3.5 ? -8 : ratio <= 2 ? +5 : -3;
+    r.morale = Math.max(10, Math.min(100, r.morale + moraleChange));
+
+    // Burnout check
+    if (r.morale < 30) {
+      burnoutCount++;
+      gs.totalTurnover++;
+      r.ses = Math.max(0, r.ses - 1);
+    }
+
+    results.push({ region: r.name, rev, winRate: Math.round(effectiveWinRate * 100), morale: r.morale });
+  });
+
+  quarterRevenue += gs.focusFireBoost || 0;
+  gs.revenue += quarterRevenue;
+  gs.focusFireBoost = 0;
+
+  const avgMorale = Math.round(Object.values(gs.regions).reduce((s,r) => s+r.morale, 0) / Object.values(gs.regions).length);
+  gs.moraleHistory.push(avgMorale);
+
+  // Show resolution screen
+  document.getElementById('resEmoji').textContent = quarterRevenue >= gs.target / 4 ? '📈' : '📉';
+  document.getElementById('resTitle').textContent = quarterRevenue >= gs.target / 4 ? 'Strong quarter' : 'Below target';
+  document.getElementById('resSub').textContent = `Q${gs.quarter} closed. ${formatMoney(quarterRevenue)} ARR generated.`;
+
+  const resEl = document.getElementById('resResults');
+  resEl.innerHTML = [
+    { label: 'Revenue this quarter', val: formatMoney(quarterRevenue), cls: quarterRevenue >= gs.target/4 ? 'positive' : 'negative' },
+    { label: 'Total revenue to date', val: formatMoney(gs.revenue), cls: 'neutral' },
+    { label: 'Target progress', val: `${Math.round(gs.revenue/gs.target*100)}%`, cls: gs.revenue >= gs.target * gs.quarter/4 ? 'positive' : 'negative' },
+    { label: 'Average team morale', val: `${avgMorale}%`, cls: avgMorale >= 60 ? 'positive' : avgMorale >= 40 ? 'neutral' : 'negative' },
+    ...(burnoutCount > 0 ? [{ label: 'SEs lost to burnout', val: burnoutCount.toString(), cls: 'negative' }] : [])
+  ].map(r => `<div class="result-row"><div class="result-label">${r.label}</div><div class="result-val ${r.cls}">${r.val}</div></div>`).join('');
+
+  showScreen('resolution');
+}
+
+function nextQuarter() {
+  if (gs.quarter >= 4 || gs.totalTurnover >= 3 || gs.budget < -200) {
+    endGame();
+    return;
+  }
+  gs.quarter++;
+  loadNextQuarter();
+  showScreen('game');
+}
+
+function endGame() {
+  const attainment = Math.round(gs.revenue / gs.target * 100);
+  const avgMorale = gs.moraleHistory.length > 0 ? Math.round(gs.moraleHistory.reduce((a,b) => a+b,0)/gs.moraleHistory.length) : 50;
+
+  let emoji, title, sub, lesson;
+  if (attainment >= 90 && avgMorale >= 60 && gs.totalTurnover === 0) {
+    emoji = '🏆'; title = 'SE Director of the Year';
+    sub = `${attainment}% revenue attainment, team morale healthy, zero turnover. You balanced growth and people.`;
+    lesson = `<strong>What you got right:</strong> You didn't just chase revenue. You protected your team's capacity while still hitting the number. The SEs who stayed engaged closed better deals. That's the pattern that scales.`;
+  } else if (attainment >= 75) {
+    emoji = '✅'; title = 'Solid Year';
+    sub = `${attainment}% attainment. Revenue was there. Team had some strain but held together.`;
+    lesson = `<strong>The tradeoff you made:</strong> Revenue came at some cost to the team. In year two, you'd be rebuilding morale while trying to grow. The best SE leaders don't run their teams at 100% -- they run them at 80% so they can sprint when it matters.`;
+  } else if (gs.totalTurnover >= 3) {
+    emoji = '😰'; title = 'The Team Broke';
+    sub = `You lost too many SEs to burnout. Revenue suffered and the cost of replacement will hurt next year.`;
+    lesson = `<strong>What happened:</strong> Overloaded SEs don't just perform worse -- they leave. And replacing a Senior SE costs 1.5-2x their salary in recruiting and ramp time. The headcount you saved by not hiring cost more in attrition than a hire would have.`;
+  } else {
+    emoji = '📉'; title = 'Missed the Number';
+    sub = `${attainment}% attainment. Undercoverage in key regions left pipeline on the table.`;
+    lesson = `<strong>Where the deals slipped:</strong> Understaffed regions have lower win rates. Every deal you lost in an uncovered region had an SE headcount decision at its root. The ROI on a single well-placed SE hire is often 3-5x their cost in incremental closed revenue.`;
+  }
+
+  document.getElementById('goEmoji').textContent = emoji;
+  document.getElementById('goTitle').textContent = title;
+  document.getElementById('goSub').textContent = sub;
+  document.getElementById('goRevenue').textContent = formatMoney(gs.revenue);
+  document.getElementById('goAttain').textContent = `${attainment}%`;
+  document.getElementById('goMorale').textContent = `${avgMorale}%`;
+  document.getElementById('goTurnover').textContent = gs.totalTurnover;
+  document.getElementById('goLesson').innerHTML = lesson;
+
+  showScreen('gameover');
+}
+
+function restartGame() { showScreen('intro'); }
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0, 0);
+}
+</script>
+</body>
+</html>
