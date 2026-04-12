@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -273,7 +273,7 @@ const EVENTS = [
   { type:'opportunity', title:'AI tools just launched', desc:'New AI demo automation tools are available. Teams that adopt them are reporting 20% more capacity without adding headcount.', effect:{ aiAvailable:true } },
   { type:'opportunity', title:'Strong inbound quarter', desc:'Industry tailwinds are strong. Inbound pipeline is up 15% across all regions. More to work with -- but also more to manage.', effect:{ pipeline:{ west:4, central:3, east:5 } } },
   { type:'disruption', title:'Your top SE in West got a competing offer', desc:'Your best SE in West received an offer 25% above their current comp. If you do nothing, there is a real chance they leave this quarter.', effect:{ morale:{ west:-18 }, leaveRisk:{ west:true } } },
-  { type:'disruption', title:'CFO wants to cut 1 SE headcount', desc:'Finance is targeting your SE budget for a 10% cost reduction. You can protect all headcount or sacrifice one position to hit the number.', effect:{ budgetPressure:true } },
+  { type:'opportunity', title:'Board approved expansion budget', desc:'Your CFO approved an additional \ for SE headcount this quarter. The timing is good -- several regions are stretched.', effect:{ budget:200 } },
   { type:'disruption', title:'POV stall in East', desc:'Three major POVs in East have gone quiet for 6 weeks. Champions may have changed roles. Your East team morale is suffering.', effect:{ pipeline:{ east:-8 }, morale:{ east:-14 } } },
   { type:'disruption', title:'AE team doubled in West', desc:'Sales hired 5 new AEs in West with no SE adjustment. SE:AE ratio jumped to 1:4.3. Win rates will fall this quarter if you do nothing.', effect:{ aes:{ west:5 }, winRate:{ west:-0.10 } } },
   { type:'market', title:'Macro slowdown', desc:'Deal cycles are extending 30 days industry-wide. Budget approvals are slower. Close rates are declining across the board.', effect:{ winRate:{ west:-0.05, central:-0.05, east:-0.05 } } },
@@ -562,6 +562,7 @@ function applyEventEffects(ef) {
   if (ef.morale) Object.entries(ef.morale).forEach(([r,v]) => { if (gs.regions[r]) gs.regions[r].morale = Math.max(10, Math.min(100, gs.regions[r].morale + v)); });
   if (ef.winRate) Object.entries(ef.winRate).forEach(([r,v]) => { if (gs.regions[r]) gs.regions[r].winRate = Math.max(0.12, gs.regions[r].winRate + v); });
   if (ef.aes) Object.entries(ef.aes).forEach(([r,v]) => { if (gs.regions[r]) gs.regions[r].aes += v; });
+  if (ef.budget) gs.budget += ef.budget;
 }
 
 function endGame() {
