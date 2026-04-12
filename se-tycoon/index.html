@@ -275,7 +275,7 @@ const REGION_DEFS = [
 const EVENTS = [
   { type:'opportunity', title:'Pipeline surge in Central', desc:'Three enterprise accounts just entered evaluation in Central. Win rates will suffer if the team is stretched thin.', effect:{ pipeline:{ central:10 }, winRate:{ central:-0.08 } } },
   { type:'opportunity', title:'Competitor lost two SEs', desc:"Your main competitor's East team lost two SEs. Their accounts are in play. If your East team has capacity, this is a window.", effect:{ pipeline:{ east:7 } } },
-  { type:'opportunity', title:'AI tools just launched', desc:'New AI demo automation tools are available. Teams that adopt them are reporting 20% more capacity without adding headcount.', effect:{ aiAvailable:true } },
+  { type:'opportunity', title:'AI tools just launched', desc:'New AI demo automation tools are available. Teams that adopt them are reporting 20% more capacity. The toolkit is free to deploy this quarter only -- normally $40K.', effect:{ aiAvailable:true } },
   { type:'opportunity', title:'Strong inbound quarter', desc:'Industry tailwinds are strong. Inbound pipeline is up 15% across all regions. More to work with -- but also more to manage.', effect:{ pipeline:{ west:4, central:3, east:5 } } },
   { type:'disruption', title:'Your top SE in West got a competing offer', descFn: gs => `Your best SE in West received an offer 25% above their current comp. West currently has ${gs.regions.west.ses} SE${gs.regions.west.ses !== 1 ? 's' : ''} -- losing one would hurt. If you do nothing, there is a real chance they leave.`, effect:{ morale:{ west:-18 }, leaveRisk:{ west:true } } },
   { type:'opportunity', title:'Board approved expansion budget', desc:'Your CFO approved an additional \ for SE headcount this quarter. The timing is good -- several regions are stretched.', effect:{ budget:200 } },
@@ -321,11 +321,15 @@ const REGION_ACTIONS = [
 // ---- GLOBAL ACTIONS (1 per quarter total) ----
 const GLOBAL_ACTIONS = [
   { id:'ai_tools', icon:'🤖', name:'Deploy AI toolkit', desc:'All regions get AI-powered prep workflows. Win rate +4% everywhere.', cost:'$40K', costType:'b',
+    costDisplay() { return gs.aiAvailableFree ? 'FREE this quarter!' : '$40K'; },
+    costTypeDisplay() { return gs.aiAvailableFree ? 'f' : 'b'; },
     apply(gs) {
       if (gs.aiDeployed) return 'AI toolkit already deployed.';
-      gs.aiDeployed = true; gs.budget -= 40;
+      gs.aiDeployed = true;
+      if (!gs.aiAvailableFree) gs.budget -= 40;
+      gs.aiAvailableFree = false;
       Object.keys(gs.regions).forEach(r => gs.regions[r].winRate = Math.min(0.65, gs.regions[r].winRate + 0.04));
-      return 'AI toolkit deployed across all regions.';
+      return 'AI toolkit deployed across all regions. Win rate +4% everywhere.';
     }
   },
   { id:'summit', icon:'🏔️', name:'Company-wide SE summit', desc:'Rebuild morale and share best practices across all regions. Morale +15 everywhere.', cost:'$30K', costType:'b',
@@ -422,13 +426,15 @@ function renderGlobalActions() {
   document.getElementById('globalActions').innerHTML = GLOBAL_ACTIONS.map(a => {
     const isUsed = usedGlobalAction === a.id;
     const isLocked = usedGlobalAction && usedGlobalAction !== a.id;
-    const cc = {b:'cost-b',t:'cost-t',f:'cost-f'}[a.costType];
+    const dynamicCostType = a.costTypeDisplay ? a.costTypeDisplay() : a.costType;
+    const dynamicCost = a.costDisplay ? a.costDisplay() : a.cost;
+    const cc = {b:'cost-b',t:'cost-t',f:'cost-f'}[dynamicCostType];
     // Hide AI tools only if already deployed from a previous quarter (not just used this quarter)
     if (a.id === 'ai_tools' && gs.aiDeployed && !isUsed) return '';
     return `<button class="rp-action${isUsed?' used':''}${isLocked?' locked':''}" onclick="takeGlobalAction('${a.id}')">
       <div class="rp-icon">${a.icon}</div>
-      <div class="rp-content"><div class="rp-name">${a.name}${isUsed?' &nbsp;✓':''}</div><div class="rp-desc">${a.desc}</div></div>
-      <div class="rp-cost ${cc}">${isUsed ? 'Used' : a.cost}</div>
+      <div class="rp-content"><div class="rp-name">${a.name}${isUsed?' &nbsp;\u2713':''}</div><div class="rp-desc">${a.desc}</div></div>
+      <div class="rp-cost ${cc}">${isUsed ? 'Used' : dynamicCost}</div>
     </button>`;
   }).join('');
 }
@@ -564,7 +570,7 @@ function resolveQuarter() {
 function nextQuarter() {
   if (gs.quarter >= 4 || gs.totalTurnover >= 3) { endGame(); return; }
   gs.quarter++;
-  usedRegionActions = {}; usedGlobalAction = null; selectedRegion = null;
+  usedRegionActions = {}; usedGlobalAction = null; selectedRegion = null; gs.aiAvailableFree = false;
   gs.currentEvent = pickEvent();
   applyEventEffects(gs.currentEvent.effect);
   renderHUD(); renderRegions(); renderEvent(); renderGlobalActions();
@@ -608,6 +614,7 @@ function applyEventEffects(ef) {
   if (ef.winRate) Object.entries(ef.winRate).forEach(([r,v]) => { if (gs.regions[r]) gs.regions[r].winRate = Math.max(0.12, gs.regions[r].winRate + v); });
   if (ef.aes) Object.entries(ef.aes).forEach(([r,v]) => { if (gs.regions[r]) gs.regions[r].aes += v; });
   if (ef.budget) gs.budget += ef.budget;
+  if (ef.aiAvailable) gs.aiAvailableFree = true; // unlock free AI toolkit this quarter
 }
 
 function endGame() {
