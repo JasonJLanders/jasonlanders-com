@@ -409,8 +409,8 @@ function renderRegionPanel(rid) {
     const cc = {b:'cost-b',t:'cost-t',f:'cost-f'}[a.costType];
     return `<button class="rp-action${isUsed?' used':''}${isLocked?' locked':''}" onclick="takeRegionAction('${rid}','${a.id}')">
       <div class="rp-icon">${a.icon}</div>
-      <div class="rp-content"><div class="rp-name">${a.name}</div><div class="rp-desc">${a.desc}</div></div>
-      <div class="rp-cost ${cc}">${a.cost}</div>
+      <div class="rp-content"><div class="rp-name">${a.name}${isUsed?' &nbsp;\u2713':''}</div><div class="rp-desc">${a.desc}</div></div>
+      <div class="rp-cost ${cc}">${isUsed ? 'Used' : a.cost}</div>
     </button>`;
   }).join('');
   document.getElementById('regionPanel').classList.add('open');
@@ -423,11 +423,12 @@ function renderGlobalActions() {
     const isUsed = usedGlobalAction === a.id;
     const isLocked = usedGlobalAction && usedGlobalAction !== a.id;
     const cc = {b:'cost-b',t:'cost-t',f:'cost-f'}[a.costType];
-    if (a.id === 'ai_tools' && gs.aiDeployed) return ''; // hide if already deployed
+    // Hide AI tools only if already deployed from a previous quarter (not just used this quarter)
+    if (a.id === 'ai_tools' && gs.aiDeployed && !isUsed) return '';
     return `<button class="rp-action${isUsed?' used':''}${isLocked?' locked':''}" onclick="takeGlobalAction('${a.id}')">
       <div class="rp-icon">${a.icon}</div>
-      <div class="rp-content"><div class="rp-name">${a.name}</div><div class="rp-desc">${a.desc}</div></div>
-      <div class="rp-cost ${cc}">${a.cost}</div>
+      <div class="rp-content"><div class="rp-name">${a.name}${isUsed?' &nbsp;✓':''}</div><div class="rp-desc">${a.desc}</div></div>
+      <div class="rp-cost ${cc}">${isUsed ? 'Used' : a.cost}</div>
     </button>`;
   }).join('');
 }
