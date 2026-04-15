@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <title>SE AI Readiness Score | Field Ready</title>
+  <meta name="description" content="10 questions. 5 dimensions. Find out how AI-native you (or your team) actually are.">
+  <script defer src="https://umami-tau-drab.vercel.app/script.js" data-website-id="23015384-bcae-4732-9665-a39f261647e1"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface2: #222533;
+      --border: #2d3148;
+      --text: #e2e4ef;
+      --muted: #6b7280;
+      --accent: #6366f1;
+      --accent-dark: #4f46e5;
+      --accent-light: rgba(99,102,241,0.12);
+      --green: #22c55e;
+      --font: 'Inter', system-ui, sans-serif;
+    }
+
+    html, body { min-height: 100%; font-family: var(--font); background: var(--bg); color: var(--text); -webkit-tap-highlight-color: transparent; }
+
+    .screen { display: none; }
+    .screen.active { display: block; }
+    body.quiz-active { overflow: hidden; height: 100vh; }
+    body.quiz-active #quiz,
+    body.quiz-active #result { position: fixed; top: 0; left: 0; right: 0; bottom: 0; overflow-y: auto; background: var(--bg); z-index: 50; }
+
+    /* ---- INTRO ---- */
+    #intro {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 24px;
+      text-align: center;
+    }
+
+    .brand-tag {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 16px;
+    }
+
+    .intro-title {
+      font-size: clamp(28px, 6vw, 48px);
+      font-weight: 800;
+      letter-spacing: -1.5px;
+      color: #fff;
+      line-height: 1.1;
+      margin-bottom: 16px;
+      max-width: 560px;
+    }
+
+    .intro-title span { color: var(--accent); }
+
+    .intro-sub {
+      font-size: 16px;
+      color: var(--muted);
+      line-height: 1.7;
+      max-width: 460px;
+      margin-bottom: 32px;
+    }
+
+    .mode-toggle {
+      display: flex;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 4px;
+      gap: 4px;
+      margin-bottom: 32px;
+    }
+
+    .mode-btn {
+      flex: 1;
+      padding: 10px 24px;
+      border: none;
+      border-radius: 8px;
+      font-family: var(--font);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      background: transparent;
+      color: var(--muted);
+    }
+
+    .mode-btn.active {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .dimension-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      margin-bottom: 32px;
+      max-width: 480px;
+    }
+
+    .pill {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      padding: 6px 14px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .btn-start {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      padding: 16px 48px;
+      font-family: var(--font);
+      font-size: 17px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .btn-start:hover { background: var(--accent-dark); }
+
+    .intro-footer { margin-top: 20px; font-size: 13px; color: var(--muted); }
+
+    /* ---- QUIZ ---- */
+    #quiz { min-height: 100vh; padding: 24px; }
+
+    .quiz-inner { max-width: 600px; margin: 0 auto; }
+
+    .progress-wrap { margin-bottom: 32px; }
+
+    .progress-bar-bg {
+      background: var(--surface);
+      border-radius: 100px;
+      height: 4px;
+      overflow: hidden;
+      margin-bottom: 10px;
+    }
+
+    .progress-bar-fill {
+      background: var(--accent);
+      height: 100%;
+      border-radius: 100px;
+      transition: width 0.4s ease;
+    }
+
+    .progress-label { font-size: 13px; color: var(--muted); }
+
+    .dimension-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 16px;
+    }
+
+    .question-text {
+      font-size: clamp(18px, 4vw, 24px);
+      font-weight: 700;
+      color: #fff;
+      line-height: 1.4;
+      margin-bottom: 28px;
+    }
+
+    .options { display: flex; flex-direction: column; gap: 10px; }
+
+    .option-btn {
+      background: var(--surface);
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 20px;
+      font-family: var(--font);
+      font-size: 15px;
+      color: var(--text);
+      text-align: left;
+      cursor: pointer;
+      transition: all 0.15s;
+      line-height: 1.5;
+    }
+
+    .option-btn:hover { border-color: var(--accent); background: var(--accent-light); }
+    .option-btn.selected { border-color: var(--accent); background: var(--accent-light); color: #fff; }
+
+    .quiz-nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 28px;
+    }
+
+    .btn-back {
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 20px;
+      font-family: var(--font);
+      font-size: 14px;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .btn-back:hover { border-color: var(--text); color: var(--text); }
+
+    .btn-next {
+      background: var(--accent);
+      border: none;
+      border-radius: 10px;
+      padding: 12px 28px;
+      font-family: var(--font);
+      font-size: 15px;
+      font-weight: 700;
+      color: #fff;
+      cursor: pointer;
+      transition: background 0.15s;
+      opacity: 0.4;
+      pointer-events: none;
+    }
+
+    .btn-next.enabled { opacity: 1; pointer-events: all; }
+    .btn-next.enabled:hover { background: var(--accent-dark); }
+
+    /* ---- RESULT ---- */
+    #result { min-height: 100vh; padding: 40px 24px 60px; }
+
+    .result-inner { max-width: 640px; margin: 0 auto; }
+
+    .result-brand { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--accent); margin-bottom: 24px; text-align: center; }
+
+    .stage-badge {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .stage-icon { font-size: 52px; margin-bottom: 12px; }
+
+    .stage-number {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .stage-name {
+      font-size: clamp(24px, 5vw, 36px);
+      font-weight: 800;
+      letter-spacing: -1px;
+      color: #fff;
+    }
+
+    .score-display {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .score-num {
+      font-size: 48px;
+      font-weight: 800;
+      color: var(--accent);
+      letter-spacing: -2px;
+    }
+
+    .score-denom { font-size: 24px; color: var(--muted); font-weight: 600; }
+
+    .stage-desc {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px 24px;
+      font-size: 15px;
+      color: var(--muted);
+      line-height: 1.7;
+      margin-bottom: 28px;
+      text-align: center;
+    }
+
+    .hours-card {
+      background: linear-gradient(135deg, rgba(99,102,241,0.15), rgba(99,102,241,0.05));
+      border: 1px solid rgba(99,102,241,0.3);
+      border-radius: 12px;
+      padding: 20px 24px;
+      margin-bottom: 28px;
+      text-align: center;
+    }
+
+    .hours-label { font-size: 12px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--accent); margin-bottom: 8px; }
+    .hours-text { font-size: 16px; color: var(--text); line-height: 1.6; }
+    .hours-text strong { color: #fff; }
+
+    .chart-section { margin-bottom: 28px; }
+
+    .section-title {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 16px;
+    }
+
+    .chart-wrap {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .chart-wrap canvas { max-width: 280px; max-height: 280px; }
+
+    .dim-breakdown { display: flex; flex-direction: column; gap: 10px; margin-bottom: 28px; }
+
+    .dim-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .dim-name { font-size: 14px; color: var(--muted); width: 160px; flex-shrink: 0; }
+    .dim-bar-bg { flex: 1; height: 6px; background: var(--surface2); border-radius: 100px; overflow: hidden; }
+    .dim-bar-fill { height: 100%; border-radius: 100px; background: var(--accent); transition: width 0.8s ease; }
+    .dim-score-label { font-size: 13px; font-weight: 600; color: var(--text); width: 36px; text-align: right; }
+
+    .weak-spot {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 3px solid #f59e0b;
+      border-radius: 12px;
+      padding: 20px 24px;
+      margin-bottom: 28px;
+    }
+
+    .weak-label { font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: #f59e0b; margin-bottom: 8px; }
+    .weak-title { font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 6px; }
+    .weak-desc { font-size: 14px; color: var(--muted); line-height: 1.6; }
+
+    .next-steps { margin-bottom: 28px; }
+
+    .step-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin-bottom: 10px;
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+    }
+
+    .step-num {
+      background: var(--accent-light);
+      color: var(--accent);
+      border-radius: 8px;
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .step-text { font-size: 14px; color: var(--text); line-height: 1.6; }
+
+    .share-section { margin-bottom: 32px; }
+
+    .share-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px 24px;
+    }
+
+    .share-text-display {
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.7;
+      margin-bottom: 16px;
+      font-style: italic;
+    }
+
+    .btn-copy {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 12px 24px;
+      font-family: var(--font);
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s;
+      width: 100%;
+    }
+
+    .btn-copy:hover { background: var(--accent-dark); }
+    .btn-copy.copied { background: #16a34a; }
+
+    .result-footer {
+      text-align: center;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    .result-footer a { color: var(--accent); text-decoration: none; font-size: 14px; }
+
+    .btn-retake {
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 20px;
+      font-family: var(--font);
+      font-size: 14px;
+      color: var(--muted);
+      cursor: pointer;
+      margin-top: 16px;
+      transition: all 0.15s;
+    }
+
+    .btn-retake:hover { border-color: var(--text); color: var(--text); }
+  </style>
+</head>
+<body>
+
+<!-- INTRO -->
+<div id="intro" class="screen active">
+  <p class="brand-tag">⚡ Field Ready by Jason Landers</p>
+  <h1 class="intro-title">SE <span>AI Readiness</span> Score</h1>
+  <p class="intro-sub">10 questions. 5 dimensions. Find out how AI-native you (or your team) actually are — and exactly where to level up.</p>
+
+  <div class="mode-toggle">
+    <button class="mode-btn active" id="modeIndividual" onclick="setMode('individual')">Individual SE</button>
+    <button class="mode-btn" id="modeManager" onclick="setMode('manager')">SE Manager</button>
+  </div>
+
+  <div class="dimension-pills">
+    <span class="pill">🔍 Call Prep</span>
+    <span class="pill">🎯 Demo</span>
+    <span class="pill">📄 POV Writing</span>
+    <span class="pill">⚔️ Competitive</span>
+    <span class="pill">🏋️ Practice</span>
+  </div>
+
+  <button class="btn-start" onclick="startQuiz()">Get My Score →</button>
+  <p class="intro-footer">Takes about 2 minutes. No signup required.</p>
+</div>
+
+<!-- QUIZ -->
+<div id="quiz" class="screen">
+  <div class="quiz-inner">
+    <div class="progress-wrap">
+      <div class="progress-bar-bg"><div class="progress-bar-fill" id="progressBar"></div></div>
+      <div class="progress-label" id="progressLabel"></div>
+    </div>
+    <div class="dimension-label" id="dimLabel"></div>
+    <div class="question-text" id="questionText"></div>
+    <div class="options" id="optionsContainer"></div>
+    <div class="quiz-nav">
+      <button class="btn-back" id="btnBack" onclick="prevQuestion()">← Back</button>
+      <button class="btn-next" id="btnNext" onclick="nextQuestion()">Next →</button>
+    </div>
+  </div>
+</div>
+
+<!-- RESULT -->
+<div id="result" class="screen">
+  <div class="result-inner">
+    <p class="result-brand">⚡ Field Ready — SE AI Readiness Score</p>
+
+    <div class="stage-badge">
+      <div class="stage-icon" id="stageIcon"></div>
+      <div class="stage-number" id="stageNumber"></div>
+      <div class="stage-name" id="stageName"></div>
+      <div class="score-display">
+        <div class="score-num" id="scoreNum"></div>
+        <div class="score-denom">/ 40</div>
+      </div>
+    </div>
+
+    <div class="stage-desc" id="stageDesc"></div>
+
+    <div class="hours-card">
+      <div class="hours-label">⏱ Hours Recovered Per Week</div>
+      <div class="hours-text" id="hoursText"></div>
+    </div>
+
+    <div class="chart-section">
+      <div class="section-title">Your AI Readiness Profile</div>
+      <div class="chart-wrap"><canvas id="radarChart"></canvas></div>
+    </div>
+
+    <div class="section-title">Dimension Breakdown</div>
+    <div class="dim-breakdown" id="dimBreakdown"></div>
+
+    <div class="weak-spot" id="weakSpot">
+      <div class="weak-label">⚠ Your Lowest Area</div>
+      <div class="weak-title" id="weakTitle"></div>
+      <div class="weak-desc" id="weakDesc"></div>
+    </div>
+
+    <div class="next-steps">
+      <div class="section-title">3 Things to Try Next</div>
+      <div id="stepsContainer"></div>
+    </div>
+
+    <div class="share-section">
+      <div class="section-title">Share Your Score</div>
+      <div class="share-box">
+        <div class="share-text-display" id="shareTextDisplay"></div>
+        <button class="btn-copy" id="btnCopy" onclick="copyShare()">Copy to Clipboard</button>
+      </div>
+    </div>
+
+    <div class="result-footer">
+      <a href="/field-ready/">← Back to Field Ready</a><br>
+      <button class="btn-retake" onclick="retake()">Retake Assessment</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  let mode = 'individual';
+  let currentQ = 0;
+  let answers = new Array(10).fill(null);
+  let radarChartInstance = null;
+
+  const DIMENSIONS = [
+    { name: 'Call Prep', icon: '🔍' },
+    { name: 'Demo', icon: '🎯' },
+    { name: 'POV Writing', icon: '📄' },
+    { name: 'Competitive', icon: '⚔️' },
+    { name: 'Practice', icon: '🏋️' }
+  ];
+
+  const QUESTIONS = [
+    {
+      dim: 0,
+      individual: 'Before a new prospect call, you typically...',
+      manager: 'Before a new prospect call, your SEs typically...',
+      options: [
+        'Check the website quickly and wing it',
+        'Read recent news and scan LinkedIn',
+        'Research the company thoroughly and review internal notes',
+        'Use AI to synthesize company intel and generate tailored discovery questions',
+        'Run a full AI prep workflow: company brief, stakeholder intel, hypothesis, and tailored question set — every time'
+      ]
+    },
+    {
+      dim: 0,
+      individual: 'When prepping for a multi-stakeholder call, you...',
+      manager: 'When prepping for a multi-stakeholder call, your SEs...',
+      options: [
+        'Look up names on the calendar invite',
+        'LinkedIn-stalk the main contact',
+        'Research each stakeholder individually ahead of time',
+        'Use AI to build a stakeholder map and prep different talking points per person',
+        'Use AI to generate personalized angles, anticipated objections, and a call plan for each stakeholder'
+      ]
+    },
+    {
+      dim: 1,
+      individual: 'When tailoring a demo for a specific use case, you...',
+      manager: 'When tailoring demos for specific use cases, your SEs...',
+      options: [
+        'Run the standard demo and narrate toward their industry',
+        'Swap in their logo and some custom data',
+        'Modify the flow based on discovery notes',
+        'Use AI to generate a custom demo script from discovery notes',
+        'Have an AI-assisted process: discovery → use case summary → custom narrative → tailored demo flow'
+      ]
+    },
+    {
+      dim: 1,
+      individual: 'When hit with an unexpected question mid-demo, you...',
+      manager: 'When hit with unexpected questions mid-demo, your SEs...',
+      options: [
+        'Say "great question, I\'ll follow up" and move on',
+        'Try to answer from memory',
+        'Pivot confidently to what you know',
+        'Have AI open in a second screen to pull quick answers in real time',
+        'Have AI actively running during demos — getting real-time context, answers, and objection framing on the fly'
+      ]
+    },
+    {
+      dim: 2,
+      individual: 'When building a POV or evaluation plan, you...',
+      manager: 'When building POVs or evaluation plans, your SEs...',
+      options: [
+        'Start from a blank doc every time',
+        'Reuse an old one and edit manually',
+        'Use a consistent template',
+        'Use AI to generate a first draft from discovery notes',
+        'Have a repeatable AI workflow: discovery notes → AI draft → human refinement → ready in under 2 hours'
+      ]
+    },
+    {
+      dim: 2,
+      individual: 'When writing executive summaries or technical findings, you...',
+      manager: 'When writing executive summaries or technical findings, your SEs...',
+      options: [
+        'Write from scratch — takes a while',
+        'Use old examples as reference',
+        'Use a template and fill it in manually',
+        'Use AI to draft based on call notes',
+        'Have a post-call AI workflow that produces a polished summary in under 30 minutes'
+      ]
+    },
+    {
+      dim: 3,
+      individual: 'When you hit a technical gap mid-deal, you...',
+      manager: 'When SEs hit a technical gap mid-deal, they...',
+      options: [
+        'Tell the customer you\'ll follow up and email the SE team',
+        'Ask a senior SE or engineer',
+        'Search internal docs and Slack',
+        'Use AI to get a fast working answer, then validate with SMEs',
+        'Use AI first, always — can close ~80% of gaps confidently in real time, escalate the rest'
+      ]
+    },
+    {
+      dim: 3,
+      individual: 'How do you stay current on competitor positioning?',
+      manager: 'How does your team stay current on competitor positioning?',
+      options: [
+        'Rely on what I remember from sales training',
+        'Read competitor battlecards when they\'re published',
+        'Check Gong/Chorus for competitive call moments',
+        'Use AI to research competitors on-demand when deals get competitive',
+        'Have an AI-assisted intel system — track new info, update positioning, prep bespoke competitive angles per deal'
+      ]
+    },
+    {
+      dim: 4,
+      individual: 'How do you practice for tough conversations or objections?',
+      manager: 'How does your team practice for tough conversations or objections?',
+      options: [
+        'Rely on experience — enough reps already',
+        'Talk it through with the AE beforehand',
+        'Roleplay with a colleague occasionally',
+        'Use AI to simulate customer objections and practice responses',
+        'Have a regular AI practice routine — roleplay, review, iterate; treat it like reps-based training'
+      ]
+    },
+    {
+      dim: 4,
+      individual: 'After a lost deal or rough call, you...',
+      manager: 'After a lost deal or rough call, your SEs...',
+      options: [
+        'Move on — next deal',
+        'Debrief with the AE',
+        'Document what happened in Salesforce',
+        'Use AI to analyze what went wrong and identify what to do differently',
+        'Run a structured AI debrief — input the situation, get diagnostic questions, identify the failure mode, update the playbook'
+      ]
+    }
+  ];
+
+  const STAGES = [
+    {
+      min: 0, max: 8,
+      icon: '🧊', number: 'Stage 1', name: 'The Skeptic',
+      desc: 'AI tooling isn\'t part of your workflow yet. You\'re relying on experience, instincts, and what\'s always worked. That\'s not wrong — but the gap between you and AI-augmented peers is widening every quarter.',
+      hours: { current: '0–1 hrs', next: '3–5 hrs', nextStage: 'Stage 3' }
+    },
+    {
+      min: 9, max: 16,
+      icon: '🌱', number: 'Stage 2', name: 'The Curious Dabbler',
+      desc: 'You\'ve tried AI tools and seen what they can do. But usage is sporadic — you reach for AI when you\'re stuck, not as a first move. The potential is there. The habit isn\'t yet.',
+      hours: { current: '1–3 hrs', next: '6–9 hrs', nextStage: 'Stage 4' }
+    },
+    {
+      min: 17, max: 24,
+      icon: '⚙️', number: 'Stage 3', name: 'The Selective User',
+      desc: 'AI is part of your toolkit, but not your system. You use it consistently in a few areas and leave value on the table in others. You\'re ahead of most SEs — and there\'s a clear path to the next level.',
+      hours: { current: '3–5 hrs', next: '10+ hrs', nextStage: 'Stage 5' }
+    },
+    {
+      min: 25, max: 32,
+      icon: '🚀', number: 'Stage 4', name: 'The AI-Augmented SE',
+      desc: 'AI is woven into how you work. Your prep is faster, your output is higher quality, and you\'re consistently recovering hours every week. You\'re in the top 15% of SE practitioners right now.',
+      hours: { current: '6–9 hrs', next: '10+ hrs', nextStage: 'Stage 5' }
+    },
+    {
+      min: 33, max: 40,
+      icon: '⚡', number: 'Stage 5', name: 'The AI-Native',
+      desc: 'AI isn\'t a tool you use — it\'s how you operate. You have repeatable workflows, real leverage, and you\'re compounding your advantage every week. This is what the next generation of SE looks like.',
+      hours: { current: '10+ hrs', next: null, nextStage: null }
+    }
+  ];
+
+  const WEAK_SPOT_INFO = {
+    0: {
+      title: 'Call Prep & Stakeholder Research',
+      desc: 'Stage 5 SEs walk into every call with an AI-generated company brief, tailored discovery questions, and stakeholder-specific angles — all built in under 10 minutes.',
+      steps: [
+        'Before your next call: paste the company URL + stakeholder LinkedIn into Claude or ChatGPT and ask for a discovery prep brief',
+        'Build a reusable prep prompt you can run for any call — company context, likely pain points, tailored questions',
+        'Track whether prepped calls have better discovery depth — you\'ll see the signal quickly'
+      ]
+    },
+    1: {
+      title: 'Demo Customization & Live Delivery',
+      desc: 'Stage 5 SEs generate a custom demo narrative from discovery notes using AI before every significant demo — and keep AI open for real-time support during the call.',
+      steps: [
+        'After your next discovery call: paste your notes into AI and ask for a custom demo script targeting their specific use case',
+        'Set up a second screen or tab with AI open during demos for live question support',
+        'Build a "demo narrative template" in AI that takes discovery input and outputs a tailored flow'
+      ]
+    },
+    2: {
+      title: 'POV Writing & Technical Writeups',
+      desc: 'Stage 5 SEs turn call notes into polished POVs and exec summaries in under 30 minutes using repeatable AI workflows.',
+      steps: [
+        'After your next discovery call: immediately paste notes into AI and ask for a first-draft POV — even rough output saves 80% of the work',
+        'Build a POV template prompt: success criteria, technical requirements, business outcomes, timeline — let AI fill the structure',
+        'Start a "post-call workflow" habit: notes → AI summary → exec brief → draft POV, all in one sitting'
+      ]
+    },
+    3: {
+      title: 'Competitive Intel & Technical Depth',
+      desc: 'Stage 5 SEs use AI to close technical gaps in real time and maintain a living competitive intelligence system that updates as deals evolve.',
+      steps: [
+        'Next time a competitor comes up in a deal: use AI to build a bespoke competitive positioning doc for that specific situation',
+        'Set up a simple AI competitive research prompt: "Compare [your product] vs [competitor] for a customer focused on [use case]"',
+        'For technical gaps: create a habit of asking AI first, validating with SMEs second — track how often AI gets you 80% of the way there'
+      ]
+    },
+    4: {
+      title: 'Practice & Self-Improvement',
+      desc: 'Stage 5 SEs treat AI like a sparring partner — regular roleplay, structured debriefs, and a playbook that gets smarter after every deal.',
+      steps: [
+        'Before your next tough call: use AI to roleplay it — describe the customer persona, likely objections, and ask AI to push back hard',
+        'After your next loss: run a structured AI debrief — describe what happened and ask AI to diagnose the failure mode and suggest alternatives',
+        'Build a personal "objection bank" in AI: every time you hit a new objection, add it and the best response you found'
+      ]
+    }
+  };
+
+  function setMode(m) {
+    mode = m;
+    document.getElementById('modeIndividual').classList.toggle('active', m === 'individual');
+    document.getElementById('modeManager').classList.toggle('active', m === 'manager');
+  }
+
+  function startQuiz() {
+    currentQ = 0;
+    answers = new Array(10).fill(null);
+    showScreen('quiz');
+    document.body.classList.add('quiz-active');
+    renderQuestion();
+  }
+
+  function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    window.scrollTo(0, 0);
+  }
+
+  function renderQuestion() {
+    const q = QUESTIONS[currentQ];
+    const dim = DIMENSIONS[q.dim];
+
+    document.getElementById('progressBar').style.width = ((currentQ / 10) * 100) + '%';
+    document.getElementById('progressLabel').textContent = `Question ${currentQ + 1} of 10`;
+    document.getElementById('dimLabel').innerHTML = `${dim.icon} ${dim.name}`;
+    document.getElementById('questionText').textContent = mode === 'manager' ? q.manager : q.individual;
+
+    const container = document.getElementById('optionsContainer');
+    container.innerHTML = '';
+    q.options.forEach((opt, i) => {
+      const btn = document.createElement('button');
+      btn.className = 'option-btn' + (answers[currentQ] === i ? ' selected' : '');
+      btn.textContent = opt;
+      btn.onclick = () => selectAnswer(i);
+      container.appendChild(btn);
+    });
+
+    document.getElementById('btnBack').style.visibility = currentQ === 0 ? 'hidden' : 'visible';
+    const btnNext = document.getElementById('btnNext');
+    btnNext.textContent = currentQ === 9 ? 'See My Score →' : 'Next →';
+    btnNext.classList.toggle('enabled', answers[currentQ] !== null);
+  }
+
+  function selectAnswer(i) {
+    answers[currentQ] = i;
+    document.querySelectorAll('.option-btn').forEach((btn, idx) => {
+      btn.classList.toggle('selected', idx === i);
+    });
+    document.getElementById('btnNext').classList.add('enabled');
+  }
+
+  function nextQuestion() {
+    if (answers[currentQ] === null) return;
+    if (currentQ < 9) {
+      currentQ++;
+      renderQuestion();
+    } else {
+      showResult();
+    }
+  }
+
+  function prevQuestion() {
+    if (currentQ > 0) { currentQ--; renderQuestion(); }
+  }
+
+  function showResult() {
+    document.body.classList.remove('quiz-active');
+    showScreen('result');
+
+    const total = answers.reduce((s, a) => s + a, 0);
+    const stage = STAGES.find(s => total >= s.min && total <= s.max);
+
+    // Dimension scores (0–8 each)
+    const dimScores = [0, 0, 0, 0, 0];
+    QUESTIONS.forEach((q, i) => { dimScores[q.dim] += answers[i]; });
+
+    document.getElementById('stageIcon').textContent = stage.icon;
+    document.getElementById('stageNumber').textContent = stage.number;
+    document.getElementById('stageName').textContent = stage.name;
+    document.getElementById('scoreNum').textContent = total;
+    document.getElementById('stageDesc').textContent = stage.desc;
+
+    // Hours
+    const hoursEl = document.getElementById('hoursText');
+    if (stage.hours.next) {
+      hoursEl.innerHTML = `You're recovering roughly <strong>${stage.hours.current}/week</strong> through AI. SEs at ${stage.hours.nextStage} recover <strong>${stage.hours.next}/week</strong>.`;
+    } else {
+      hoursEl.innerHTML = `You're recovering <strong>${stage.hours.current}/week</strong> from AI-native workflows. You're setting the standard.`;
+    }
+
+    // Radar chart
+    if (radarChartInstance) radarChartInstance.destroy();
+    const ctx = document.getElementById('radarChart').getContext('2d');
+    radarChartInstance = new Chart(ctx, {
+      type: 'radar',
+      data: {
+        labels: DIMENSIONS.map(d => d.name),
+        datasets: [{
+          data: dimScores.map(s => (s / 8) * 10),
+          backgroundColor: 'rgba(99,102,241,0.2)',
+          borderColor: '#6366f1',
+          borderWidth: 2,
+          pointBackgroundColor: '#6366f1',
+          pointRadius: 4
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          r: {
+            min: 0, max: 10,
+            ticks: { display: false },
+            grid: { color: '#2d3148' },
+            pointLabels: { color: '#6b7280', font: { size: 12, family: 'Inter' } },
+            angleLines: { color: '#2d3148' }
+          }
+        },
+        plugins: { legend: { display: false } }
+      }
+    });
+
+    // Dimension breakdown bars
+    const breakdown = document.getElementById('dimBreakdown');
+    breakdown.innerHTML = '';
+    DIMENSIONS.forEach((dim, i) => {
+      const pct = (dimScores[i] / 8) * 100;
+      breakdown.innerHTML += `
+        <div class="dim-row">
+          <div class="dim-name">${dim.icon} ${dim.name}</div>
+          <div class="dim-bar-bg"><div class="dim-bar-fill" style="width:${pct}%"></div></div>
+          <div class="dim-score-label">${dimScores[i]}/8</div>
+        </div>`;
+    });
+
+    // Weakest dimension
+    const weakIdx = dimScores.indexOf(Math.min(...dimScores));
+    const weak = WEAK_SPOT_INFO[weakIdx];
+    const modeLabel = mode === 'manager' ? 'your team\'s' : 'your';
+    document.getElementById('weakTitle').textContent = weak.title;
+    document.getElementById('weakDesc').textContent = `This is ${modeLabel} lowest-scoring area. ${weak.desc}`;
+
+    // Next steps
+    const stepsContainer = document.getElementById('stepsContainer');
+    stepsContainer.innerHTML = '';
+    weak.steps.forEach((step, i) => {
+      stepsContainer.innerHTML += `
+        <div class="step-card">
+          <div class="step-num">${i + 1}</div>
+          <div class="step-text">${step}</div>
+        </div>`;
+    });
+
+    // Share text
+    const shareText = mode === 'manager'
+      ? `I just ran my SE team through the AI Readiness Score — we scored ${total}/40 (${stage.name}). The radar chart showing where we're strongest vs where to focus enablement is genuinely useful.\n\njasonlanders.com/field-ready/ai-readiness.html`
+      : `I just took the SE AI Readiness Score and landed at ${total}/40 — ${stage.name}.\n\nIf you work in presales/SE, it's worth the 2 minutes. Shows you exactly which dimensions of your job you're leaving AI leverage on the table.\n\njasonlanders.com/field-ready/ai-readiness.html`;
+
+    document.getElementById('shareTextDisplay').textContent = shareText;
+    document.getElementById('btnCopy').dataset.text = shareText;
+    document.getElementById('btnCopy').classList.remove('copied');
+    document.getElementById('btnCopy').textContent = 'Copy to Clipboard';
+  }
+
+  function copyShare() {
+    const text = document.getElementById('btnCopy').dataset.text;
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = document.getElementById('btnCopy');
+      btn.textContent = '✓ Copied!';
+      btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = 'Copy to Clipboard'; btn.classList.remove('copied'); }, 2500);
+    });
+  }
+
+  function retake() {
+    answers = new Array(10).fill(null);
+    currentQ = 0;
+    showScreen('intro');
+  }
+</script>
+</body>
+</html>
