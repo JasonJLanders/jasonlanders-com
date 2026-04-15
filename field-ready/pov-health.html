@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -21,11 +21,7 @@
     .page { max-width: 620px; margin: 0 auto; padding: 40px 24px 80px; }
     .back-link { font-size: 12px; color: var(--muted); text-decoration: none; display: inline-block; margin-bottom: 28px; }
     .back-link:hover { color: var(--accent); }
-    
-    param($m)
-    $v = $m.Value
-    if ($v -notmatch 'text-decoration') {
-      $v -replace '\}
+    .brand-tag { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--accent); margin-bottom: 12px; }
     .page-title { font-size: clamp(26px, 5vw, 36px); font-weight: 800; letter-spacing: -1px; color: #fff; margin-bottom: 10px; }
     .page-sub { font-size: 15px; color: var(--muted); line-height: 1.65; margin-bottom: 32px; }
 
@@ -132,7 +128,7 @@
 </head>
 <body>
 <div class="page">
-  <a href="/field-ready/" class="brand-tag">&#8592; Field Ready by Jason Landers</a>
+  <a href="/field-ready" class="back-link">&#8592; Field Ready</a>
 
   <!-- INTRO -->
   <div id="intro">
@@ -189,7 +185,7 @@
     </div>
 
     <div class="field-ready-footer" style="margin-top:24px;">
-      <a href="/field-ready">Field Ready by Jason Landers &nbsp;�&nbsp; jasonlanders.com</a>
+      <a href="/field-ready">Field Ready by Jason Landers &nbsp;·&nbsp; jasonlanders.com</a>
     </div>
   </div>
 </div>
@@ -200,8 +196,8 @@
       id: 'champion',
       text: 'Do you have a named champion?',
       sub: 'Someone with internal influence who wants you to win and is actively advocating.',
-      yes: { label: 'Yes, named and active', icon: '?' },
-      no: { label: 'No or unclear', icon: '?' },
+      yes: { label: 'Yes, named and active', icon: '✅' },
+      no: { label: 'No or unclear', icon: '❓' },
       weight: 20,
       risk: {
         label: 'No defined champion',
@@ -213,8 +209,8 @@
       id: 'criteria',
       text: 'Did the customer help define the success criteria?',
       sub: 'Criteria they helped write are criteria they own. Criteria you handed them are yours.',
-      yes: { label: 'Yes, co-created', icon: '?' },
-      no: { label: 'No, we wrote them', icon: '?' },
+      yes: { label: 'Yes, co-created', icon: '✅' },
+      no: { label: 'No, we wrote them', icon: '❌' },
       weight: 20,
       risk: {
         label: 'Vendor-authored success criteria',
@@ -226,8 +222,8 @@
       id: 'sponsor',
       text: 'Is there an executive sponsor engaged?',
       sub: 'Someone at VP level or above who has visibility into the evaluation and cares about the outcome.',
-      yes: { label: 'Yes, engaged', icon: '?' },
-      no: { label: 'No or not yet', icon: '??' },
+      yes: { label: 'Yes, engaged', icon: '✅' },
+      no: { label: 'No or not yet', icon: '⚠️' },
       weight: 15,
       risk: {
         label: 'No executive sponsor',
@@ -239,8 +235,8 @@
       id: 'timeline',
       text: 'Is there a defined end date both sides agreed to?',
       sub: 'Not just a target in your CRM -- an actual mutual commitment to when the evaluation concludes.',
-      yes: { label: 'Yes, mutually agreed', icon: '?' },
-      no: { label: 'No or vague', icon: '?' },
+      yes: { label: 'Yes, mutually agreed', icon: '✅' },
+      no: { label: 'No or vague', icon: '❓' },
       weight: 15,
       risk: {
         label: 'No defined end date',
@@ -252,8 +248,8 @@
       id: 'progress',
       text: 'Is the evaluation more than 50% complete?',
       sub: 'Based on days elapsed relative to the total planned duration.',
-      yes: { label: 'Less than 50% elapsed', icon: '??' },
-      no: { label: 'More than 50% elapsed', icon: '??' },
+      yes: { label: 'Less than 50% elapsed', icon: '🟢' },
+      no: { label: 'More than 50% elapsed', icon: '🟡' },
       weight: 10,
       risk: {
         label: 'Evaluation is past the halfway point',
@@ -265,8 +261,8 @@
       id: 'activity',
       text: 'Have you had meaningful customer contact in the last 7 days?',
       sub: 'A real conversation or meaningful async update -- not just a status ping.',
-      yes: { label: 'Yes, active contact', icon: '?' },
-      no: { label: 'No, it has gone quiet', icon: '??' },
+      yes: { label: 'Yes, active contact', icon: '✅' },
+      no: { label: 'No, it has gone quiet', icon: '🔴' },
       weight: 10,
       risk: {
         label: 'No meaningful contact in the last week',
@@ -278,8 +274,8 @@
       id: 'business',
       text: 'Have you connected the POV to a specific business outcome the customer cares about?',
       sub: 'Something their leadership is measured on -- not just a technical validation.',
-      yes: { label: 'Yes, clearly linked', icon: '?' },
-      no: { label: 'Not yet or unclear', icon: '??' },
+      yes: { label: 'Yes, clearly linked', icon: '✅' },
+      no: { label: 'Not yet or unclear', icon: '⚠️' },
       weight: 5,
       risk: {
         label: 'POV is not clearly linked to a business outcome',
@@ -291,8 +287,8 @@
       id: 'done',
       text: 'Do both sides agree on what a completed POV looks like?',
       sub: 'Not just "the trial ends" -- a specific moment when results are reviewed and a decision is made.',
-      yes: { label: 'Yes, clearly defined', icon: '?' },
-      no: { label: 'No or vague', icon: '?' },
+      yes: { label: 'Yes, clearly defined', icon: '✅' },
+      no: { label: 'No or vague', icon: '❓' },
       weight: 5,
       risk: {
         label: 'No shared definition of done',
@@ -371,15 +367,15 @@
     // Determine status
     let status, emoji, title, desc, colorClass;
     if (pct >= 80) {
-      status = 'ON TRACK'; emoji = '??'; title = 'This POV looks healthy';
+      status = 'ON TRACK'; emoji = '🟢'; title = 'This POV looks healthy';
       desc = 'The fundamentals are in place. Keep the momentum going and stay close to your champion as you move toward the close.';
       colorClass = 'green';
     } else if (pct >= 55) {
-      status = 'AT RISK'; emoji = '??'; title = 'A few things need attention';
+      status = 'AT RISK'; emoji = '🟡'; title = 'A few things need attention';
       desc = 'There are some gaps that could slow this down or stall it. Address the risks below before they compound.';
       colorClass = 'yellow';
     } else {
-      status = 'IN TROUBLE'; emoji = '??'; title = 'This evaluation needs intervention';
+      status = 'IN TROUBLE'; emoji = '🔴'; title = 'This evaluation needs intervention';
       desc = 'Multiple risk factors are present. The POV may not close without deliberate action this week. Start with the highest-weight risk below.';
       colorClass = 'red';
     }
@@ -404,7 +400,7 @@
       rTitle.textContent = risks.length === 1 ? '1 risk to address' : `${risks.length} risks to address`;
       document.getElementById('risksList').innerHTML = risks.map(r => `
         <div class="risk-item">
-          <div class="risk-icon">??</div>
+          <div class="risk-icon">⚠️</div>
           <div class="risk-content">
             <div class="risk-label">${r.label}</div>
             <div class="risk-action">${r.action}</div>
@@ -466,493 +462,7 @@
 
 <div id="installHint" style="display:none;position:fixed;bottom:0;left:0;right:0;background:#1a1d27;border-top:1px solid #2d3148;padding:12px 20px;text-align:center;z-index:200;">
   <p style="font-size:13px;color:#9ca3af;margin:0;">
-    <span style="margin-right:8px;">??</span>
-    Add to your home screen for quick access
-    <button onclick="installApp()" id="installBtn" style="display:none;margin-left:10px;background:#6366f1;color:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;">Install</button>
-    <span id="iosHint" style="display:none;margin-left:8px;color:#6b7280;">Tap Share then "Add to Home Screen"</span>
-    <button onclick="document.getElementById('installHint').style.display='none'" style="margin-left:12px;background:transparent;border:none;color:#6b7280;cursor:pointer;font-size:16px;">x</button>
-  </p>
-</div>
-
-<script>
-  // Show hint on mobile only
-  if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-    // iOS -- show share hint
-    if (/iPhone|iPad|iPod/i.test(navigator.userAgent) && !window.navigator.standalone) {
-      document.getElementById('installHint').style.display = 'block';
-      document.getElementById('iosHint').style.display = 'inline';
-    }
-  }
-
-  // Android / Chrome -- listen for beforeinstallprompt
-  let deferredPrompt;
-  window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-    document.getElementById('installHint').style.display = 'block';
-    document.getElementById('installBtn').style.display = 'inline-block';
-  });
-
-  function installApp() {
-    if (deferredPrompt) {
-      deferredPrompt.prompt();
-      deferredPrompt.userChoice.then(() => {
-        document.getElementById('installHint').style.display = 'none';
-        deferredPrompt = null;
-      });
-    }
-  }
-
-  window.addEventListener('appinstalled', () => {
-    document.getElementById('installHint').style.display = 'none';
-  });
-</script>
-</body>
-</html>
-, ' text-decoration: none; display: inline-block; }'
-    } else { $v }
-  
-    .page-title { font-size: clamp(26px, 5vw, 36px); font-weight: 800; letter-spacing: -1px; color: #fff; margin-bottom: 10px; }
-    .page-sub { font-size: 15px; color: var(--muted); line-height: 1.65; margin-bottom: 32px; }
-
-    /* Progress */
-    .progress-wrap { margin-bottom: 28px; }
-    .progress-bg { background: var(--surface); border-radius: 100px; height: 4px; margin-bottom: 8px; }
-    .progress-fill { background: var(--accent); height: 100%; border-radius: 100px; transition: width 0.4s ease; }
-    .progress-label { font-size: 12px; color: var(--muted); font-weight: 500; }
-
-    /* Questions */
-    .question-block { animation: fadeUp 0.25s ease; }
-    @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-    .q-num { font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--accent); margin-bottom: 8px; }
-    .q-text { font-size: 19px; font-weight: 700; color: #fff; line-height: 1.35; margin-bottom: 8px; letter-spacing: -0.3px; }
-    .q-sub { font-size: 13px; color: var(--muted); line-height: 1.5; margin-bottom: 22px; }
-    .q-options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .q-btn {
-      background: var(--surface); border: 2px solid var(--border); border-radius: 12px;
-      padding: 18px 20px; font-family: var(--font); font-size: 15px; font-weight: 600;
-      cursor: pointer; transition: border-color 0.15s, background 0.15s, transform 0.1s;
-      display: flex; flex-direction: column; align-items: center; gap: 6px;
-    }
-    .q-btn:hover { border-color: var(--accent); background: rgba(99,102,241,0.08); }
-    .q-btn:active { transform: scale(0.97); }
-    .q-btn-icon { font-size: 24px; }
-    .q-btn-label { font-size: 14px; font-weight: 700; color: var(--text); }
-
-    /* Results */
-    #results { display: none; }
-    #results.show { display: block; }
-
-    .score-card {
-      border-radius: 16px; padding: 28px; margin-bottom: 16px; text-align: center;
-      border: 2px solid transparent;
-    }
-    .score-card.green { background: rgba(34,197,94,0.08); border-color: var(--green); }
-    .score-card.yellow { background: rgba(234,179,8,0.08); border-color: var(--yellow); }
-    .score-card.red { background: rgba(239,68,68,0.08); border-color: var(--red); }
-
-    .score-emoji { font-size: 48px; margin-bottom: 12px; }
-    .score-label { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
-    .score-label.green { color: var(--green); }
-    .score-label.yellow { color: var(--yellow); }
-    .score-label.red { color: var(--red); }
-    .score-title { font-size: 26px; font-weight: 800; color: #fff; letter-spacing: -0.5px; margin-bottom: 8px; }
-    .score-desc { font-size: 14px; color: var(--muted); line-height: 1.65; max-width: 440px; margin: 0 auto; }
-
-    .score-bar-wrap { margin: 20px 0 0; }
-    .score-bar-bg { background: var(--surface2); border-radius: 100px; height: 8px; overflow: hidden; }
-    .score-bar-fill { height: 100%; border-radius: 100px; transition: width 0.8s ease; }
-    .score-bar-fill.green { background: var(--green); }
-    .score-bar-fill.yellow { background: var(--yellow); }
-    .score-bar-fill.red { background: var(--red); }
-    .score-bar-label { font-size: 12px; color: var(--muted); margin-top: 6px; text-align: right; }
-
-    .risks-section { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 22px; margin-bottom: 14px; }
-    .risks-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 14px; }
-    .risks-title.red { color: var(--red); }
-    .risks-title.yellow { color: var(--yellow); }
-    .risks-title.green { color: var(--green); }
-
-    .risk-item { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 14px; }
-    .risk-item:last-child { margin-bottom: 0; }
-    .risk-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
-    .risk-content { flex: 1; }
-    .risk-label { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 3px; }
-    .risk-action { font-size: 13px; color: var(--muted); line-height: 1.5; }
-
-    .strong-item { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 10px; }
-    .strong-item:last-child { margin-bottom: 0; }
-    .strong-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); flex-shrink: 0; margin-top: 6px; }
-    .strong-text { font-size: 14px; color: var(--text); line-height: 1.5; }
-
-    .action-row { display: flex; gap: 10px; margin-top: 20px; }
-    .btn-primary { flex: 1; background: var(--accent); color: #fff; border: none; border-radius: 12px; padding: 14px; font-family: var(--font); font-size: 15px; font-weight: 700; cursor: pointer; transition: background 0.15s; }
-    .btn-primary:hover { background: var(--accent-dark); }
-    .btn-secondary { flex: 1; background: transparent; color: var(--muted); border: 1px solid var(--border); border-radius: 12px; padding: 14px; font-family: var(--font); font-size: 15px; font-weight: 600; cursor: pointer; transition: border-color 0.15s, color 0.15s; }
-    .btn-secondary:hover { border-color: var(--text); color: var(--text); }
-
-    .newsletter-box { background: var(--accent); border-radius: 14px; padding: 22px; margin-bottom: 14px; text-align: center; }
-    .newsletter-box h3 { font-size: 17px; font-weight: 700; color: #fff; margin-bottom: 6px; }
-    .newsletter-box p { font-size: 13px; color: rgba(255,255,255,0.8); margin-bottom: 14px; line-height: 1.5; }
-    .nl-form { display: flex; gap: 8px; flex-wrap: wrap; }
-    .nl-input { flex: 1; min-width: 160px; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); border-radius: 8px; padding: 10px 14px; color: #fff; font-family: var(--font); font-size: 14px; outline: none; }
-    .nl-input::placeholder { color: rgba(255,255,255,0.6); }
-    .nl-btn { background: #fff; color: var(--accent); border: none; border-radius: 8px; padding: 10px 18px; font-family: var(--font); font-size: 14px; font-weight: 700; cursor: pointer; white-space: nowrap; }
-
-    .field-ready-footer { margin-top: 32px; padding-top: 20px; border-top: 1px solid var(--border); text-align: center; }
-    .field-ready-footer a { font-size: 12px; color: var(--muted); text-decoration: none; }
-    .field-ready-footer a:hover { color: var(--accent); }
-
-    @media (max-width: 400px) { .q-options { grid-template-columns: 1fr; } .action-row { flex-direction: column; } .nl-form { flex-direction: column; } }
-  </style>
-  <meta property="og:title" content="POV Health Check | Free tool for Sales Engineers" />
-  <meta property="og:description" content="Answer 8 questions about your active evaluation and get an instant health assessment with specific actions to take this week." />
-  <meta property="og:url" content="https://jasonlanders.com/field-ready/pov-health.html" />
-  <meta property="og:type" content="website" />
-  <meta name="keywords" content="POV health check, proof of value assessment, SE evaluation tracker, presales POV tool, sales engineering POV" />
-  <link rel="manifest" href="/field-ready/manifest-pov-health.json" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="POV Health" />
-  <meta name="theme-color" content="#6366f1" />
-</head>
-<body>
-<div class="page">
-  <a href="/field-ready/" class="brand-tag">&#8592; Field Ready by Jason Landers</a>
-
-  <!-- INTRO -->
-  <div id="intro">
-    <div class="brand-tag">Field Ready</div>
-    <h1 class="page-title">POV Health Check</h1>
-    <p class="page-sub">8 questions about your active evaluation. Get an instant read on what's working, what's at risk, and the one thing worth addressing this week.</p>
-  </div>
-
-  <!-- PROGRESS -->
-  <div class="progress-wrap" id="progressWrap" style="display:none;">
-    <div class="progress-bg"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
-    <div class="progress-label" id="progressLabel">Question 1 of 8</div>
-  </div>
-
-  <!-- QUESTION -->
-  <div id="questionBlock"></div>
-
-  <!-- RESULTS -->
-  <div id="results">
-    <div class="score-card" id="scoreCard">
-      <div class="score-emoji" id="scoreEmoji"></div>
-      <div class="score-label" id="scoreLabel"></div>
-      <div class="score-title" id="scoreTitle"></div>
-      <div class="score-desc" id="scoreDesc"></div>
-      <div class="score-bar-wrap">
-        <div class="score-bar-bg"><div class="score-bar-fill" id="scoreBarFill" style="width:0%"></div></div>
-        <div class="score-bar-label" id="scoreBarLabel"></div>
-      </div>
-    </div>
-
-    <div class="risks-section" id="risksSection" style="display:none;">
-      <div class="risks-title red" id="risksTitle">Risks to address</div>
-      <div id="risksList"></div>
-    </div>
-
-    <div class="risks-section" id="strongSection" style="display:none;">
-      <div class="risks-title green">What's solid</div>
-      <div id="strongList"></div>
-    </div>
-
-    <p style="font-size:13px;color:#6b7280;margin-top:16px;">Want to go deeper? Read <a href="/articles/pov-failure-signs.html" style="color:#818cf8;">5 signs a POV is already dead</a> on jasonlanders.com.</p>
-    <div class="newsletter-box">
-      <h3>Want more POV frameworks?</h3>
-      <p>The SE Edge newsletter covers POV strategy, discovery, and deal execution weekly.</p>
-      <form class="nl-form" action="https://magic.beehiiv.com/v1/ed62bc9e-56bd-41ca-be98-5ab6463a12bf" method="get" target="_blank">
-        <input class="nl-input" type="email" name="email" placeholder="your@email.com" required />
-        <button class="nl-btn" type="submit">Subscribe</button>
-      </form>
-    </div>
-
-    <div class="action-row">
-      <button class="btn-primary" onclick="shareResult()">Share this result</button>
-      <button class="btn-secondary" onclick="restart()">Check another POV</button>
-    </div>
-
-    <div class="field-ready-footer" style="margin-top:24px;">
-      <a href="/field-ready">Field Ready by Jason Landers &nbsp;�&nbsp; jasonlanders.com</a>
-    </div>
-  </div>
-</div>
-
-<script>
-  const QUESTIONS = [
-    {
-      id: 'champion',
-      text: 'Do you have a named champion?',
-      sub: 'Someone with internal influence who wants you to win and is actively advocating.',
-      yes: { label: 'Yes, named and active', icon: '?' },
-      no: { label: 'No or unclear', icon: '?' },
-      weight: 20,
-      risk: {
-        label: 'No defined champion',
-        action: 'A POV without a champion is a free trial. Before anything else, identify who internally wants you to win and confirm they are willing to advocate. If you cannot name that person, the POV should not have started yet.'
-      },
-      strong: 'You have a named champion who is actively advocating internally.'
-    },
-    {
-      id: 'criteria',
-      text: 'Did the customer help define the success criteria?',
-      sub: 'Criteria they helped write are criteria they own. Criteria you handed them are yours.',
-      yes: { label: 'Yes, co-created', icon: '?' },
-      no: { label: 'No, we wrote them', icon: '?' },
-      weight: 20,
-      risk: {
-        label: 'Vendor-authored success criteria',
-        action: 'Schedule a criteria review call this week. Bring a draft and ask them to edit it. Even minor changes shift ownership significantly. Criteria they help write are criteria they will defend internally.'
-      },
-      strong: 'Success criteria were co-created with the customer.'
-    },
-    {
-      id: 'sponsor',
-      text: 'Is there an executive sponsor engaged?',
-      sub: 'Someone at VP level or above who has visibility into the evaluation and cares about the outcome.',
-      yes: { label: 'Yes, engaged', icon: '?' },
-      no: { label: 'No or not yet', icon: '??' },
-      weight: 15,
-      risk: {
-        label: 'No executive sponsor',
-        action: 'Ask your champion to introduce you to their VP this week. Frame it as wanting to ensure the evaluation aligns with leadership priorities. Without executive visibility, even a successful POV can stall at the business case stage.'
-      },
-      strong: 'An executive sponsor is engaged and aware of the evaluation.'
-    },
-    {
-      id: 'timeline',
-      text: 'Is there a defined end date both sides agreed to?',
-      sub: 'Not just a target in your CRM -- an actual mutual commitment to when the evaluation concludes.',
-      yes: { label: 'Yes, mutually agreed', icon: '?' },
-      no: { label: 'No or vague', icon: '?' },
-      weight: 15,
-      risk: {
-        label: 'No defined end date',
-        action: 'POVs without end dates do not end -- they drift. This week, send a recap email that includes a specific close date and asks for confirmation. "Based on our conversation, we are targeting [date] as the point at which we will review results and discuss next steps -- does that still work for you?"'
-      },
-      strong: 'Both sides have agreed to a defined end date.'
-    },
-    {
-      id: 'progress',
-      text: 'Is the evaluation more than 50% complete?',
-      sub: 'Based on days elapsed relative to the total planned duration.',
-      yes: { label: 'Less than 50% elapsed', icon: '??' },
-      no: { label: 'More than 50% elapsed', icon: '??' },
-      weight: 10,
-      risk: {
-        label: 'Evaluation is past the halfway point',
-        action: 'Run a mid-point check-in this week. Review which success criteria have been met, which have not, and confirm the path to completion. If you are past 50% and have not validated the core criteria, the POV is at risk of running out of runway.'
-      },
-      strong: 'The evaluation is in the early half with time to address any gaps.'
-    },
-    {
-      id: 'activity',
-      text: 'Have you had meaningful customer contact in the last 7 days?',
-      sub: 'A real conversation or meaningful async update -- not just a status ping.',
-      yes: { label: 'Yes, active contact', icon: '?' },
-      no: { label: 'No, it has gone quiet', icon: '??' },
-      weight: 10,
-      risk: {
-        label: 'No meaningful contact in the last week',
-        action: 'Do not send another follow-up email. Instead, find something genuinely useful to share -- a data point, a use case, a relevant piece of news -- and lead with value. Going quiet mid-POV is usually the first sign of trouble. The sooner you re-engage, the more options you have.'
-      },
-      strong: 'Active contact with the customer in the last 7 days.'
-    },
-    {
-      id: 'business',
-      text: 'Have you connected the POV to a specific business outcome the customer cares about?',
-      sub: 'Something their leadership is measured on -- not just a technical validation.',
-      yes: { label: 'Yes, clearly linked', icon: '?' },
-      no: { label: 'Not yet or unclear', icon: '??' },
-      weight: 5,
-      risk: {
-        label: 'POV is not clearly linked to a business outcome',
-        action: 'Ask your champion: "When you present the POV results to your leadership, what business problem does this solve?" If they struggle to answer, you have a positioning problem. The technical evaluation is meaningless without a business outcome attached to it.'
-      },
-      strong: 'The evaluation is tied to a specific business outcome the customer cares about.'
-    },
-    {
-      id: 'done',
-      text: 'Do both sides agree on what a completed POV looks like?',
-      sub: 'Not just "the trial ends" -- a specific moment when results are reviewed and a decision is made.',
-      yes: { label: 'Yes, clearly defined', icon: '?' },
-      no: { label: 'No or vague', icon: '?' },
-      weight: 5,
-      risk: {
-        label: 'No shared definition of done',
-        action: 'Without a definition of done, POVs do not conclude -- they fade. This week, align on a specific end state: "By [date], we will have demonstrated [X and Y]. At that point, [name] will present a recommendation to [VP]. Is that still the plan?" Getting confirmation forces clarity on both sides.'
-      },
-      strong: 'Both sides share a clear definition of what a completed POV looks like.'
-    }
-  ];
-
-  let current = 0;
-  let answers = {};
-
-  function start() {
-    document.getElementById('progressWrap').style.display = 'block';
-    renderQuestion();
-  }
-
-  function renderQuestion() {
-    const q = QUESTIONS[current];
-    const pct = (current / QUESTIONS.length) * 100;
-    document.getElementById('progressFill').style.width = pct + '%';
-    document.getElementById('progressLabel').textContent = `Question ${current + 1} of ${QUESTIONS.length}`;
-
-    document.getElementById('questionBlock').innerHTML = `
-      <div class="question-block">
-        <div class="q-num">Question ${current + 1}</div>
-        <div class="q-text">${q.text}</div>
-        <div class="q-sub">${q.sub}</div>
-        <div class="q-options">
-          <button class="q-btn" onclick="answer('yes')">
-            <span class="q-btn-icon">${q.yes.icon}</span>
-            <span class="q-btn-label">${q.yes.label}</span>
-          </button>
-          <button class="q-btn" onclick="answer('no')">
-            <span class="q-btn-icon">${q.no.icon}</span>
-            <span class="q-btn-label">${q.no.label}</span>
-          </button>
-        </div>
-      </div>
-    `;
-  }
-
-  function answer(val) {
-    answers[QUESTIONS[current].id] = val;
-    current++;
-    if (current < QUESTIONS.length) {
-      renderQuestion();
-    } else {
-      showResults();
-    }
-  }
-
-  function showResults() {
-    document.getElementById('questionBlock').innerHTML = '';
-    document.getElementById('progressFill').style.width = '100%';
-    document.getElementById('progressLabel').textContent = 'Complete';
-
-    // Calculate score
-    let score = 0;
-    let maxScore = 0;
-    let risks = [];
-    let strongs = [];
-
-    QUESTIONS.forEach(q => {
-      maxScore += q.weight;
-      if (answers[q.id] === 'yes') {
-        score += q.weight;
-        strongs.push(q.strong);
-      } else {
-        risks.push(q.risk);
-      }
-    });
-
-    const pct = Math.round((score / maxScore) * 100);
-
-    // Determine status
-    let status, emoji, title, desc, colorClass;
-    if (pct >= 80) {
-      status = 'ON TRACK'; emoji = '??'; title = 'This POV looks healthy';
-      desc = 'The fundamentals are in place. Keep the momentum going and stay close to your champion as you move toward the close.';
-      colorClass = 'green';
-    } else if (pct >= 55) {
-      status = 'AT RISK'; emoji = '??'; title = 'A few things need attention';
-      desc = 'There are some gaps that could slow this down or stall it. Address the risks below before they compound.';
-      colorClass = 'yellow';
-    } else {
-      status = 'IN TROUBLE'; emoji = '??'; title = 'This evaluation needs intervention';
-      desc = 'Multiple risk factors are present. The POV may not close without deliberate action this week. Start with the highest-weight risk below.';
-      colorClass = 'red';
-    }
-
-    // Render score card
-    const card = document.getElementById('scoreCard');
-    card.className = 'score-card ' + colorClass;
-    document.getElementById('scoreEmoji').textContent = emoji;
-    document.getElementById('scoreLabel').textContent = status;
-    document.getElementById('scoreLabel').className = 'score-label ' + colorClass;
-    document.getElementById('scoreTitle').textContent = title;
-    document.getElementById('scoreDesc').textContent = desc;
-    document.getElementById('scoreBarFill').style.width = pct + '%';
-    document.getElementById('scoreBarFill').className = 'score-bar-fill ' + colorClass;
-    document.getElementById('scoreBarLabel').textContent = `${pct} / 100`;
-
-    // Risks
-    if (risks.length > 0) {
-      document.getElementById('risksSection').style.display = 'block';
-      const rTitle = document.getElementById('risksTitle');
-      rTitle.className = 'risks-title ' + colorClass;
-      rTitle.textContent = risks.length === 1 ? '1 risk to address' : `${risks.length} risks to address`;
-      document.getElementById('risksList').innerHTML = risks.map(r => `
-        <div class="risk-item">
-          <div class="risk-icon">??</div>
-          <div class="risk-content">
-            <div class="risk-label">${r.label}</div>
-            <div class="risk-action">${r.action}</div>
-          </div>
-        </div>
-      `).join('');
-    }
-
-    // Strongs
-    if (strongs.length > 0) {
-      document.getElementById('strongSection').style.display = 'block';
-      document.getElementById('strongList').innerHTML = strongs.map(s => `
-        <div class="strong-item">
-          <div class="strong-dot"></div>
-          <div class="strong-text">${s}</div>
-        </div>
-      `).join('');
-    }
-
-    // Store for sharing
-    window._povResult = { status, pct, risks: risks.map(r => r.label) };
-
-    document.getElementById('results').classList.add('show');
-    window.scrollTo(0, 0);
-  }
-
-  function shareResult() {
-    const r = window._povResult;
-    if (!r) return;
-    const riskText = r.risks.length > 0 ? `\nRisks: ${r.risks.slice(0,2).join(', ')}` : '';
-    const text = `POV Health Check result: ${r.status} (${r.pct}/100)${riskText}\n\nCheck your active POV: jasonlanders.com/field-ready/pov-health.html`;
-    if (navigator.share) {
-      navigator.share({ text }).catch(() => copyText(text));
-    } else {
-      copyText(text);
-    }
-  }
-
-  function copyText(text) {
-    navigator.clipboard.writeText(text).catch(() => {});
-    const btn = document.querySelector('.btn-primary');
-    btn.textContent = 'Copied!';
-    setTimeout(() => btn.textContent = 'Share this result', 2000);
-  }
-
-  function restart() {
-    current = 0;
-    answers = {};
-    document.getElementById('results').classList.remove('show');
-    document.getElementById('risksSection').style.display = 'none';
-    document.getElementById('strongSection').style.display = 'none';
-    renderQuestion();
-    window.scrollTo(0, 0);
-  }
-
-  // Auto-start
-  start();
-</script>
-
-<div id="installHint" style="display:none;position:fixed;bottom:0;left:0;right:0;background:#1a1d27;border-top:1px solid #2d3148;padding:12px 20px;text-align:center;z-index:200;">
-  <p style="font-size:13px;color:#9ca3af;margin:0;">
-    <span style="margin-right:8px;">??</span>
+    <span style="margin-right:8px;">📱</span>
     Add to your home screen for quick access
     <button onclick="installApp()" id="installBtn" style="display:none;margin-left:10px;background:#6366f1;color:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;">Install</button>
     <span id="iosHint" style="display:none;margin-left:8px;color:#6b7280;">Tap Share then "Add to Home Screen"</span>

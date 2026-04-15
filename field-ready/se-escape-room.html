@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -154,7 +154,7 @@
     .lesson-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: var(--accent); margin-bottom: 10px; }
     .lesson-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
     .lesson-list li { font-size: 14px; color: var(--text); line-height: 1.55; padding-left: 18px; position: relative; }
-    .lesson-list li::before { content: '?'; position: absolute; left: 0; color: var(--accent); font-size: 12px; }
+    .lesson-list li::before { content: '→'; position: absolute; left: 0; color: var(--accent); font-size: 12px; }
 
     .score-row { display: flex; gap: 12px; justify-content: center; margin-bottom: 20px; flex-wrap: wrap; }
     .score-pill { background: var(--surface); border: 1px solid var(--border); border-radius: 100px; padding: 8px 18px; font-size: 14px; font-weight: 600; }
@@ -182,7 +182,7 @@
 </head>
 <body>
 <div class="page">
-  <a href="/field-ready/" class="brand-tag">&#8592; Field Ready by Jason Landers</a>
+  <a href="/field-ready" class="back-link">&#8592; Field Ready</a>
 
   <!-- INTRO -->
   <div id="intro">
@@ -201,7 +201,7 @@
     </div>
 
     <button class="btn-start" onclick="startGame()">Enter the deal</button>
-    <p class="intro-footer">5 decisions &nbsp;�&nbsp; 4 possible endings &nbsp;�&nbsp; No wrong answers, only consequences</p>
+    <p class="intro-footer">5 decisions &nbsp;·&nbsp; 4 possible endings &nbsp;·&nbsp; No wrong answers, only consequences</p>
   </div>
 
   <!-- GAME -->
@@ -239,7 +239,7 @@
       <button class="btn-replay" onclick="replay()">Try a different path</button>
     </div>
     <div class="field-ready-footer">
-      <a href="/field-ready">Field Ready by Jason Landers &nbsp;�&nbsp; jasonlanders.com</a>
+      <a href="/field-ready">Field Ready by Jason Landers &nbsp;·&nbsp; jasonlanders.com</a>
     </div>
   </div>
 </div>
@@ -275,7 +275,7 @@ illustration: `<svg viewBox="0 0 680 200" xmlns="http://www.w3.org/2000/svg"><re
     context: "DAY 5 / Marcus wants to move forward. Sarah is pushing to skip straight to a POV.",
     heading: "The champion question",
     text: `Marcus emails you directly: "Good call last week. I'd like to get my team doing a proper evaluation. Can we set up a trial?"\n\nSarah is thrilled. "Let's get them into a POV before the weekend. Strike while it's hot."\n\nYou pull up Nexus's org chart. Marcus is technically the VP of Engineering, but you know the actual budget decision sits with <em>Dana Flores</em>, the CTO, who hasn't been mentioned once. Marcus reports to Dana.`,
-illustration: `<svg viewBox="0 0 680 200" xmlns="http://www.w3.org/2000/svg"><rect width="680" height="200" fill="#111827"/><rect x="280" y="20" width="120" height="44" rx="8" fill="#1a2234" stroke="#f59e0b" stroke-width="2"/><text x="340" y="37" text-anchor="middle" fill="#f59e0b" font-size="11" font-family="Inter,sans-serif" font-weight="700">DANA FLORES</text><text x="340" y="52" text-anchor="middle" fill="#64748b" font-size="9" font-family="Inter,sans-serif">CTO � Signs off</text><line x1="340" y1="64" x2="200" y2="100" stroke="#2d3148" stroke-width="2" stroke-dasharray="6,3"/><line x1="340" y1="64" x2="340" y2="100" stroke="#f59e0b" stroke-width="2"/><rect x="140" y="100" width="120" height="44" rx="8" fill="#1a2234" stroke="#2d3148" stroke-width="1.5"/><text x="200" y="117" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif" font-weight="600">SARAH CHEN</text><text x="200" y="131" text-anchor="middle" fill="#64748b" font-size="9" font-family="Inter,sans-serif">AE</text><rect x="280" y="100" width="120" height="44" rx="8" fill="#1a2234" stroke="#22c55e" stroke-width="2"/><text x="340" y="117" text-anchor="middle" fill="#22c55e" font-size="10" font-family="Inter,sans-serif" font-weight="700">MARCUS WEBB</text><text x="340" y="131" text-anchor="middle" fill="#64748b" font-size="9" font-family="Inter,sans-serif">VP Eng � Your contact</text><text x="340" y="175" text-anchor="middle" fill="#f59e0b" font-size="11" font-family="Inter,sans-serif" font-weight="600">The budget is one level up</text></svg>`,
+illustration: `<svg viewBox="0 0 680 200" xmlns="http://www.w3.org/2000/svg"><rect width="680" height="200" fill="#111827"/><rect x="280" y="20" width="120" height="44" rx="8" fill="#1a2234" stroke="#f59e0b" stroke-width="2"/><text x="340" y="37" text-anchor="middle" fill="#f59e0b" font-size="11" font-family="Inter,sans-serif" font-weight="700">DANA FLORES</text><text x="340" y="52" text-anchor="middle" fill="#64748b" font-size="9" font-family="Inter,sans-serif">CTO — Signs off</text><line x1="340" y1="64" x2="200" y2="100" stroke="#2d3148" stroke-width="2" stroke-dasharray="6,3"/><line x1="340" y1="64" x2="340" y2="100" stroke="#f59e0b" stroke-width="2"/><rect x="140" y="100" width="120" height="44" rx="8" fill="#1a2234" stroke="#2d3148" stroke-width="1.5"/><text x="200" y="117" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif" font-weight="600">SARAH CHEN</text><text x="200" y="131" text-anchor="middle" fill="#64748b" font-size="9" font-family="Inter,sans-serif">AE</text><rect x="280" y="100" width="120" height="44" rx="8" fill="#1a2234" stroke="#22c55e" stroke-width="2"/><text x="340" y="117" text-anchor="middle" fill="#22c55e" font-size="10" font-family="Inter,sans-serif" font-weight="700">MARCUS WEBB</text><text x="340" y="131" text-anchor="middle" fill="#64748b" font-size="9" font-family="Inter,sans-serif">VP Eng — Your contact</text><text x="340" y="175" text-anchor="middle" fill="#f59e0b" font-size="11" font-family="Inter,sans-serif" font-weight="600">The budget is one level up</text></svg>`,
     choices: [
       {
         label: "Move fast. Marcus is on board and enthusiastic -- a POV this week keeps momentum.",
@@ -506,7 +506,7 @@ illustration: `<svg viewBox="0 0 680 200" xmlns="http://www.w3.org/2000/svg"><re
 const ENDINGS = {
   end_win: {
     type: "win",
-    emoji: "??",
+    emoji: "🏆",
     tag: "CLOSED WON",
     title: "Full value, full terms, Q2 close",
     desc: "Nexus is yours. Dana sent a note to your VP about the quality of the engagement. Sarah is already talking about expansion. This is what the job looks like when everything clicks.",
@@ -520,7 +520,7 @@ const ENDINGS = {
   },
   end_ok: {
     type: "ok",
-    emoji: "?",
+    emoji: "✅",
     tag: "CLOSED",
     title: "Deal done. Relationship to rebuild.",
     desc: "Nexus signed. Not at full value, not at full strength, but the account is yours. The real question is what you do with the first 90 days. The foundation you build now determines whether this expands or churns.",
@@ -533,7 +533,7 @@ const ENDINGS = {
   },
   end_loss: {
     type: "loss",
-    emoji: "??",
+    emoji: "📉",
     tag: "CLOSED LOST",
     title: "Hyperion won. Nexus is gone.",
     desc: "It happens. The question is why -- and whether you know the real reason. Most lost deals are decided earlier than the official loss date. Somewhere in this run, the deal was already over before you knew it.",
@@ -546,7 +546,7 @@ const ENDINGS = {
   },
   end_stall: {
     type: "stall",
-    emoji: "?",
+    emoji: "⏳",
     tag: "SECOND CHANCE",
     title: "Lost the battle. Not the account.",
     desc: "Nexus went with Hyperion. But how you handled the loss left a door open. Six months from now, when the competition underdelivers, your name will be the first one Marcus remembers. That is worth something.",

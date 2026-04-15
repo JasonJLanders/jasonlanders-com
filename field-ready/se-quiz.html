@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -58,8 +58,6 @@
       text-transform: uppercase;
       color: var(--accent);
       margin-bottom: 16px;
-      text-decoration: none;
-      display: inline-block;
     }
 
     .intro-title {
@@ -497,7 +495,7 @@
 
 <!-- INTRO -->
 <div id="intro" class="screen active">
-  <a href="/field-ready/" class="brand-tag">&#8592; Field Ready by Jason Landers</a>
+  <a href="/field-ready" class="brand-tag" style="text-decoration:none;">Field Ready</a>
   <h1 class="intro-title">What kind of Sales Engineer are you?</h1>
   <p class="intro-sub">Ten questions, six archetypes. A quick way to understand your own strengths and the different styles on your team.</p>
   <div class="archetypes-preview">
@@ -582,7 +580,7 @@
     </div>
 
     <div class="field-ready-footer">
-      <a href="/field-ready">Field Ready by Jason Landers &nbsp;�&nbsp; jasonlanders.com</a>
+      <a href="/field-ready">Field Ready by Jason Landers &nbsp;·&nbsp; jasonlanders.com</a>
     </div>
   </div>
 </div>
@@ -705,7 +703,7 @@
   // ---- ARCHETYPES ----
   const ARCHETYPES = {
     a: {
-      emoji: "??",
+      emoji: "🔬",
       name: "The Deep-Diver",
       tagline: "Technical credibility is your superpower. You prepare relentlessly and customers trust you because you clearly know what you're talking about.",
       description: "You live for the architecture conversation. When a customer's staff engineer throws a curveball, you're ready -- because you did the research. You're happiest whiteboarding with engineers, and you have genuine opinions about technology choices. Your technical credibility opens doors that polished pitches cannot.",
@@ -715,7 +713,7 @@
       quote: "Actually, let me show you how this works under the hood."
     },
     b: {
-      emoji: "??",
+      emoji: "🎯",
       name: "The Executive Whisperer",
       tagline: "You translate technology into business outcomes effortlessly. Executives trust you. You make complex things feel simple and relevant.",
       description: "You naturally think in terms of what the business cares about -- cost, risk, speed, competitive position. When a VP joins a call unexpectedly, you don't panic. You pivot to their world and make the conversation land. Engineers sometimes think you're shallow. They're wrong.",
@@ -725,7 +723,7 @@
       quote: "What keeps you up at night?"
     },
     c: {
-      emoji: "??",
+      emoji: "📋",
       name: "The POV Perfectionist",
       tagline: "No POV starts without crystal-clear success criteria. You bring process discipline to evaluations that might otherwise drift.",
       description: "You believe that a well-structured POV is the difference between winning and hoping. You will not let a discovery call end without a defined next step. You make everyone around you more rigorous -- sometimes to their frustration, and usually to their benefit. Your POV win rates prove the point.",
@@ -735,7 +733,7 @@
       quote: "Before we start -- what does success look like in your terms, not ours?"
     },
     d: {
-      emoji: "??",
+      emoji: "⚔️",
       name: "The Competitive Assassin",
       tagline: "You know every competitor's weakness and get energy from being told you're losing. Bake-offs are where you thrive.",
       description: "You have done your homework on the competition. You know their product gaps, their pricing, their customer complaints, and the objections they'll raise about yours. When a customer says another vendor is winning, you lean forward. You know exactly what to do with that information.",
@@ -745,7 +743,7 @@
       quote: "Tell me more about what they showed you."
     },
     e: {
-      emoji: "??",
+      emoji: "🎨",
       name: "The Demo Artist",
       tagline: "You can make any product look beautiful. You read the room, pivot on instinct, and leave every audience wanting to see more.",
       description: "You treat the demo as a performance -- and you're good at it. You know which features to lead with for which audience, when to slow down and when to move fast, and how to turn a technical walkthrough into a story. You're the person the team wants in the room for the big one.",
@@ -755,7 +753,7 @@
       quote: "Let me show you something I think you'll find interesting."
     },
     f: {
-      emoji: "??",
+      emoji: "🤝",
       name: "The Champion Builder",
       tagline: "You play the long game. When a deal goes sideways, your champion fights for it internally -- because you built that relationship.",
       description: "You invest in relationships the way others invest in deal stages. You know who the real decision-makers are, who influences them, and what they care about when no vendor is in the room. When a deal gets complicated internally, you're the one who finds out what's actually happening -- and has someone willing to tell them.",
@@ -891,7 +889,7 @@
 
 <div id="installHint" style="display:none;position:fixed;bottom:0;left:0;right:0;background:#1a1d27;border-top:1px solid #2d3148;padding:12px 20px;text-align:center;z-index:200;">
   <p style="font-size:13px;color:#9ca3af;margin:0;">
-    <span style="margin-right:8px;">??</span>
+    <span style="margin-right:8px;">📱</span>
     Add to your home screen for quick access
     <button onclick="installApp()" id="installBtn" style="display:none;margin-left:10px;background:#6366f1;color:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;">Install</button>
     <span id="iosHint" style="display:none;margin-left:8px;color:#6b7280;">Tap Share then "Add to Home Screen"</span>

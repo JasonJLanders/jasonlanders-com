@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -25,11 +25,7 @@
     .back-link { font-size: 12px; color: var(--muted); text-decoration: none; display: inline-block; margin-bottom: 32px; }
     .back-link:hover { color: var(--accent); }
 
-    
-    param($m)
-    $v = $m.Value
-    if ($v -notmatch 'text-decoration') {
-      $v -replace '\}
+    .brand-tag { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--accent); margin-bottom: 12px; }
     .page-title { font-size: clamp(28px, 5vw, 38px); font-weight: 800; letter-spacing: -1px; color: #fff; margin-bottom: 10px; }
     .page-sub { font-size: 15px; color: var(--muted); line-height: 1.65; margin-bottom: 32px; max-width: 520px; }
 
@@ -126,7 +122,7 @@
 </head>
 <body>
 <div class="page">
-  <a href="/field-ready/" class="brand-tag">&#8592; Field Ready by Jason Landers</a>
+  <a href="/field-ready" class="back-link">&#8592; Field Ready</a>
 
   <div class="brand-tag">Field Ready</div>
   <h1 class="page-title">The Fine Print</h1>
@@ -154,7 +150,7 @@
   <!-- RATE LIMIT -->
   <div id="rateLimit">
     <div class="state-card">
-      <div class="state-emoji">?</div>
+      <div class="state-emoji">⏳</div>
       <div class="state-title">We've hit today's analysis limit</div>
       <div class="state-sub">The Fine Print runs a set number of analyses each day to keep the tool free. Today's limit has been reached. Come back tomorrow and it resets automatically.<br><br>In the meantime, the questions in <a href="/field-ready" style="color:var(--accent);">other Field Ready tools</a> might help you think it through.</div>
     </div>
@@ -164,7 +160,7 @@
   <!-- ERROR -->
   <div id="error">
     <div class="state-card">
-      <div class="state-emoji">??</div>
+      <div class="state-emoji">🔧</div>
       <div class="state-title">Something went wrong</div>
       <div class="state-sub">The analysis didn't complete. Try again in a moment, or check that the job description is long enough to analyze.</div>
     </div>
@@ -207,7 +203,7 @@
   </div>
 
   <div class="field-ready-footer">
-    <a href="/field-ready">Field Ready by Jason Landers &nbsp;�&nbsp; jasonlanders.com</a>
+    <a href="/field-ready">Field Ready by Jason Landers &nbsp;·&nbsp; jasonlanders.com</a>
   </div>
 </div>
 
@@ -321,344 +317,7 @@
 
 <div id="installHint" style="display:none;position:fixed;bottom:0;left:0;right:0;background:#1a1d27;border-top:1px solid #2d3148;padding:12px 20px;text-align:center;z-index:200;">
   <p style="font-size:13px;color:#9ca3af;margin:0;">
-    <span style="margin-right:8px;">??</span>
-    Add to your home screen for quick access
-    <button onclick="installApp()" id="installBtn" style="display:none;margin-left:10px;background:#6366f1;color:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;">Install</button>
-    <span id="iosHint" style="display:none;margin-left:8px;color:#6b7280;">Tap Share then "Add to Home Screen"</span>
-    <button onclick="document.getElementById('installHint').style.display='none'" style="margin-left:12px;background:transparent;border:none;color:#6b7280;cursor:pointer;font-size:16px;">x</button>
-  </p>
-</div>
-
-<script>
-  // Show hint on mobile only
-  if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-    // iOS -- show share hint
-    if (/iPhone|iPad|iPod/i.test(navigator.userAgent) && !window.navigator.standalone) {
-      document.getElementById('installHint').style.display = 'block';
-      document.getElementById('iosHint').style.display = 'inline';
-    }
-  }
-
-  // Android / Chrome -- listen for beforeinstallprompt
-  let deferredPrompt;
-  window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-    document.getElementById('installHint').style.display = 'block';
-    document.getElementById('installBtn').style.display = 'inline-block';
-  });
-
-  function installApp() {
-    if (deferredPrompt) {
-      deferredPrompt.prompt();
-      deferredPrompt.userChoice.then(() => {
-        document.getElementById('installHint').style.display = 'none';
-        deferredPrompt = null;
-      });
-    }
-  }
-
-  window.addEventListener('appinstalled', () => {
-    document.getElementById('installHint').style.display = 'none';
-  });
-</script>
-</body>
-</html>
-, ' text-decoration: none; display: inline-block; }'
-    } else { $v }
-  
-    .page-title { font-size: clamp(28px, 5vw, 38px); font-weight: 800; letter-spacing: -1px; color: #fff; margin-bottom: 10px; }
-    .page-sub { font-size: 15px; color: var(--muted); line-height: 1.65; margin-bottom: 32px; max-width: 520px; }
-
-    /* ---- INPUT ---- */
-    .input-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 24px; margin-bottom: 20px; }
-    .input-label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 12px; }
-    textarea {
-      width: 100%; min-height: 200px; background: var(--surface2); border: 1px solid var(--border);
-      border-radius: 10px; padding: 14px; color: var(--text); font-family: var(--font);
-      font-size: 14px; line-height: 1.6; resize: vertical; outline: none; transition: border-color 0.15s;
-    }
-    textarea:focus { border-color: var(--accent); }
-    textarea::placeholder { color: var(--muted); }
-    .char-count { font-size: 11px; color: var(--muted); text-align: right; margin-top: 6px; }
-
-    .btn-analyze {
-      width: 100%; background: var(--accent); color: #fff; border: none; border-radius: 12px;
-      padding: 16px; font-family: var(--font); font-size: 16px; font-weight: 700;
-      cursor: pointer; transition: background 0.15s; display: flex; align-items: center; justify-content: center; gap: 8px;
-    }
-    .btn-analyze:hover { background: var(--accent-dark); }
-    .btn-analyze:disabled { opacity: 0.5; cursor: not-allowed; }
-
-    .spinner { width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite; }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    /* ---- STATES ---- */
-    #loading, #error, #rateLimit, #results { display: none; }
-    #loading.show, #error.show, #rateLimit.show, #results.show { display: block; }
-
-    .state-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 32px; text-align: center; margin-bottom: 20px; }
-    .state-emoji { font-size: 40px; margin-bottom: 14px; }
-    .state-title { font-size: 18px; font-weight: 700; color: #fff; margin-bottom: 8px; }
-    .state-sub { font-size: 14px; color: var(--muted); line-height: 1.6; max-width: 400px; margin: 0 auto; }
-
-    /* ---- RESULTS ---- */
-    .score-hero { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 28px; margin-bottom: 14px; display: flex; align-items: center; gap: 24px; }
-    .score-num { font-size: 56px; font-weight: 800; letter-spacing: -2px; line-height: 1; flex-shrink: 0; }
-    .score-num.solid { color: var(--green); }
-    .score-num.mostly { color: #86efac; }
-    .score-num.caution { color: var(--yellow); }
-    .score-num.concerns { color: var(--orange); }
-    .score-verdict { font-size: 18px; font-weight: 700; color: #fff; margin-bottom: 6px; }
-    .score-summary { font-size: 14px; color: var(--muted); line-height: 1.65; }
-
-    .dimensions-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
-    .dim-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
-    .dim-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
-    .dim-name { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); }
-    .dim-label { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 100px; }
-    .dim-label.strong, .dim-label.clear, .dim-label.structured, .dim-label.healthy { background: rgba(34,197,94,0.15); color: var(--green); }
-    .dim-label.fair, .dim-label.mentioned, .dim-label.developing, .dim-label.typical { background: rgba(234,179,8,0.15); color: var(--yellow); }
-    .dim-label.unclear, .dim-label.vague, .dim-label.watchout { background: rgba(249,115,22,0.15); color: var(--orange); }
-    .dim-label.weak, .dim-label.absent, .dim-label.concerning, .dim-label.redflag { background: rgba(239,68,68,0.15); color: var(--red); }
-    .dim-bar-bg { background: var(--surface2); border-radius: 100px; height: 4px; margin-bottom: 8px; }
-    .dim-bar-fill { height: 100%; border-radius: 100px; background: var(--accent); transition: width 0.6s ease; }
-    .dim-note { font-size: 12px; color: var(--muted); line-height: 1.5; }
-
-    .flags-section { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 22px; margin-bottom: 14px; }
-    .flags-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 14px; }
-    .flags-title.green { color: var(--green); }
-    .flags-title.yellow { color: var(--yellow); }
-    .flag-item { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 10px; font-size: 14px; color: var(--text); line-height: 1.5; }
-    .flag-item:last-child { margin-bottom: 0; }
-    .flag-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; margin-top: 6px; }
-    .flag-dot.green { background: var(--green); }
-    .flag-dot.yellow { background: var(--yellow); }
-
-    .questions-section { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 22px; margin-bottom: 20px; }
-    .questions-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--accent); margin-bottom: 14px; }
-    .q-item { display: flex; gap: 12px; margin-bottom: 12px; font-size: 14px; line-height: 1.55; }
-    .q-item:last-child { margin-bottom: 0; }
-    .q-num { font-size: 12px; font-weight: 700; color: var(--accent); min-width: 20px; margin-top: 1px; }
-
-    .btn-reset { width: 100%; background: transparent; color: var(--muted); border: 1px solid var(--border); border-radius: 12px; padding: 14px; font-family: var(--font); font-size: 15px; font-weight: 600; cursor: pointer; transition: border-color 0.15s, color 0.15s; margin-bottom: 32px; }
-    .btn-reset:hover { border-color: var(--text); color: var(--text); }
-
-    .field-ready-footer { padding-top: 20px; border-top: 1px solid var(--border); text-align: center; }
-    .field-ready-footer a { font-size: 12px; color: var(--muted); text-decoration: none; }
-    .field-ready-footer a:hover { color: var(--accent); }
-
-    @media (max-width: 480px) { .dimensions-grid { grid-template-columns: 1fr; } .score-hero { flex-direction: column; text-align: center; } }
-  </style>
-  <meta property="og:title" content="The Fine Print | SE Job Description Analyzer" />
-  <meta property="og:description" content="Paste in a job description and get an honest AI-powered assessment of compensation structure, technical depth, and red flags worth asking about." />
-  <meta property="og:url" content="https://jasonlanders.com/field-ready/the-fine-print.html" />
-  <meta property="og:type" content="website" />
-  <meta name="keywords" content="SE job description analyzer, sales engineer job review, presales role assessment, SE job offer analysis" />
-  <link rel="manifest" href="/field-ready/manifest-the-fine-print.json" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="Fine Print" />
-  <meta name="theme-color" content="#6366f1" />
-</head>
-<body>
-<div class="page">
-  <a href="/field-ready/" class="brand-tag">&#8592; Field Ready by Jason Landers</a>
-
-  <div class="brand-tag">Field Ready</div>
-  <h1 class="page-title">The Fine Print</h1>
-  <p class="page-sub">Paste in a job description and get an honest read on what it's really offering: compensation structure, technical depth, career path, and the questions worth asking before you sign anything.</p>
-
-  <!-- INPUT -->
-  <div id="inputSection">
-    <div class="input-card">
-      <div class="input-label">Job Description</div>
-      <textarea id="jdText" placeholder="Paste the job description here..." oninput="updateCount()"></textarea>
-      <div class="char-count"><span id="charCount">0</span> characters</div>
-    </div>
-    <button class="btn-analyze" id="analyzeBtn" onclick="analyze()">Read the Fine Print</button>
-  </div>
-
-  <!-- LOADING -->
-  <div id="loading">
-    <div class="state-card">
-      <div style="display:flex;justify-content:center;margin-bottom:14px;"><div class="spinner" style="width:32px;height:32px;border-width:3px;"></div></div>
-      <div class="state-title">Reading the fine print...</div>
-      <div class="state-sub">This takes about 10 seconds.</div>
-    </div>
-  </div>
-
-  <!-- RATE LIMIT -->
-  <div id="rateLimit">
-    <div class="state-card">
-      <div class="state-emoji">?</div>
-      <div class="state-title">We've hit today's analysis limit</div>
-      <div class="state-sub">The Fine Print runs a set number of analyses each day to keep the tool free. Today's limit has been reached. Come back tomorrow and it resets automatically.<br><br>In the meantime, the questions in <a href="/field-ready" style="color:var(--accent);">other Field Ready tools</a> might help you think it through.</div>
-    </div>
-    <button class="btn-reset" onclick="reset()">Try a different posting</button>
-  </div>
-
-  <!-- ERROR -->
-  <div id="error">
-    <div class="state-card">
-      <div class="state-emoji">??</div>
-      <div class="state-title">Something went wrong</div>
-      <div class="state-sub">The analysis didn't complete. Try again in a moment, or check that the job description is long enough to analyze.</div>
-    </div>
-    <button class="btn-reset" onclick="reset()">Try again</button>
-  </div>
-
-  <!-- RESULTS -->
-  <div id="results">
-    <!-- Score hero -->
-    <div class="score-hero" id="scoreHero">
-      <div class="score-num" id="scoreNum"></div>
-      <div>
-        <div class="score-verdict" id="scoreVerdict"></div>
-        <div class="score-summary" id="scoreSummary"></div>
-      </div>
-    </div>
-
-    <!-- Dimensions -->
-    <div class="dimensions-grid" id="dimensionsGrid"></div>
-
-    <!-- Green flags -->
-    <div class="flags-section" id="greenFlagsSection">
-      <div class="flags-title green">What looks good</div>
-      <div id="greenFlagsList"></div>
-    </div>
-
-    <!-- Yellow flags -->
-    <div class="flags-section" id="yellowFlagsSection">
-      <div class="flags-title yellow">Worth asking about</div>
-      <div id="yellowFlagsList"></div>
-    </div>
-
-    <!-- Interview questions -->
-    <div class="questions-section">
-      <div class="questions-title">Questions to ask in the interview</div>
-      <div id="questionsList"></div>
-    </div>
-
-    <button class="btn-reset" onclick="reset()">Analyze another posting</button>
-  </div>
-
-  <div class="field-ready-footer">
-    <a href="/field-ready">Field Ready by Jason Landers &nbsp;�&nbsp; jasonlanders.com</a>
-  </div>
-</div>
-
-<script>
-  function updateCount() {
-    const len = document.getElementById('jdText').value.length;
-    document.getElementById('charCount').textContent = len.toLocaleString();
-    document.getElementById('analyzeBtn').disabled = len < 100;
-  }
-
-  function show(id) {
-    ['loading','error','rateLimit','results'].forEach(s => document.getElementById(s).classList.remove('show'));
-    if (id) document.getElementById(id).classList.add('show');
-  }
-
-  async function analyze() {
-    const text = document.getElementById('jdText').value.trim();
-    if (text.length < 100) return;
-
-    document.getElementById('inputSection').style.display = 'none';
-    show('loading');
-    window.scrollTo(0, 0);
-
-    try {
-      const res = await fetch('/api/fine-print', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ jobDescription: text })
-      });
-
-      const data = await res.json();
-
-      if (res.status === 429 || data.rateLimited) { show('rateLimit'); return; }
-      if (!res.ok || data.error) { show('error'); return; }
-
-      renderResults(data);
-      show('results');
-      window.scrollTo(0, 0);
-
-    } catch (e) {
-      show('error');
-    }
-  }
-
-  function renderResults(d) {
-    // Score color
-    const score = d.overallScore;
-    const colorClass = score >= 75 ? 'solid' : score >= 55 ? 'mostly' : score >= 40 ? 'caution' : 'concerns';
-    document.getElementById('scoreNum').textContent = score;
-    document.getElementById('scoreNum').className = 'score-num ' + colorClass;
-    document.getElementById('scoreVerdict').textContent = d.overallVerdict;
-    document.getElementById('scoreSummary').textContent = d.summary;
-
-    // Dimensions
-    const dimNames = {
-      compensation: 'Compensation',
-      technicalDepth: 'Technical Depth',
-      careerPath: 'Career Path',
-      seMotion: 'SE Motion',
-      workLifeBalance: 'Work/Life'
-    };
-    const grid = document.getElementById('dimensionsGrid');
-    grid.innerHTML = '';
-    Object.entries(d.dimensions).forEach(([key, dim]) => {
-      const pct = (dim.score / 20) * 100;
-      const labelClass = dim.label.toLowerCase().replace(/[\s\/]+/g, '').replace('watchout', 'watchout').replace('redflag', 'redflag');
-      grid.innerHTML += `
-        <div class="dim-card">
-          <div class="dim-header">
-            <div class="dim-name">${dimNames[key] || key}</div>
-            <div class="dim-label ${labelClass}">${dim.label}</div>
-          </div>
-          <div class="dim-bar-bg"><div class="dim-bar-fill" style="width:${pct}%"></div></div>
-          <div class="dim-note">${dim.note}</div>
-        </div>
-      `;
-    });
-
-    // Green flags
-    const greenList = document.getElementById('greenFlagsList');
-    greenList.innerHTML = (d.greenFlags || []).map(f =>
-      `<div class="flag-item"><div class="flag-dot green"></div><span>${f}</span></div>`
-    ).join('');
-    document.getElementById('greenFlagsSection').style.display = (d.greenFlags?.length) ? '' : 'none';
-
-    // Yellow flags
-    const yellowList = document.getElementById('yellowFlagsList');
-    yellowList.innerHTML = (d.yellowFlags || []).map(f =>
-      `<div class="flag-item"><div class="flag-dot yellow"></div><span>${f}</span></div>`
-    ).join('');
-    document.getElementById('yellowFlagsSection').style.display = (d.yellowFlags?.length) ? '' : 'none';
-
-    // Interview questions
-    document.getElementById('questionsList').innerHTML = (d.interviewQuestions || []).map((q, i) =>
-      `<div class="q-item"><div class="q-num">${i + 1}.</div><div>${q}</div></div>`
-    ).join('');
-  }
-
-  function reset() {
-    document.getElementById('inputSection').style.display = 'block';
-    document.getElementById('jdText').value = '';
-    document.getElementById('charCount').textContent = '0';
-    document.getElementById('analyzeBtn').disabled = true;
-    show(null);
-    window.scrollTo(0, 0);
-  }
-
-  // Init
-  document.getElementById('analyzeBtn').disabled = true;
-</script>
-
-<div id="installHint" style="display:none;position:fixed;bottom:0;left:0;right:0;background:#1a1d27;border-top:1px solid #2d3148;padding:12px 20px;text-align:center;z-index:200;">
-  <p style="font-size:13px;color:#9ca3af;margin:0;">
-    <span style="margin-right:8px;">??</span>
+    <span style="margin-right:8px;">📱</span>
     Add to your home screen for quick access
     <button onclick="installApp()" id="installBtn" style="display:none;margin-left:10px;background:#6366f1;color:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;">Install</button>
     <span id="iosHint" style="display:none;margin-left:8px;color:#6b7280;">Tap Share then "Add to Home Screen"</span>
