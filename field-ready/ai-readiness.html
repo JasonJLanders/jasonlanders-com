@@ -346,6 +346,10 @@
     .chart-wrap canvas { width: 260px !important; height: 260px !important; }
 
     .dim-breakdown { display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px; }
+
+    @media print {
+      .chart-section { break-after: page; }
+    }
     .dim-row { display: flex; align-items: center; gap: 12px; }
     .dim-name { font-size: 13px; color: var(--muted); width: 130px; flex-shrink: 0; }
     .dim-bar-bg { flex: 1; height: 6px; background: var(--surface2); border-radius: 100px; overflow: hidden; }
