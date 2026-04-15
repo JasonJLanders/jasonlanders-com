@@ -29,11 +29,18 @@
 
     html, body { min-height: 100%; font-family: var(--font); background: var(--bg); color: var(--text); -webkit-tap-highlight-color: transparent; }
 
+    /* Screens */
     .screen { display: none; }
     .screen.active { display: block; }
-    body.quiz-active { overflow: hidden; height: 100vh; }
-    body.quiz-active #quiz,
-    body.quiz-active #result { position: fixed; top: 0; left: 0; right: 0; bottom: 0; overflow-y: auto; background: var(--bg); z-index: 50; }
+
+    /* Quiz fullscreen overlay */
+    #quiz.active {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      overflow-y: auto;
+      background: var(--bg);
+      z-index: 50;
+    }
 
     /* ---- INTRO ---- */
     #intro {
@@ -99,10 +106,7 @@
       color: var(--muted);
     }
 
-    .mode-btn.active {
-      background: var(--accent);
-      color: #fff;
-    }
+    .mode-btn.active { background: var(--accent); color: #fff; }
 
     .dimension-pills {
       display: flex;
@@ -136,14 +140,11 @@
     }
 
     .btn-start:hover { background: var(--accent-dark); }
-
     .intro-footer { margin-top: 20px; font-size: 13px; color: var(--muted); }
 
     /* ---- QUIZ ---- */
-    #quiz { min-height: 100vh; padding: 24px; }
-
+    #quiz { padding: 24px; }
     .quiz-inner { max-width: 600px; margin: 0 auto; }
-
     .progress-wrap { margin-bottom: 32px; }
 
     .progress-bar-bg {
@@ -207,6 +208,7 @@
       justify-content: space-between;
       align-items: center;
       margin-top: 28px;
+      padding-bottom: 40px;
     }
 
     .btn-back {
@@ -242,17 +244,20 @@
     .btn-next.enabled:hover { background: var(--accent-dark); }
 
     /* ---- RESULT ---- */
-    #result { min-height: 100vh; padding: 40px 24px 60px; }
-
+    #result { padding: 40px 24px 60px; }
     .result-inner { max-width: 640px; margin: 0 auto; }
 
-    .result-brand { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--accent); margin-bottom: 24px; text-align: center; }
-
-    .stage-badge {
+    .result-brand {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 24px;
       text-align: center;
-      margin-bottom: 32px;
     }
 
+    .stage-badge { text-align: center; margin-bottom: 32px; }
     .stage-icon { font-size: 52px; margin-bottom: 12px; }
 
     .stage-number {
@@ -279,13 +284,7 @@
       margin-top: 12px;
     }
 
-    .score-num {
-      font-size: 48px;
-      font-weight: 800;
-      color: var(--accent);
-      letter-spacing: -2px;
-    }
-
+    .score-num { font-size: 48px; font-weight: 800; color: var(--accent); letter-spacing: -2px; }
     .score-denom { font-size: 24px; color: var(--muted); font-weight: 600; }
 
     .stage-desc {
@@ -331,21 +330,17 @@
       padding: 24px;
       display: flex;
       justify-content: center;
+      align-items: center;
     }
 
-    .chart-wrap canvas { max-width: 280px; max-height: 280px; }
+    .chart-wrap canvas { width: 260px !important; height: 260px !important; }
 
     .dim-breakdown { display: flex; flex-direction: column; gap: 10px; margin-bottom: 28px; }
 
-    .dim-row {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .dim-name { font-size: 14px; color: var(--muted); width: 160px; flex-shrink: 0; }
+    .dim-row { display: flex; align-items: center; gap: 12px; }
+    .dim-name { font-size: 14px; color: var(--muted); width: 140px; flex-shrink: 0; }
     .dim-bar-bg { flex: 1; height: 6px; background: var(--surface2); border-radius: 100px; overflow: hidden; }
-    .dim-bar-fill { height: 100%; border-radius: 100px; background: var(--accent); transition: width 0.8s ease; }
+    .dim-bar-fill { height: 100%; border-radius: 100px; background: var(--accent); }
     .dim-score-label { font-size: 13px; font-weight: 600; color: var(--text); width: 36px; text-align: right; }
 
     .weak-spot {
@@ -405,6 +400,7 @@
       line-height: 1.7;
       margin-bottom: 16px;
       font-style: italic;
+      white-space: pre-line;
     }
 
     .btn-copy {
@@ -452,9 +448,9 @@
 
 <!-- INTRO -->
 <div id="intro" class="screen active">
-  <p class="brand-tag">⚡ Field Ready by Jason Landers</p>
+  <p class="brand-tag">&#9889; Field Ready by Jason Landers</p>
   <h1 class="intro-title">SE <span>AI Readiness</span> Score</h1>
-  <p class="intro-sub">10 questions. 5 dimensions. Find out how AI-native you (or your team) actually are — and exactly where to level up.</p>
+  <p class="intro-sub">10 questions. 5 dimensions. Find out how AI-native you (or your team) actually are, and exactly where to level up.</p>
 
   <div class="mode-toggle">
     <button class="mode-btn active" id="modeIndividual" onclick="setMode('individual')">Individual SE</button>
@@ -462,14 +458,14 @@
   </div>
 
   <div class="dimension-pills">
-    <span class="pill">🔍 Call Prep</span>
-    <span class="pill">🎯 Demo</span>
-    <span class="pill">📄 POV Writing</span>
-    <span class="pill">⚔️ Competitive</span>
-    <span class="pill">🏋️ Practice</span>
+    <span class="pill">&#128269; Call Prep</span>
+    <span class="pill">&#127919; Demo</span>
+    <span class="pill">&#128196; POV Writing</span>
+    <span class="pill">&#9876;&#65039; Competitive</span>
+    <span class="pill">&#127947;&#65039; Practice</span>
   </div>
 
-  <button class="btn-start" onclick="startQuiz()">Get My Score →</button>
+  <button class="btn-start" onclick="startQuiz()">Get My Score &#8594;</button>
   <p class="intro-footer">Takes about 2 minutes. No signup required.</p>
 </div>
 
@@ -484,8 +480,8 @@
     <div class="question-text" id="questionText"></div>
     <div class="options" id="optionsContainer"></div>
     <div class="quiz-nav">
-      <button class="btn-back" id="btnBack" onclick="prevQuestion()">← Back</button>
-      <button class="btn-next" id="btnNext" onclick="nextQuestion()">Next →</button>
+      <button class="btn-back" id="btnBack" onclick="prevQuestion()">&#8592; Back</button>
+      <button class="btn-next" id="btnNext" onclick="nextQuestion()">Next &#8594;</button>
     </div>
   </div>
 </div>
@@ -493,7 +489,7 @@
 <!-- RESULT -->
 <div id="result" class="screen">
   <div class="result-inner">
-    <p class="result-brand">⚡ Field Ready — SE AI Readiness Score</p>
+    <p class="result-brand">&#9889; Field Ready - SE AI Readiness Score</p>
 
     <div class="stage-badge">
       <div class="stage-icon" id="stageIcon"></div>
@@ -508,20 +504,20 @@
     <div class="stage-desc" id="stageDesc"></div>
 
     <div class="hours-card">
-      <div class="hours-label">⏱ Hours Recovered Per Week</div>
+      <div class="hours-label">&#9201; Hours Recovered Per Week</div>
       <div class="hours-text" id="hoursText"></div>
     </div>
 
     <div class="chart-section">
       <div class="section-title">Your AI Readiness Profile</div>
-      <div class="chart-wrap"><canvas id="radarChart"></canvas></div>
+      <div class="chart-wrap"><canvas id="radarChart" width="260" height="260"></canvas></div>
     </div>
 
     <div class="section-title">Dimension Breakdown</div>
     <div class="dim-breakdown" id="dimBreakdown"></div>
 
-    <div class="weak-spot" id="weakSpot">
-      <div class="weak-label">⚠ Your Lowest Area</div>
+    <div class="weak-spot">
+      <div class="weak-label">&#9888; Your Lowest Area</div>
       <div class="weak-title" id="weakTitle"></div>
       <div class="weak-desc" id="weakDesc"></div>
     </div>
@@ -540,7 +536,7 @@
     </div>
 
     <div class="result-footer">
-      <a href="/field-ready/">← Back to Field Ready</a><br>
+      <a href="/field-ready/">&#8592; Back to Field Ready</a><br>
       <button class="btn-retake" onclick="retake()">Retake Assessment</button>
     </div>
   </div>
@@ -553,11 +549,11 @@
   let radarChartInstance = null;
 
   const DIMENSIONS = [
-    { name: 'Call Prep', icon: '🔍' },
-    { name: 'Demo', icon: '🎯' },
-    { name: 'POV Writing', icon: '📄' },
-    { name: 'Competitive', icon: '⚔️' },
-    { name: 'Practice', icon: '🏋️' }
+    { name: 'Call Prep', icon: '\u{1F50D}' },
+    { name: 'Demo', icon: '\u{1F3AF}' },
+    { name: 'POV Writing', icon: '\u{1F4C4}' },
+    { name: 'Competitive', icon: '\u{2694}\uFE0F' },
+    { name: 'Practice', icon: '\u{1F3CB}\uFE0F' }
   ];
 
   const QUESTIONS = [
@@ -570,7 +566,7 @@
         'Read recent news and scan LinkedIn',
         'Research the company thoroughly and review internal notes',
         'Use AI to synthesize company intel and generate tailored discovery questions',
-        'Run a full AI prep workflow: company brief, stakeholder intel, hypothesis, and tailored question set — every time'
+        'Run a full AI prep workflow: company brief, stakeholder intel, hypothesis, and tailored question set. Every time.'
       ]
     },
     {
@@ -594,7 +590,7 @@
         'Swap in their logo and some custom data',
         'Modify the flow based on discovery notes',
         'Use AI to generate a custom demo script from discovery notes',
-        'Have an AI-assisted process: discovery → use case summary → custom narrative → tailored demo flow'
+        'Have an AI-assisted process: discovery, use case summary, custom narrative, and tailored demo flow'
       ]
     },
     {
@@ -606,7 +602,7 @@
         'Try to answer from memory',
         'Pivot confidently to what you know',
         'Have AI open in a second screen to pull quick answers in real time',
-        'Have AI actively running during demos — getting real-time context, answers, and objection framing on the fly'
+        'Have AI actively running during demos, getting real-time context, answers, and objection framing on the fly'
       ]
     },
     {
@@ -618,7 +614,7 @@
         'Reuse an old one and edit manually',
         'Use a consistent template',
         'Use AI to generate a first draft from discovery notes',
-        'Have a repeatable AI workflow: discovery notes → AI draft → human refinement → ready in under 2 hours'
+        'Have a repeatable AI workflow: discovery notes to AI draft to human refinement, ready in under 2 hours'
       ]
     },
     {
@@ -626,7 +622,7 @@
       individual: 'When writing executive summaries or technical findings, you...',
       manager: 'When writing executive summaries or technical findings, your SEs...',
       options: [
-        'Write from scratch — takes a while',
+        'Write from scratch - takes a while',
         'Use old examples as reference',
         'Use a template and fill it in manually',
         'Use AI to draft based on call notes',
@@ -642,7 +638,7 @@
         'Ask a senior SE or engineer',
         'Search internal docs and Slack',
         'Use AI to get a fast working answer, then validate with SMEs',
-        'Use AI first, always — can close ~80% of gaps confidently in real time, escalate the rest'
+        'Use AI first, always - can close ~80% of gaps confidently in real time, escalate the rest'
       ]
     },
     {
@@ -654,7 +650,7 @@
         'Read competitor battlecards when they\'re published',
         'Check Gong/Chorus for competitive call moments',
         'Use AI to research competitors on-demand when deals get competitive',
-        'Have an AI-assisted intel system — track new info, update positioning, prep bespoke competitive angles per deal'
+        'Have an AI-assisted intel system: track new info, update positioning, prep bespoke competitive angles per deal'
       ]
     },
     {
@@ -662,11 +658,11 @@
       individual: 'How do you practice for tough conversations or objections?',
       manager: 'How does your team practice for tough conversations or objections?',
       options: [
-        'Rely on experience — enough reps already',
+        'Rely on experience - enough reps already',
         'Talk it through with the AE beforehand',
         'Roleplay with a colleague occasionally',
         'Use AI to simulate customer objections and practice responses',
-        'Have a regular AI practice routine — roleplay, review, iterate; treat it like reps-based training'
+        'Have a regular AI practice routine: roleplay, review, iterate. Treat it like reps-based training.'
       ]
     },
     {
@@ -674,11 +670,11 @@
       individual: 'After a lost deal or rough call, you...',
       manager: 'After a lost deal or rough call, your SEs...',
       options: [
-        'Move on — next deal',
+        'Move on - next deal',
         'Debrief with the AE',
         'Document what happened in Salesforce',
         'Use AI to analyze what went wrong and identify what to do differently',
-        'Run a structured AI debrief — input the situation, get diagnostic questions, identify the failure mode, update the playbook'
+        'Run a structured AI debrief: input the situation, get diagnostic questions, identify the failure mode, update the playbook'
       ]
     }
   ];
@@ -686,32 +682,32 @@
   const STAGES = [
     {
       min: 0, max: 8,
-      icon: '🧊', number: 'Stage 1', name: 'The Skeptic',
-      desc: 'AI tooling isn\'t part of your workflow yet. You\'re relying on experience, instincts, and what\'s always worked. That\'s not wrong — but the gap between you and AI-augmented peers is widening every quarter.',
-      hours: { current: '0–1 hrs', next: '3–5 hrs', nextStage: 'Stage 3' }
+      icon: '\u{1F9CA}', number: 'Stage 1', name: 'The Skeptic',
+      desc: 'AI tooling isn\'t part of your workflow yet. You\'re relying on experience, instincts, and what\'s always worked. That\'s not wrong, but the gap between you and AI-augmented peers is widening every quarter.',
+      hours: { current: '0-1 hrs', next: '3-5 hrs', nextStage: 'Stage 3' }
     },
     {
       min: 9, max: 16,
-      icon: '🌱', number: 'Stage 2', name: 'The Curious Dabbler',
-      desc: 'You\'ve tried AI tools and seen what they can do. But usage is sporadic — you reach for AI when you\'re stuck, not as a first move. The potential is there. The habit isn\'t yet.',
-      hours: { current: '1–3 hrs', next: '6–9 hrs', nextStage: 'Stage 4' }
+      icon: '\u{1F331}', number: 'Stage 2', name: 'The Curious Dabbler',
+      desc: 'You\'ve tried AI tools and seen what they can do. But usage is sporadic: you reach for AI when you\'re stuck, not as a first move. The potential is there. The habit isn\'t yet.',
+      hours: { current: '1-3 hrs', next: '6-9 hrs', nextStage: 'Stage 4' }
     },
     {
       min: 17, max: 24,
-      icon: '⚙️', number: 'Stage 3', name: 'The Selective User',
-      desc: 'AI is part of your toolkit, but not your system. You use it consistently in a few areas and leave value on the table in others. You\'re ahead of most SEs — and there\'s a clear path to the next level.',
-      hours: { current: '3–5 hrs', next: '10+ hrs', nextStage: 'Stage 5' }
+      icon: '\u2699\uFE0F', number: 'Stage 3', name: 'The Selective User',
+      desc: 'AI is part of your toolkit, but not your system. You use it consistently in a few areas and leave value on the table in others. You\'re ahead of most SEs, and there\'s a clear path to the next level.',
+      hours: { current: '3-5 hrs', next: '10+ hrs', nextStage: 'Stage 5' }
     },
     {
       min: 25, max: 32,
-      icon: '🚀', number: 'Stage 4', name: 'The AI-Augmented SE',
+      icon: '\u{1F680}', number: 'Stage 4', name: 'The AI-Augmented SE',
       desc: 'AI is woven into how you work. Your prep is faster, your output is higher quality, and you\'re consistently recovering hours every week. You\'re in the top 15% of SE practitioners right now.',
-      hours: { current: '6–9 hrs', next: '10+ hrs', nextStage: 'Stage 5' }
+      hours: { current: '6-9 hrs', next: '10+ hrs', nextStage: 'Stage 5' }
     },
     {
       min: 33, max: 40,
-      icon: '⚡', number: 'Stage 5', name: 'The AI-Native',
-      desc: 'AI isn\'t a tool you use — it\'s how you operate. You have repeatable workflows, real leverage, and you\'re compounding your advantage every week. This is what the next generation of SE looks like.',
+      icon: '\u26A1', number: 'Stage 5', name: 'The AI-Native',
+      desc: 'AI isn\'t a tool you use - it\'s how you operate. You have repeatable workflows, real leverage, and you\'re compounding your advantage every week. This is what the next generation of SE looks like.',
       hours: { current: '10+ hrs', next: null, nextStage: null }
     }
   ];
@@ -719,29 +715,29 @@
   const WEAK_SPOT_INFO = {
     0: {
       title: 'Call Prep & Stakeholder Research',
-      desc: 'Stage 5 SEs walk into every call with an AI-generated company brief, tailored discovery questions, and stakeholder-specific angles — all built in under 10 minutes.',
+      desc: 'Stage 5 SEs walk into every call with an AI-generated company brief, tailored discovery questions, and stakeholder-specific angles, all built in under 10 minutes.',
       steps: [
-        'Before your next call: paste the company URL + stakeholder LinkedIn into Claude or ChatGPT and ask for a discovery prep brief',
-        'Build a reusable prep prompt you can run for any call — company context, likely pain points, tailored questions',
-        'Track whether prepped calls have better discovery depth — you\'ll see the signal quickly'
+        'Before your next call: paste the company URL and stakeholder LinkedIn into Claude or ChatGPT and ask for a discovery prep brief',
+        'Build a reusable prep prompt you can run for any call: company context, likely pain points, tailored questions',
+        'Track whether prepped calls produce better discovery depth - you\'ll see the signal quickly'
       ]
     },
     1: {
       title: 'Demo Customization & Live Delivery',
-      desc: 'Stage 5 SEs generate a custom demo narrative from discovery notes using AI before every significant demo — and keep AI open for real-time support during the call.',
+      desc: 'Stage 5 SEs generate a custom demo narrative from discovery notes using AI before every significant demo, and keep AI open for real-time support during the call.',
       steps: [
         'After your next discovery call: paste your notes into AI and ask for a custom demo script targeting their specific use case',
         'Set up a second screen or tab with AI open during demos for live question support',
-        'Build a "demo narrative template" in AI that takes discovery input and outputs a tailored flow'
+        'Build a "demo narrative template" prompt that takes discovery input and outputs a tailored flow'
       ]
     },
     2: {
       title: 'POV Writing & Technical Writeups',
       desc: 'Stage 5 SEs turn call notes into polished POVs and exec summaries in under 30 minutes using repeatable AI workflows.',
       steps: [
-        'After your next discovery call: immediately paste notes into AI and ask for a first-draft POV — even rough output saves 80% of the work',
-        'Build a POV template prompt: success criteria, technical requirements, business outcomes, timeline — let AI fill the structure',
-        'Start a "post-call workflow" habit: notes → AI summary → exec brief → draft POV, all in one sitting'
+        'After your next discovery call: immediately paste notes into AI and ask for a first-draft POV - even rough output saves 80% of the work',
+        'Build a POV template prompt: success criteria, technical requirements, business outcomes, timeline - let AI fill the structure',
+        'Start a post-call workflow habit: notes to AI summary to exec brief to draft POV, all in one sitting'
       ]
     },
     3: {
@@ -750,15 +746,15 @@
       steps: [
         'Next time a competitor comes up in a deal: use AI to build a bespoke competitive positioning doc for that specific situation',
         'Set up a simple AI competitive research prompt: "Compare [your product] vs [competitor] for a customer focused on [use case]"',
-        'For technical gaps: create a habit of asking AI first, validating with SMEs second — track how often AI gets you 80% of the way there'
+        'For technical gaps: ask AI first, validate with SMEs second - track how often AI gets you 80% of the way there'
       ]
     },
     4: {
       title: 'Practice & Self-Improvement',
-      desc: 'Stage 5 SEs treat AI like a sparring partner — regular roleplay, structured debriefs, and a playbook that gets smarter after every deal.',
+      desc: 'Stage 5 SEs treat AI like a sparring partner: regular roleplay, structured debriefs, and a playbook that gets smarter after every deal.',
       steps: [
-        'Before your next tough call: use AI to roleplay it — describe the customer persona, likely objections, and ask AI to push back hard',
-        'After your next loss: run a structured AI debrief — describe what happened and ask AI to diagnose the failure mode and suggest alternatives',
+        'Before your next tough call: use AI to roleplay it - describe the customer persona, likely objections, and ask AI to push back hard',
+        'After your next loss: run a structured AI debrief - describe what happened and ask AI to diagnose the failure mode and suggest alternatives',
         'Build a personal "objection bank" in AI: every time you hit a new objection, add it and the best response you found'
       ]
     }
@@ -773,15 +769,103 @@
   function startQuiz() {
     currentQ = 0;
     answers = new Array(10).fill(null);
-    showScreen('quiz');
-    document.body.classList.add('quiz-active');
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('quiz').classList.add('active');
+    window.scrollTo(0, 0);
     renderQuestion();
   }
 
-  function showScreen(id) {
+  function showResult() {
+    // Hide quiz, show result as normal page
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    document.getElementById(id).classList.add('active');
-    window.scrollTo(0, 0);
+    document.getElementById('result').classList.add('active');
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+
+    const total = answers.reduce((s, a) => s + a, 0);
+    const stage = STAGES.find(s => total >= s.min && total <= s.max);
+
+    const dimScores = [0, 0, 0, 0, 0];
+    QUESTIONS.forEach((q, i) => { dimScores[q.dim] += answers[i]; });
+
+    document.getElementById('stageIcon').textContent = stage.icon;
+    document.getElementById('stageNumber').textContent = stage.number;
+    document.getElementById('stageName').textContent = stage.name;
+    document.getElementById('scoreNum').textContent = total;
+    document.getElementById('stageDesc').textContent = stage.desc;
+
+    const hoursEl = document.getElementById('hoursText');
+    if (stage.hours.next) {
+      hoursEl.innerHTML = 'You\'re recovering roughly <strong>' + stage.hours.current + '/week</strong> through AI. SEs at ' + stage.hours.nextStage + ' recover <strong>' + stage.hours.next + '/week</strong>.';
+    } else {
+      hoursEl.innerHTML = 'You\'re recovering <strong>' + stage.hours.current + '/week</strong> from AI-native workflows. You\'re setting the standard.';
+    }
+
+    // Render chart after a frame so canvas is laid out
+    requestAnimationFrame(function() {
+      if (radarChartInstance) { radarChartInstance.destroy(); radarChartInstance = null; }
+      const canvas = document.getElementById('radarChart');
+      const ctx = canvas.getContext('2d');
+      radarChartInstance = new Chart(ctx, {
+        type: 'radar',
+        data: {
+          labels: DIMENSIONS.map(d => d.name),
+          datasets: [{
+            data: dimScores.map(s => parseFloat(((s / 8) * 10).toFixed(1))),
+            backgroundColor: 'rgba(99,102,241,0.2)',
+            borderColor: '#6366f1',
+            borderWidth: 2,
+            pointBackgroundColor: '#6366f1',
+            pointRadius: 4
+          }]
+        },
+        options: {
+          responsive: false,
+          scales: {
+            r: {
+              min: 0, max: 10,
+              ticks: { display: false },
+              grid: { color: '#2d3148' },
+              pointLabels: { color: '#6b7280', font: { size: 12, family: 'Inter' } },
+              angleLines: { color: '#2d3148' }
+            }
+          },
+          plugins: { legend: { display: false } }
+        }
+      });
+    });
+
+    // Dimension bars
+    const breakdown = document.getElementById('dimBreakdown');
+    breakdown.innerHTML = '';
+    DIMENSIONS.forEach(function(dim, i) {
+      const pct = Math.round((dimScores[i] / 8) * 100);
+      breakdown.innerHTML += '<div class="dim-row"><div class="dim-name">' + dim.icon + ' ' + dim.name + '</div><div class="dim-bar-bg"><div class="dim-bar-fill" style="width:' + pct + '%"></div></div><div class="dim-score-label">' + dimScores[i] + '/8</div></div>';
+    });
+
+    // Weakest dimension
+    const weakIdx = dimScores.indexOf(Math.min.apply(null, dimScores));
+    const weak = WEAK_SPOT_INFO[weakIdx];
+    const modeLabel = mode === 'manager' ? "your team's" : 'your';
+    document.getElementById('weakTitle').textContent = weak.title;
+    document.getElementById('weakDesc').textContent = 'This is ' + modeLabel + ' lowest-scoring area. ' + weak.desc;
+
+    // Next steps
+    const stepsContainer = document.getElementById('stepsContainer');
+    stepsContainer.innerHTML = '';
+    weak.steps.forEach(function(step, i) {
+      stepsContainer.innerHTML += '<div class="step-card"><div class="step-num">' + (i + 1) + '</div><div class="step-text">' + step + '</div></div>';
+    });
+
+    // Share text
+    const shareText = mode === 'manager'
+      ? 'I just ran my SE team through the AI Readiness Score - we scored ' + total + '/40 (' + stage.name + '). The radar chart showing where we\'re strongest vs where to focus enablement is genuinely useful.\n\njasonlanders.com/field-ready/ai-readiness.html'
+      : 'I just took the SE AI Readiness Score and landed at ' + total + '/40 - ' + stage.name + '.\n\nIf you work in presales/SE, it\'s worth the 2 minutes. Shows you exactly which dimensions of your job you\'re leaving AI leverage on the table.\n\njasonlanders.com/field-ready/ai-readiness.html';
+
+    document.getElementById('shareTextDisplay').textContent = shareText;
+    document.getElementById('btnCopy').dataset.text = shareText;
+    document.getElementById('btnCopy').classList.remove('copied');
+    document.getElementById('btnCopy').textContent = 'Copy to Clipboard';
   }
 
   function renderQuestion() {
@@ -789,29 +873,33 @@
     const dim = DIMENSIONS[q.dim];
 
     document.getElementById('progressBar').style.width = ((currentQ / 10) * 100) + '%';
-    document.getElementById('progressLabel').textContent = `Question ${currentQ + 1} of 10`;
-    document.getElementById('dimLabel').innerHTML = `${dim.icon} ${dim.name}`;
+    document.getElementById('progressLabel').textContent = 'Question ' + (currentQ + 1) + ' of 10';
+    document.getElementById('dimLabel').textContent = dim.icon + ' ' + dim.name;
     document.getElementById('questionText').textContent = mode === 'manager' ? q.manager : q.individual;
 
     const container = document.getElementById('optionsContainer');
     container.innerHTML = '';
-    q.options.forEach((opt, i) => {
+    q.options.forEach(function(opt, i) {
       const btn = document.createElement('button');
       btn.className = 'option-btn' + (answers[currentQ] === i ? ' selected' : '');
       btn.textContent = opt;
-      btn.onclick = () => selectAnswer(i);
+      btn.onclick = function() { selectAnswer(i); };
       container.appendChild(btn);
     });
 
     document.getElementById('btnBack').style.visibility = currentQ === 0 ? 'hidden' : 'visible';
     const btnNext = document.getElementById('btnNext');
-    btnNext.textContent = currentQ === 9 ? 'See My Score →' : 'Next →';
+    btnNext.textContent = currentQ === 9 ? 'See My Score \u2192' : 'Next \u2192';
     btnNext.classList.toggle('enabled', answers[currentQ] !== null);
+
+    // Scroll quiz to top on each question
+    const quizEl = document.getElementById('quiz');
+    quizEl.scrollTop = 0;
   }
 
   function selectAnswer(i) {
     answers[currentQ] = i;
-    document.querySelectorAll('.option-btn').forEach((btn, idx) => {
+    document.querySelectorAll('.option-btn').forEach(function(btn, idx) {
       btn.classList.toggle('selected', idx === i);
     });
     document.getElementById('btnNext').classList.add('enabled');
@@ -831,118 +919,22 @@
     if (currentQ > 0) { currentQ--; renderQuestion(); }
   }
 
-  function showResult() {
-    document.body.classList.remove('quiz-active');
-    showScreen('result');
-
-    const total = answers.reduce((s, a) => s + a, 0);
-    const stage = STAGES.find(s => total >= s.min && total <= s.max);
-
-    // Dimension scores (0–8 each)
-    const dimScores = [0, 0, 0, 0, 0];
-    QUESTIONS.forEach((q, i) => { dimScores[q.dim] += answers[i]; });
-
-    document.getElementById('stageIcon').textContent = stage.icon;
-    document.getElementById('stageNumber').textContent = stage.number;
-    document.getElementById('stageName').textContent = stage.name;
-    document.getElementById('scoreNum').textContent = total;
-    document.getElementById('stageDesc').textContent = stage.desc;
-
-    // Hours
-    const hoursEl = document.getElementById('hoursText');
-    if (stage.hours.next) {
-      hoursEl.innerHTML = `You're recovering roughly <strong>${stage.hours.current}/week</strong> through AI. SEs at ${stage.hours.nextStage} recover <strong>${stage.hours.next}/week</strong>.`;
-    } else {
-      hoursEl.innerHTML = `You're recovering <strong>${stage.hours.current}/week</strong> from AI-native workflows. You're setting the standard.`;
-    }
-
-    // Radar chart
-    if (radarChartInstance) radarChartInstance.destroy();
-    const ctx = document.getElementById('radarChart').getContext('2d');
-    radarChartInstance = new Chart(ctx, {
-      type: 'radar',
-      data: {
-        labels: DIMENSIONS.map(d => d.name),
-        datasets: [{
-          data: dimScores.map(s => (s / 8) * 10),
-          backgroundColor: 'rgba(99,102,241,0.2)',
-          borderColor: '#6366f1',
-          borderWidth: 2,
-          pointBackgroundColor: '#6366f1',
-          pointRadius: 4
-        }]
-      },
-      options: {
-        responsive: true,
-        scales: {
-          r: {
-            min: 0, max: 10,
-            ticks: { display: false },
-            grid: { color: '#2d3148' },
-            pointLabels: { color: '#6b7280', font: { size: 12, family: 'Inter' } },
-            angleLines: { color: '#2d3148' }
-          }
-        },
-        plugins: { legend: { display: false } }
-      }
-    });
-
-    // Dimension breakdown bars
-    const breakdown = document.getElementById('dimBreakdown');
-    breakdown.innerHTML = '';
-    DIMENSIONS.forEach((dim, i) => {
-      const pct = (dimScores[i] / 8) * 100;
-      breakdown.innerHTML += `
-        <div class="dim-row">
-          <div class="dim-name">${dim.icon} ${dim.name}</div>
-          <div class="dim-bar-bg"><div class="dim-bar-fill" style="width:${pct}%"></div></div>
-          <div class="dim-score-label">${dimScores[i]}/8</div>
-        </div>`;
-    });
-
-    // Weakest dimension
-    const weakIdx = dimScores.indexOf(Math.min(...dimScores));
-    const weak = WEAK_SPOT_INFO[weakIdx];
-    const modeLabel = mode === 'manager' ? 'your team\'s' : 'your';
-    document.getElementById('weakTitle').textContent = weak.title;
-    document.getElementById('weakDesc').textContent = `This is ${modeLabel} lowest-scoring area. ${weak.desc}`;
-
-    // Next steps
-    const stepsContainer = document.getElementById('stepsContainer');
-    stepsContainer.innerHTML = '';
-    weak.steps.forEach((step, i) => {
-      stepsContainer.innerHTML += `
-        <div class="step-card">
-          <div class="step-num">${i + 1}</div>
-          <div class="step-text">${step}</div>
-        </div>`;
-    });
-
-    // Share text
-    const shareText = mode === 'manager'
-      ? `I just ran my SE team through the AI Readiness Score — we scored ${total}/40 (${stage.name}). The radar chart showing where we're strongest vs where to focus enablement is genuinely useful.\n\njasonlanders.com/field-ready/ai-readiness.html`
-      : `I just took the SE AI Readiness Score and landed at ${total}/40 — ${stage.name}.\n\nIf you work in presales/SE, it's worth the 2 minutes. Shows you exactly which dimensions of your job you're leaving AI leverage on the table.\n\njasonlanders.com/field-ready/ai-readiness.html`;
-
-    document.getElementById('shareTextDisplay').textContent = shareText;
-    document.getElementById('btnCopy').dataset.text = shareText;
-    document.getElementById('btnCopy').classList.remove('copied');
-    document.getElementById('btnCopy').textContent = 'Copy to Clipboard';
-  }
-
   function copyShare() {
     const text = document.getElementById('btnCopy').dataset.text;
-    navigator.clipboard.writeText(text).then(() => {
+    navigator.clipboard.writeText(text).then(function() {
       const btn = document.getElementById('btnCopy');
-      btn.textContent = '✓ Copied!';
+      btn.textContent = '\u2713 Copied!';
       btn.classList.add('copied');
-      setTimeout(() => { btn.textContent = 'Copy to Clipboard'; btn.classList.remove('copied'); }, 2500);
+      setTimeout(function() { btn.textContent = 'Copy to Clipboard'; btn.classList.remove('copied'); }, 2500);
     });
   }
 
   function retake() {
     answers = new Array(10).fill(null);
     currentQ = 0;
-    showScreen('intro');
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('intro').classList.add('active');
+    window.scrollTo(0, 0);
   }
 </script>
 </body>
