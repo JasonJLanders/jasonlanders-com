@@ -12,522 +12,119 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
     :root {
-      --bg: #0f1117;
-      --surface: #1a1d27;
-      --surface2: #222533;
-      --border: #2d3148;
-      --text: #e2e4ef;
-      --muted: #6b7280;
-      --accent: #6366f1;
-      --accent-dark: #4f46e5;
-      --accent-light: rgba(99,102,241,0.12);
+      --bg: #0f1117; --surface: #1a1d27; --surface2: #222533;
+      --border: #2d3148; --text: #e2e4ef; --muted: #6b7280;
+      --accent: #6366f1; --accent-dark: #4f46e5; --accent-light: rgba(99,102,241,0.12);
       --font: 'Inter', system-ui, sans-serif;
     }
+    html, body { height: 100%; font-family: var(--font); background: var(--bg); color: var(--text); -webkit-tap-highlight-color: transparent; overflow: hidden; }
 
-    html, body {
-      height: 100%;
-      font-family: var(--font);
-      background: var(--bg);
-      color: var(--text);
-      -webkit-tap-highlight-color: transparent;
-      overflow: hidden;
-    }
-
-    /* All screens fill the viewport and scroll internally */
-    .screen {
-      display: none;
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      overflow-y: auto;
-      background: var(--bg);
-      -webkit-overflow-scrolling: touch;
-    }
+    .screen { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; overflow-y: auto; background: var(--bg); -webkit-overflow-scrolling: touch; }
     .screen.active { display: block; }
 
-    /* ---- INTRO ---- */
-    #intro {
-      display: none;
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      overflow: hidden; /* no scroll on intro */
-      background: var(--bg);
-    }
-    #intro.active {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 24px;
-      text-align: center;
-    }
+    #intro { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; overflow: hidden; background: var(--bg); }
+    #intro.active { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; text-align: center; }
 
-    .brand-tag {
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      color: var(--accent);
-      margin-bottom: 12px;
-    }
-
-    .intro-title {
-      font-size: clamp(26px, 5vw, 44px);
-      font-weight: 800;
-      letter-spacing: -1.5px;
-      color: #fff;
-      line-height: 1.1;
-      margin-bottom: 12px;
-      max-width: 540px;
-    }
-
+    .brand-tag { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--accent); margin-bottom: 12px; }
+    .intro-title { font-size: clamp(26px, 5vw, 44px); font-weight: 800; letter-spacing: -1.5px; color: #fff; line-height: 1.1; margin-bottom: 12px; max-width: 540px; }
     .intro-title span { color: var(--accent); }
+    .intro-sub { font-size: 15px; color: var(--muted); line-height: 1.6; max-width: 440px; margin-bottom: 24px; }
 
-    .intro-sub {
-      font-size: 15px;
-      color: var(--muted);
-      line-height: 1.6;
-      max-width: 440px;
-      margin-bottom: 24px;
-    }
-
-    .mode-toggle {
-      display: flex;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 4px;
-      gap: 4px;
-      margin-bottom: 24px;
-    }
-
-    .mode-btn {
-      flex: 1;
-      padding: 10px 24px;
-      border: none;
-      border-radius: 8px;
-      font-family: var(--font);
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.15s;
-      background: transparent;
-      color: var(--muted);
-    }
-
+    .mode-toggle { display: flex; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 4px; gap: 4px; margin-bottom: 24px; }
+    .mode-btn { flex: 1; padding: 10px 24px; border: none; border-radius: 8px; font-family: var(--font); font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.15s; background: transparent; color: var(--muted); }
     .mode-btn.active { background: var(--accent); color: #fff; }
 
-    .dimension-pills {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      justify-content: center;
-      margin-bottom: 24px;
-      max-width: 460px;
-    }
+    .dimension-pills { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-bottom: 24px; max-width: 480px; }
+    .pill { background: var(--surface); border: 1px solid var(--border); border-radius: 100px; padding: 5px 12px; font-size: 13px; color: var(--muted); }
 
-    .pill {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 100px;
-      padding: 5px 12px;
-      font-size: 13px;
-      color: var(--muted);
-    }
-
-    .btn-start {
-      background: var(--accent);
-      color: #fff;
-      border: none;
-      border-radius: 12px;
-      padding: 15px 44px;
-      font-family: var(--font);
-      font-size: 17px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: background 0.15s;
-    }
-
+    .btn-start { background: var(--accent); color: #fff; border: none; border-radius: 12px; padding: 15px 44px; font-family: var(--font); font-size: 17px; font-weight: 700; cursor: pointer; transition: background 0.15s; }
     .btn-start:hover { background: var(--accent-dark); }
     .intro-footer { margin-top: 14px; font-size: 13px; color: var(--muted); }
 
-    /* ---- QUIZ ---- */
     #quiz { padding: 24px; }
     .quiz-inner { max-width: 600px; margin: 0 auto; padding-bottom: 40px; }
-
     .progress-wrap { margin-bottom: 28px; }
-
-    .progress-bar-bg {
-      background: var(--surface);
-      border-radius: 100px;
-      height: 4px;
-      overflow: hidden;
-      margin-bottom: 10px;
-    }
-
-    .progress-bar-fill {
-      background: var(--accent);
-      height: 100%;
-      border-radius: 100px;
-      transition: width 0.4s ease;
-    }
-
+    .progress-bar-bg { background: var(--surface); border-radius: 100px; height: 4px; overflow: hidden; margin-bottom: 10px; }
+    .progress-bar-fill { background: var(--accent); height: 100%; border-radius: 100px; transition: width 0.4s ease; }
     .progress-label { font-size: 13px; color: var(--muted); }
-
-    .dimension-label {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 12px;
-      font-weight: 700;
-      letter-spacing: 1.5px;
-      text-transform: uppercase;
-      color: var(--accent);
-      margin-bottom: 14px;
-    }
-
-    .question-text {
-      font-size: clamp(18px, 4vw, 24px);
-      font-weight: 700;
-      color: #fff;
-      line-height: 1.4;
-      margin-bottom: 24px;
-    }
-
+    .dimension-label { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--accent); margin-bottom: 14px; }
+    .question-text { font-size: clamp(18px, 4vw, 24px); font-weight: 700; color: #fff; line-height: 1.4; margin-bottom: 24px; }
     .options { display: flex; flex-direction: column; gap: 10px; }
-
-    .option-btn {
-      background: var(--surface);
-      border: 2px solid var(--border);
-      border-radius: 12px;
-      padding: 15px 18px;
-      font-family: var(--font);
-      font-size: 15px;
-      color: var(--text);
-      text-align: left;
-      cursor: pointer;
-      transition: all 0.15s;
-      line-height: 1.5;
-    }
-
+    .option-btn { background: var(--surface); border: 2px solid var(--border); border-radius: 12px; padding: 15px 18px; font-family: var(--font); font-size: 15px; color: var(--text); text-align: left; cursor: pointer; transition: all 0.15s; line-height: 1.5; }
     .option-btn:hover { border-color: var(--accent); background: var(--accent-light); }
     .option-btn.selected { border-color: var(--accent); background: var(--accent-light); color: #fff; }
-
-    .quiz-nav {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-top: 24px;
-    }
-
-    .btn-back {
-      background: transparent;
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 12px 20px;
-      font-family: var(--font);
-      font-size: 14px;
-      color: var(--muted);
-      cursor: pointer;
-      transition: all 0.15s;
-    }
-
+    .quiz-nav { display: flex; justify-content: space-between; align-items: center; margin-top: 24px; }
+    .btn-back { background: transparent; border: 1px solid var(--border); border-radius: 10px; padding: 12px 20px; font-family: var(--font); font-size: 14px; color: var(--muted); cursor: pointer; transition: all 0.15s; }
     .btn-back:hover { border-color: var(--text); color: var(--text); }
-
-    .btn-next {
-      background: var(--accent);
-      border: none;
-      border-radius: 10px;
-      padding: 12px 28px;
-      font-family: var(--font);
-      font-size: 15px;
-      font-weight: 700;
-      color: #fff;
-      cursor: pointer;
-      transition: background 0.15s;
-      opacity: 0.4;
-      pointer-events: none;
-    }
-
+    .btn-next { background: var(--accent); border: none; border-radius: 10px; padding: 12px 28px; font-family: var(--font); font-size: 15px; font-weight: 700; color: #fff; cursor: pointer; transition: background 0.15s; opacity: 0.4; pointer-events: none; }
     .btn-next.enabled { opacity: 1; pointer-events: all; }
     .btn-next.enabled:hover { background: var(--accent-dark); }
 
-    /* ---- RESULT ---- */
     #result { padding: 40px 24px 60px; }
     .result-inner { max-width: 640px; margin: 0 auto; }
-
-    .result-brand {
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      color: var(--accent);
-      margin-bottom: 24px;
-      text-align: center;
-    }
-
+    .result-brand { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--accent); margin-bottom: 24px; text-align: center; }
     .stage-badge { text-align: center; margin-bottom: 28px; }
     .stage-icon { font-size: 52px; margin-bottom: 10px; }
-
-    .stage-number {
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      color: var(--muted);
-      margin-bottom: 4px;
-    }
-
-    .stage-name {
-      font-size: clamp(22px, 5vw, 34px);
-      font-weight: 800;
-      letter-spacing: -1px;
-      color: #fff;
-    }
-
-    .score-display {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      margin-top: 10px;
-    }
-
+    .stage-number { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+    .stage-name { font-size: clamp(22px, 5vw, 34px); font-weight: 800; letter-spacing: -1px; color: #fff; }
+    .score-display { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 10px; }
     .score-num { font-size: 48px; font-weight: 800; color: var(--accent); letter-spacing: -2px; }
     .score-denom { font-size: 24px; color: var(--muted); font-weight: 600; }
-
-    .stage-desc {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 18px 22px;
-      font-size: 15px;
-      color: var(--muted);
-      line-height: 1.7;
-      margin-bottom: 24px;
-      text-align: center;
-    }
-
-    .hours-card {
-      background: linear-gradient(135deg, rgba(99,102,241,0.15), rgba(99,102,241,0.05));
-      border: 1px solid rgba(99,102,241,0.3);
-      border-radius: 12px;
-      padding: 18px 22px;
-      margin-bottom: 24px;
-      text-align: center;
-    }
-
+    .stage-desc { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 18px 22px; font-size: 15px; color: var(--muted); line-height: 1.7; margin-bottom: 24px; text-align: center; }
+    .hours-card { background: linear-gradient(135deg, rgba(99,102,241,0.15), rgba(99,102,241,0.05)); border: 1px solid rgba(99,102,241,0.3); border-radius: 12px; padding: 18px 22px; margin-bottom: 24px; text-align: center; }
     .hours-label { font-size: 12px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--accent); margin-bottom: 8px; }
     .hours-text { font-size: 15px; color: var(--text); line-height: 1.6; }
     .hours-text strong { color: #fff; }
-
     .chart-section { margin-bottom: 24px; }
-
-    .section-title {
-      font-size: 13px;
-      font-weight: 700;
-      letter-spacing: 1.5px;
-      text-transform: uppercase;
-      color: var(--muted);
-      margin-bottom: 14px;
-    }
-
-    .chart-wrap {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 20px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-
+    .section-title { font-size: 13px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); margin-bottom: 14px; }
+    .chart-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; display: flex; justify-content: center; align-items: center; }
     .chart-wrap canvas { width: 260px !important; height: 260px !important; }
-
     .dim-breakdown { display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px; }
-
-    @media print {
-      .chart-section { break-after: page; }
-    }
     .dim-row { display: flex; align-items: center; gap: 12px; }
-    .dim-name { font-size: 13px; color: var(--muted); width: 130px; flex-shrink: 0; }
+    .dim-name { font-size: 13px; color: var(--muted); width: 150px; flex-shrink: 0; }
     .dim-bar-bg { flex: 1; height: 6px; background: var(--surface2); border-radius: 100px; overflow: hidden; }
     .dim-bar-fill { height: 100%; border-radius: 100px; background: var(--accent); }
     .dim-score-label { font-size: 13px; font-weight: 600; color: var(--text); width: 36px; text-align: right; }
-
-    .weak-spot {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-left: 3px solid #f59e0b;
-      border-radius: 12px;
-      padding: 18px 22px;
-      margin-bottom: 24px;
-    }
-
+    .weak-spot { background: var(--surface); border: 1px solid var(--border); border-left: 3px solid #f59e0b; border-radius: 12px; padding: 18px 22px; margin-bottom: 24px; }
     .weak-label { font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: #f59e0b; margin-bottom: 8px; }
     .weak-title { font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 6px; }
     .weak-desc { font-size: 14px; color: var(--muted); line-height: 1.6; }
-
     .next-steps { margin-bottom: 24px; }
-
-    .step-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 14px 18px;
-      margin-bottom: 10px;
-      display: flex;
-      gap: 14px;
-      align-items: flex-start;
-    }
-
-    .step-num {
-      background: var(--accent-light);
-      color: var(--accent);
-      border-radius: 8px;
-      width: 28px;
-      height: 28px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 13px;
-      font-weight: 700;
-      flex-shrink: 0;
-    }
-
+    .step-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 18px; margin-bottom: 10px; display: flex; gap: 14px; align-items: flex-start; }
+    .step-num { background: var(--accent-light); color: var(--accent); border-radius: 8px; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; flex-shrink: 0; }
     .step-text { font-size: 14px; color: var(--text); line-height: 1.6; }
-
     .share-section { margin-bottom: 24px; }
-
-    .share-box {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 18px 22px;
-    }
-
-    .share-text-display {
-      font-size: 14px;
-      color: var(--muted);
-      line-height: 1.7;
-      margin-bottom: 14px;
-      font-style: italic;
-      white-space: pre-line;
-    }
-
-    .result-actions {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .btn-copy, .btn-pdf {
-      border: none;
-      border-radius: 10px;
-      padding: 13px 24px;
-      font-family: var(--font);
-      font-size: 14px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: background 0.15s;
-      width: 100%;
-      text-align: center;
-    }
-
+    .share-box { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 18px 22px; }
+    .share-text-display { font-size: 14px; color: var(--muted); line-height: 1.7; margin-bottom: 14px; font-style: italic; white-space: pre-line; }
+    .result-actions { display: flex; flex-direction: column; gap: 10px; }
+    .btn-copy, .btn-pdf { border: none; border-radius: 10px; padding: 13px 24px; font-family: var(--font); font-size: 14px; font-weight: 700; cursor: pointer; transition: background 0.15s; width: 100%; text-align: center; }
     .btn-copy { background: var(--accent); color: #fff; }
     .btn-copy:hover { background: var(--accent-dark); }
     .btn-copy.copied { background: #16a34a; }
-
-    .btn-pdf {
-      background: var(--surface2);
-      color: var(--text);
-      border: 1px solid var(--border);
-    }
+    .btn-pdf { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
     .btn-pdf:hover { border-color: var(--accent); color: var(--accent); }
-
-    .result-footer {
-      text-align: center;
-      padding-top: 16px;
-      border-top: 1px solid var(--border);
-    }
-
+    .result-footer { text-align: center; padding-top: 16px; border-top: 1px solid var(--border); }
     .result-footer a { color: var(--accent); text-decoration: none; font-size: 14px; }
-
-    .btn-retake {
-      background: transparent;
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 10px 20px;
-      font-family: var(--font);
-      font-size: 14px;
-      color: var(--muted);
-      cursor: pointer;
-      margin-top: 14px;
-      transition: all 0.15s;
-    }
-
+    .btn-retake { background: transparent; border: 1px solid var(--border); border-radius: 10px; padding: 10px 20px; font-family: var(--font); font-size: 14px; color: var(--muted); cursor: pointer; margin-top: 14px; transition: all 0.15s; }
     .btn-retake:hover { border-color: var(--text); color: var(--text); }
 
-    /* ---- PRINT / PDF STYLES ---- */
     @media print {
-      html, body {
-        height: auto;
-        overflow: visible;
-        background: #fff;
-        color: #111;
-      }
-
+      html, body { height: auto; overflow: visible; background: #fff; color: #111; }
       .screen { display: none !important; position: static !important; overflow: visible !important; }
       #result { display: block !important; position: static !important; overflow: visible !important; padding: 20px; }
-
-      :root {
-        --bg: #fff;
-        --surface: #f5f5f7;
-        --surface2: #e8e8ec;
-        --border: #ddd;
-        --text: #111;
-        --muted: #555;
-        --accent: #4f46e5;
-        --accent-light: rgba(79,70,229,0.08);
-      }
-
+      :root { --bg: #fff; --surface: #f5f5f7; --surface2: #e8e8ec; --border: #ddd; --text: #111; --muted: #555; --accent: #4f46e5; --accent-light: rgba(79,70,229,0.08); }
       .result-brand { color: var(--accent); }
       .stage-name, .score-num { color: var(--accent); }
       .score-denom { color: #888; }
-      .stage-desc { border: 1px solid #ddd; }
-
-      .share-section,
-      .result-footer,
-      .result-actions { display: none !important; }
-
-      .chart-wrap { background: #f5f5f7; border: 1px solid #ddd; }
-      .weak-spot { border: 1px solid #ddd; border-left: 3px solid #d97706; }
-      .step-card { border: 1px solid #ddd; break-inside: avoid; }
-
-      .hours-card {
-        background: #eef0ff;
-        border: 1px solid #c7d2fe;
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
-      }
-
-      .dim-bar-bg { background: #e8e8ec; }
+      .stage-desc, .chart-wrap, .step-card, .weak-spot { border: 1px solid #ddd; }
+      .share-section, .result-footer, .result-actions { display: none !important; }
+      .hours-card { background: #eef0ff; border: 1px solid #c7d2fe; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
       .dim-bar-fill { background: var(--accent); -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-
       .result-inner { max-width: 100%; }
-
-      .print-footer {
-        display: block !important;
-        text-align: center;
-        margin-top: 24px;
-        font-size: 12px;
-        color: #888;
-        border-top: 1px solid #ddd;
-        padding-top: 12px;
-      }
+      .chart-section { break-after: page; }
+      .print-footer { display: block !important; text-align: center; margin-top: 24px; font-size: 12px; color: #888; border-top: 1px solid #ddd; padding-top: 12px; }
     }
-
     .print-footer { display: none; }
   </style>
 </head>
@@ -537,21 +134,12 @@
 <div id="intro" class="screen active">
   <p class="brand-tag">&#9889; Field Ready by Jason Landers</p>
   <h1 class="intro-title">SE <span>AI Readiness</span> Score</h1>
-  <p class="intro-sub">10 questions. 5 dimensions. Find out how AI-native you (or your team) actually are, and exactly where to level up.</p>
-
+  <p class="intro-sub" id="introSub">10 questions. 5 dimensions. Find out how AI-native you actually are, and exactly where to level up.</p>
   <div class="mode-toggle">
     <button class="mode-btn active" id="modeIndividual" onclick="setMode('individual')">Individual SE</button>
     <button class="mode-btn" id="modeManager" onclick="setMode('manager')">SE Manager</button>
   </div>
-
-  <div class="dimension-pills">
-    <span class="pill">&#128269; Call Prep</span>
-    <span class="pill">&#127919; Demo</span>
-    <span class="pill">&#128196; POV Writing</span>
-    <span class="pill">&#9876;&#65039; Competitive</span>
-    <span class="pill">&#127947;&#65039; Practice</span>
-  </div>
-
+  <div class="dimension-pills" id="introPills"></div>
   <button class="btn-start" onclick="startQuiz()">Get My Score &#8594;</button>
   <p class="intro-footer">Takes about 2 minutes. No signup required.</p>
 </div>
@@ -576,8 +164,7 @@
 <!-- RESULT -->
 <div id="result" class="screen">
   <div class="result-inner">
-    <p class="result-brand">&#9889; Field Ready - SE AI Readiness Score</p>
-
+    <p class="result-brand" id="resultBrand">&#9889; Field Ready - SE AI Readiness Score</p>
     <div class="stage-badge">
       <div class="stage-icon" id="stageIcon"></div>
       <div class="stage-number" id="stageNumber"></div>
@@ -587,74 +174,64 @@
         <div class="score-denom">/ 40</div>
       </div>
     </div>
-
     <div class="stage-desc" id="stageDesc"></div>
-
     <div class="hours-card">
-      <div class="hours-label">&#9201; Hours Recovered Per Week</div>
+      <div class="hours-label" id="hoursLabel">&#9201; Hours Recovered Per Week</div>
       <div class="hours-text" id="hoursText"></div>
     </div>
-
     <div class="chart-section">
-      <div class="section-title">Your AI Readiness Profile</div>
+      <div class="section-title" id="radarTitle">Your AI Readiness Profile</div>
       <div class="chart-wrap"><canvas id="radarChart" width="260" height="260"></canvas></div>
     </div>
-
     <div class="section-title">Dimension Breakdown</div>
     <div class="dim-breakdown" id="dimBreakdown"></div>
-
     <div class="weak-spot">
       <div class="weak-label">&#9888; Your Lowest Area</div>
       <div class="weak-title" id="weakTitle"></div>
       <div class="weak-desc" id="weakDesc"></div>
     </div>
-
     <div class="next-steps">
-      <div class="section-title">3 Things to Try Next</div>
+      <div class="section-title">3 Things to Do Next</div>
       <div id="stepsContainer"></div>
     </div>
-
     <div class="share-section">
       <div class="section-title">Share Your Score</div>
       <div class="share-box">
         <div class="share-text-display" id="shareTextDisplay"></div>
         <div class="result-actions">
           <button class="btn-copy" id="btnCopy" onclick="copyShare()">Copy to Clipboard</button>
-          <button class="btn-pdf" onclick="downloadPDF()">&#8595; Download as PDF</button>
+          <button class="btn-pdf" onclick="window.print()">&#8595; Download as PDF</button>
         </div>
       </div>
     </div>
-
     <div class="result-footer">
       <a href="/field-ready/">&#8592; Back to Field Ready</a><br>
       <button class="btn-retake" onclick="retake()">Start Over</button>
     </div>
-
-    <div class="print-footer">
-      Generated at jasonlanders.com/field-ready/ai-readiness.html
-    </div>
+    <div class="print-footer">Generated at jasonlanders.com/field-ready/ai-readiness.html</div>
   </div>
 </div>
 
 <script>
-  let mode = 'individual';
-  let currentQ = 0;
-  let answers = new Array(10).fill(null);
-  let radarChartInstance = null;
+var mode = 'individual';
+var currentQ = 0;
+var answers = new Array(10).fill(null);
+var radarChartInstance = null;
 
-  const DIMENSIONS = [
-    { name: 'Call Prep', icon: '\u{1F50D}' },
-    { name: 'Demo', icon: '\u{1F3AF}' },
-    { name: 'POV Writing', icon: '\u{1F4C4}' },
-    { name: 'Competitive', icon: '\u{2694}\uFE0F' },
-    { name: 'Practice', icon: '\u{1F3CB}\uFE0F' }
-  ];
-
-  const QUESTIONS = [
+// ============================================================
+// INDIVIDUAL DATA
+// ============================================================
+var INDIVIDUAL = {
+  dimensions: [
+    { name: 'Call Prep',    icon: '\u{1F50D}' },
+    { name: 'Demo',         icon: '\u{1F3AF}' },
+    { name: 'POV Writing',  icon: '\u{1F4C4}' },
+    { name: 'Competitive',  icon: '\u{2694}\uFE0F' },
+    { name: 'Practice',     icon: '\u{1F3CB}\uFE0F' }
+  ],
+  questions: [
     {
-      dim: 0,
-      individual: 'Before a new prospect call, you typically...',
-      manager: 'Before a new prospect call, your SEs typically...',
+      dim: 0, text: 'Before a new prospect call, you typically...',
       options: [
         'Check the website quickly and wing it',
         'Read recent news and scan LinkedIn',
@@ -664,9 +241,7 @@
       ]
     },
     {
-      dim: 0,
-      individual: 'When prepping for a multi-stakeholder call, you...',
-      manager: 'When prepping for a multi-stakeholder call, your SEs...',
+      dim: 0, text: 'When prepping for a multi-stakeholder call, you...',
       options: [
         'Look up names on the calendar invite',
         'LinkedIn-stalk the main contact',
@@ -676,9 +251,7 @@
       ]
     },
     {
-      dim: 1,
-      individual: 'When tailoring a demo for a specific use case, you...',
-      manager: 'When tailoring demos for specific use cases, your SEs...',
+      dim: 1, text: 'When tailoring a demo for a specific use case, you...',
       options: [
         'Run the standard demo and narrate toward their industry',
         'Swap in their logo and some custom data',
@@ -688,9 +261,7 @@
       ]
     },
     {
-      dim: 1,
-      individual: 'When hit with an unexpected question mid-demo, you...',
-      manager: 'When hit with unexpected questions mid-demo, your SEs...',
+      dim: 1, text: 'When hit with an unexpected question mid-demo, you...',
       options: [
         'Say "great question, I\'ll follow up" and move on',
         'Try to answer from memory',
@@ -700,9 +271,7 @@
       ]
     },
     {
-      dim: 2,
-      individual: 'When building a POV or evaluation plan, you...',
-      manager: 'When building POVs or evaluation plans, your SEs...',
+      dim: 2, text: 'When building a POV or evaluation plan, you...',
       options: [
         'Start from a blank doc every time',
         'Reuse an old one and edit manually',
@@ -712,9 +281,7 @@
       ]
     },
     {
-      dim: 2,
-      individual: 'When writing executive summaries or technical findings, you...',
-      manager: 'When writing executive summaries or technical findings, your SEs...',
+      dim: 2, text: 'When writing executive summaries or technical findings, you...',
       options: [
         'Write from scratch - takes a while',
         'Use old examples as reference',
@@ -724,9 +291,7 @@
       ]
     },
     {
-      dim: 3,
-      individual: 'When you hit a technical gap mid-deal, you...',
-      manager: 'When SEs hit a technical gap mid-deal, they...',
+      dim: 3, text: 'When you hit a technical gap mid-deal, you...',
       options: [
         'Tell the customer you\'ll follow up and email the SE team',
         'Ask a senior SE or engineer',
@@ -736,9 +301,7 @@
       ]
     },
     {
-      dim: 3,
-      individual: 'How do you stay current on competitor positioning?',
-      manager: 'How does your team stay current on competitor positioning?',
+      dim: 3, text: 'How do you stay current on competitor positioning?',
       options: [
         'Rely on what I remember from sales training',
         'Read competitor battlecards when they\'re published',
@@ -748,9 +311,7 @@
       ]
     },
     {
-      dim: 4,
-      individual: 'How do you practice for tough conversations or objections?',
-      manager: 'How does your team practice for tough conversations or objections?',
+      dim: 4, text: 'How do you practice for tough conversations or objections?',
       options: [
         'Rely on experience - enough reps already',
         'Talk it through with the AE beforehand',
@@ -760,9 +321,7 @@
       ]
     },
     {
-      dim: 4,
-      individual: 'After a lost deal or rough call, you...',
-      manager: 'After a lost deal or rough call, your SEs...',
+      dim: 4, text: 'After a lost deal or rough call, you...',
       options: [
         'Move on - next deal',
         'Debrief with the AE',
@@ -771,44 +330,31 @@
         'Run a structured AI debrief: input the situation, get diagnostic questions, identify the failure mode, update the playbook'
       ]
     }
-  ];
-
-  const STAGES = [
-    {
-      min: 0, max: 8,
-      icon: '\u{1F9CA}', number: 'Stage 1', name: 'The Skeptic',
+  ],
+  stages: [
+    { min: 0,  max: 8,  icon: '\u{1F9CA}', number: 'Stage 1', name: 'The Skeptic',
       desc: 'AI tooling isn\'t part of your workflow yet. You\'re relying on experience, instincts, and what\'s always worked. That\'s not wrong, but the gap between you and AI-augmented peers is widening every quarter.',
-      hours: { current: '0-1 hrs', next: '3-5 hrs', nextStage: 'Stage 3' }
-    },
-    {
-      min: 9, max: 16,
-      icon: '\u{1F331}', number: 'Stage 2', name: 'The Curious Dabbler',
+      hoursLabel: 'Hours Recovered Per Week',
+      hours: { current: '0-1 hrs/week', next: '3-5 hrs/week', nextStage: 'Stage 3' } },
+    { min: 9,  max: 16, icon: '\u{1F331}', number: 'Stage 2', name: 'The Curious Dabbler',
       desc: 'You\'ve tried AI tools and seen what they can do. But usage is sporadic: you reach for AI when you\'re stuck, not as a first move. The potential is there. The habit isn\'t yet.',
-      hours: { current: '1-3 hrs', next: '6-9 hrs', nextStage: 'Stage 4' }
-    },
-    {
-      min: 17, max: 24,
-      icon: '\u2699\uFE0F', number: 'Stage 3', name: 'The Selective User',
+      hoursLabel: 'Hours Recovered Per Week',
+      hours: { current: '1-3 hrs/week', next: '6-9 hrs/week', nextStage: 'Stage 4' } },
+    { min: 17, max: 24, icon: '\u2699\uFE0F', number: 'Stage 3', name: 'The Selective User',
       desc: 'AI is part of your toolkit, but not your system. You use it consistently in a few areas and leave value on the table in others. You\'re ahead of most SEs, and there\'s a clear path to the next level.',
-      hours: { current: '3-5 hrs', next: '10+ hrs', nextStage: 'Stage 5' }
-    },
-    {
-      min: 25, max: 32,
-      icon: '\u{1F680}', number: 'Stage 4', name: 'The AI-Augmented SE',
+      hoursLabel: 'Hours Recovered Per Week',
+      hours: { current: '3-5 hrs/week', next: '10+ hrs/week', nextStage: 'Stage 5' } },
+    { min: 25, max: 32, icon: '\u{1F680}', number: 'Stage 4', name: 'The AI-Augmented SE',
       desc: 'AI is woven into how you work. Your prep is faster, your output is higher quality, and you\'re consistently recovering hours every week. You\'re in the top 15% of SE practitioners right now.',
-      hours: { current: '6-9 hrs', next: '10+ hrs', nextStage: 'Stage 5' }
-    },
-    {
-      min: 33, max: 40,
-      icon: '\u26A1', number: 'Stage 5', name: 'The AI-Native',
+      hoursLabel: 'Hours Recovered Per Week',
+      hours: { current: '6-9 hrs/week', next: '10+ hrs/week', nextStage: 'Stage 5' } },
+    { min: 33, max: 40, icon: '\u26A1', number: 'Stage 5', name: 'The AI-Native',
       desc: 'AI isn\'t a tool you use - it\'s how you operate. You have repeatable workflows, real leverage, and you\'re compounding your advantage every week. This is what the next generation of SE looks like.',
-      hours: { current: '10+ hrs', next: null, nextStage: null }
-    }
-  ];
-
-  const WEAK_SPOT_INFO = {
-    0: {
-      title: 'Call Prep & Stakeholder Research',
+      hoursLabel: 'Hours Recovered Per Week',
+      hours: { current: '10+ hrs/week', next: null, nextStage: null } }
+  ],
+  weakSpots: [
+    { title: 'Call Prep & Stakeholder Research',
       desc: 'Stage 5 SEs walk into every call with an AI-generated company brief, tailored discovery questions, and stakeholder-specific angles, all built in under 10 minutes.',
       steps: [
         'Before your next call: paste the company URL and stakeholder LinkedIn into Claude or ChatGPT and ask for a discovery prep brief',
@@ -816,8 +362,7 @@
         'Track whether prepped calls produce better discovery depth - you\'ll see the signal quickly'
       ]
     },
-    1: {
-      title: 'Demo Customization & Live Delivery',
+    { title: 'Demo Customization & Live Delivery',
       desc: 'Stage 5 SEs generate a custom demo narrative from discovery notes using AI before every significant demo, and keep AI open for real-time support during the call.',
       steps: [
         'After your next discovery call: paste your notes into AI and ask for a custom demo script targeting their specific use case',
@@ -825,8 +370,7 @@
         'Build a "demo narrative template" prompt that takes discovery input and outputs a tailored flow'
       ]
     },
-    2: {
-      title: 'POV Writing & Technical Writeups',
+    { title: 'POV Writing & Technical Writeups',
       desc: 'Stage 5 SEs turn call notes into polished POVs and exec summaries in under 30 minutes using repeatable AI workflows.',
       steps: [
         'After your next discovery call: immediately paste notes into AI and ask for a first-draft POV - even rough output saves 80% of the work',
@@ -834,8 +378,7 @@
         'Start a post-call workflow habit: notes to AI summary to exec brief to draft POV, all in one sitting'
       ]
     },
-    3: {
-      title: 'Competitive Intel & Technical Depth',
+    { title: 'Competitive Intel & Technical Depth',
       desc: 'Stage 5 SEs use AI to close technical gaps in real time and maintain a living competitive intelligence system that updates as deals evolve.',
       steps: [
         'Next time a competitor comes up in a deal: use AI to build a bespoke competitive positioning doc for that specific situation',
@@ -843,8 +386,7 @@
         'For technical gaps: ask AI first, validate with SMEs second - track how often AI gets you 80% of the way there'
       ]
     },
-    4: {
-      title: 'Practice & Self-Improvement',
+    { title: 'Practice & Self-Improvement',
       desc: 'Stage 5 SEs treat AI like a sparring partner: regular roleplay, structured debriefs, and a playbook that gets smarter after every deal.',
       steps: [
         'Before your next tough call: use AI to roleplay it - describe the customer persona, likely objections, and ask AI to push back hard',
@@ -852,185 +394,386 @@
         'Build a personal "objection bank" in AI: every time you hit a new objection, add it and the best response you found'
       ]
     }
-  };
-
-  function setMode(m) {
-    mode = m;
-    document.getElementById('modeIndividual').classList.toggle('active', m === 'individual');
-    document.getElementById('modeManager').classList.toggle('active', m === 'manager');
+  ],
+  shareText: function(total, stageName) {
+    return 'I just took the SE AI Readiness Score and landed at ' + total + '/40 - ' + stageName + '.\n\nIf you work in presales/SE, it\'s worth the 2 minutes. Shows you exactly which dimensions of your job you\'re leaving AI leverage on the table.\n\njasonlanders.com/field-ready/ai-readiness.html';
   }
+};
 
-  function showScreen(id) {
-    document.querySelectorAll('.screen').forEach(function(s) {
-      s.classList.remove('active');
-      s.scrollTop = 0;
-    });
-    document.getElementById(id).classList.add('active');
-  }
-
-  function startQuiz() {
-    currentQ = 0;
-    answers = new Array(10).fill(null);
-    showScreen('quiz');
-    renderQuestion();
-  }
-
-  function renderQuestion() {
-    var q = QUESTIONS[currentQ];
-    var dim = DIMENSIONS[q.dim];
-
-    document.getElementById('progressBar').style.width = ((currentQ / 10) * 100) + '%';
-    document.getElementById('progressLabel').textContent = 'Question ' + (currentQ + 1) + ' of 10';
-    document.getElementById('dimLabel').textContent = dim.icon + ' ' + dim.name;
-    document.getElementById('questionText').textContent = mode === 'manager' ? q.manager : q.individual;
-
-    var container = document.getElementById('optionsContainer');
-    container.innerHTML = '';
-    q.options.forEach(function(opt, i) {
-      var btn = document.createElement('button');
-      btn.className = 'option-btn' + (answers[currentQ] === i ? ' selected' : '');
-      btn.textContent = opt;
-      btn.onclick = function() { selectAnswer(i); };
-      container.appendChild(btn);
-    });
-
-    document.getElementById('btnBack').style.visibility = currentQ === 0 ? 'hidden' : 'visible';
-    var btnNext = document.getElementById('btnNext');
-    btnNext.textContent = currentQ === 9 ? 'See My Score \u2192' : 'Next \u2192';
-    btnNext.classList.toggle('enabled', answers[currentQ] !== null);
-
-    document.getElementById('quiz').scrollTop = 0;
-  }
-
-  function selectAnswer(i) {
-    answers[currentQ] = i;
-    document.querySelectorAll('.option-btn').forEach(function(btn, idx) {
-      btn.classList.toggle('selected', idx === i);
-    });
-    document.getElementById('btnNext').classList.add('enabled');
-  }
-
-  function nextQuestion() {
-    if (answers[currentQ] === null) return;
-    if (currentQ < 9) {
-      currentQ++;
-      renderQuestion();
-    } else {
-      buildResult();
-      showScreen('result');
+// ============================================================
+// MANAGER DATA
+// ============================================================
+var MANAGER = {
+  dimensions: [
+    { name: 'Onboarding',   icon: '\u{1F393}' },
+    { name: 'Tooling',      icon: '\u{1F6E0}\uFE0F' },
+    { name: 'Coaching',     icon: '\u{1F3AF}' },
+    { name: 'Measurement',  icon: '\u{1F4CA}' },
+    { name: 'Strategy',     icon: '\u{1F9ED}' }
+  ],
+  questions: [
+    {
+      dim: 0, text: 'When a new SE joins your team, how does AI get introduced?',
+      options: [
+        'It doesn\'t - they figure it out on their own',
+        'I point them to some resources informally',
+        'It comes up in general onboarding conversations',
+        'I have a defined set of AI use cases I walk them through',
+        'We have a structured AI onboarding track: tools, workflows, prompt libraries, and expectations - all set before day 30'
+      ]
+    },
+    {
+      dim: 0, text: 'When your team encounters a new AI tool or capability, what happens?',
+      options: [
+        'Individuals explore it if they want - nothing coordinated',
+        'I share it in Slack and let people experiment',
+        'We discuss it as a team and some people try it',
+        'I evaluate it against our workflow and share a recommendation',
+        'We have a defined process: evaluate, pilot with one SE, document what works, then roll out with prompts and training'
+      ]
+    },
+    {
+      dim: 1, text: 'What does your team\'s AI toolset look like?',
+      options: [
+        'Ad hoc - everyone uses whatever they want, or nothing',
+        'A few people use AI tools independently, no coordination',
+        'Most people have access to the same tools but use them differently',
+        'We have a defined set of approved tools with guidance on when to use them',
+        'We have a curated AI stack with shared prompt libraries, use case guides, and regular updates'
+      ]
+    },
+    {
+      dim: 1, text: 'Does your team have shared prompt libraries or workflow templates?',
+      options: [
+        'No - everyone prompts from scratch',
+        'A few people have shared prompts informally',
+        'We\'ve discussed it but nothing formal exists',
+        'We have shared prompts for key workflows like prep, POV, and call summaries',
+        'We maintain a living prompt library organized by workflow, updated regularly based on what\'s working in deals'
+      ]
+    },
+    {
+      dim: 2, text: 'How does AI skill development show up in your coaching?',
+      options: [
+        'It doesn\'t - I coach on deal strategy and fundamentals',
+        'I mention AI occasionally in 1:1s when it\'s relevant',
+        'I ask about AI usage when reviewing deals or calls',
+        'AI adoption is a regular 1:1 topic - I know each SE\'s current usage and gaps',
+        'I have a coaching framework for AI maturity: I know each SE\'s stage, set development goals, and track progress'
+      ]
+    },
+    {
+      dim: 2, text: 'How does your team practice AI-assisted workflows?',
+      options: [
+        'They don\'t practice - they use it in real deals or not at all',
+        'Occasionally someone shares what worked after the fact',
+        'We sometimes do deal reviews that touch on AI usage',
+        'We run team sessions where we workshop AI workflows together',
+        'We have regular structured practice: AI workflow workshops, shared debrief sessions, and a culture of showing each other what\'s working'
+      ]
+    },
+    {
+      dim: 3, text: 'How do you measure AI adoption across your team?',
+      options: [
+        'I don\'t - I assume people are using it or they\'re not',
+        'I get a general sense from conversations',
+        'I can name which SEs use AI regularly and which don\'t',
+        'I track adoption qualitatively and have a point of view on each SE\'s maturity',
+        'I have a clear view of each SE\'s AI maturity by workflow and can report on team-level adoption with specifics'
+      ]
+    },
+    {
+      dim: 3, text: 'If your VP asked today "how AI-adopted is your SE team?", you would...',
+      options: [
+        'Give a vague answer - I don\'t really know',
+        'Share my general impression based on conversations',
+        'Name a few strong users and acknowledge others aren\'t there yet',
+        'Give a structured answer by workflow area with specific examples',
+        'Pull up a clear assessment with maturity stages, specific strengths and gaps, and a development plan - ready to share'
+      ]
+    },
+    {
+      dim: 4, text: 'How intentional are you about building an AI-native team culture?',
+      options: [
+        'I haven\'t thought about it explicitly',
+        'I\'m supportive of AI but it\'s not something I actively drive',
+        'I encourage AI use and celebrate wins when I see them',
+        'I actively set expectations around AI adoption and make it a team priority',
+        'AI-native operation is a core part of my team\'s identity - I set expectations, model the behavior, and build it into how we operate'
+      ]
+    },
+    {
+      dim: 4, text: 'How do you think about AI adoption as a competitive advantage for your team?',
+      options: [
+        'I don\'t - it\'s a tool, not a strategy',
+        'I see the value but haven\'t connected it to team performance goals',
+        'I believe it matters and talk about it with my team',
+        'I\'ve connected AI adoption to specific team outcomes: ramp time, win rates, SE capacity',
+        'AI adoption is part of my team strategy - I\'ve built the case internally, tied it to metrics, and I\'m actively widening the gap vs. the market'
+      ]
     }
-  }
-
-  function prevQuestion() {
-    if (currentQ > 0) { currentQ--; renderQuestion(); }
-  }
-
-  function buildResult() {
-    var total = answers.reduce(function(s, a) { return s + a; }, 0);
-    var stage = STAGES.find(function(s) { return total >= s.min && total <= s.max; });
-
-    var dimScores = [0, 0, 0, 0, 0];
-    QUESTIONS.forEach(function(q, i) { dimScores[q.dim] += answers[i]; });
-
-    document.getElementById('stageIcon').textContent = stage.icon;
-    document.getElementById('stageNumber').textContent = stage.number;
-    document.getElementById('stageName').textContent = stage.name;
-    document.getElementById('scoreNum').textContent = total;
-    document.getElementById('stageDesc').textContent = stage.desc;
-
-    var hoursEl = document.getElementById('hoursText');
-    if (stage.hours.next) {
-      hoursEl.innerHTML = "You're recovering roughly <strong>" + stage.hours.current + "/week</strong> through AI. SEs at " + stage.hours.nextStage + " recover <strong>" + stage.hours.next + "/week</strong>.";
-    } else {
-      hoursEl.innerHTML = "You're recovering <strong>" + stage.hours.current + "/week</strong> from AI-native workflows. You're setting the standard.";
+  ],
+  stages: [
+    { min: 0,  max: 8,  icon: '\u{1F4A4}', number: 'Stage 1', name: 'The Unaware Manager',
+      desc: 'AI adoption on your team is happening (or not) without your influence. Your team\'s AI maturity is a function of individual initiative, not leadership. The good news: a little intentionality goes a long way.',
+      hoursLabel: 'Team Capacity Left on the Table',
+      hours: { current: 'minimal AI leverage', next: 'hours/week per SE recovered', nextStage: 'Stage 3' } },
+    { min: 9,  max: 16, icon: '\u{1F331}', number: 'Stage 2', name: 'The Hands-Off Manager',
+      desc: 'You\'re supportive of AI but not actively driving it. Your best people are probably figuring it out themselves. The gap between your top and bottom SE is likely growing without you seeing it.',
+      hoursLabel: 'Team Capacity Left on the Table',
+      hours: { current: 'ad hoc individual adoption', next: 'systematic team-wide leverage', nextStage: 'Stage 4' } },
+    { min: 17, max: 24, icon: '\u2699\uFE0F', number: 'Stage 3', name: 'The Aware Enabler',
+      desc: 'You understand AI matters and you\'re starting to build it into how you lead. You have some infrastructure and intention, but it\'s not yet systematic. You\'re ahead of most SE managers.',
+      hoursLabel: 'Team Capacity Left on the Table',
+      hours: { current: 'partial enablement coverage', next: 'full team AI readiness', nextStage: 'Stage 5' } },
+    { min: 25, max: 32, icon: '\u{1F680}', number: 'Stage 4', name: 'The AI Enabler',
+      desc: 'AI development is a real part of how you manage your team. You have tooling, coaching, and visibility. Your team is moving faster than average and you can articulate why.',
+      hoursLabel: 'Team Capacity Left on the Table',
+      hours: { current: 'strong foundation in place', next: 'compounding AI advantage', nextStage: 'Stage 5' } },
+    { min: 33, max: 40, icon: '\u26A1', number: 'Stage 5', name: 'The AI Architect',
+      desc: 'You\'ve built an AI-native team environment. Infrastructure, coaching, measurement, and culture are all intentional. Your team\'s AI advantage compounds over time and you can prove it.',
+      hoursLabel: 'Team Capacity Left on the Table',
+      hours: { current: 'compounding team advantage', next: null, nextStage: null } }
+  ],
+  weakSpots: [
+    { title: 'AI Onboarding & Ramp',
+      desc: 'Stage 5 managers have a structured AI onboarding track before day 30: tools, workflows, shared prompts, and clear expectations all in place from the start.',
+      steps: [
+        'Map the 3-5 workflows where AI has the highest ROI for your team and build a simple "start here" guide for each one',
+        'Add AI tool setup and a first workflow walkthrough to your new hire onboarding checklist',
+        'In your next new hire\'s first 30 days, schedule a dedicated AI workflow session and document what you teach - that\'s the start of your onboarding track'
+      ]
+    },
+    { title: 'Team Tooling & Shared Resources',
+      desc: 'Stage 5 managers maintain a curated AI stack with shared prompt libraries organized by workflow, updated regularly based on what\'s actually working in deals.',
+      steps: [
+        'Run a quick team survey: what AI tools is each SE using, for what workflows, and how often? The range will surprise you.',
+        'Pick the 3 highest-leverage workflows and build a shared prompt for each - start a team prompt library in Google Drive or Notion',
+        'Set a monthly cadence: one new shared prompt or workflow template added per month, sourced from whoever on the team found something that worked'
+      ]
+    },
+    { title: 'AI Coaching & Skill Development',
+      desc: 'Stage 5 managers know each SE\'s AI maturity by workflow, set development goals, and track progress. AI is a coached skill, not an assumed one.',
+      steps: [
+        'In your next round of 1:1s, ask each SE: "Which parts of your workflow are you using AI for? Where do you feel like you\'re leaving time on the table?" Just listen.',
+        'After those conversations, assign each SE an informal AI maturity level by workflow - you\'ll immediately see who needs what',
+        'Pick your strongest AI user and have them run a 20-minute team demo of exactly how they use it in their workflow'
+      ]
+    },
+    { title: 'Adoption Tracking & Reporting',
+      desc: 'Stage 5 managers can answer "how AI-adopted is your team?" with specifics - maturity by workflow, individual gaps, and a development plan - ready to share with leadership on demand.',
+      steps: [
+        'Build a simple team AI readiness map: list each SE, each key workflow, and rate usage as none, some, or consistent. Takes 20 minutes and immediately shows where to focus.',
+        'Prepare a 3-slide summary for your VP: current state, what\'s working, and what you\'re doing about it - having the answer ready changes how you\'re perceived',
+        'Set a quarterly review rhythm: where is the team now vs. last quarter on AI adoption by workflow?'
+      ]
+    },
+    { title: 'Team Strategy & AI Culture',
+      desc: 'Stage 5 managers have made AI-native operation part of their team\'s identity - they set expectations, model the behavior, and have connected AI adoption to measurable team outcomes.',
+      steps: [
+        'Write a one-paragraph "AI vision" for your team: what does AI-native operation look like for your SEs in 12 months? Share it in your next team meeting.',
+        'Connect AI adoption to a metric your team already tracks - ramp time, deal velocity, POV win rate, or SE capacity - and make the ROI argument concrete',
+        'Model the behavior: share an example of AI making you better in a 1:1 or team meeting. Leaders who use it visibly give their team permission to invest in it.'
+      ]
     }
+  ],
+  shareText: function(total, stageName) {
+    return 'I just ran my SE team through the AI Readiness Score for managers - scored ' + total + '/40 (' + stageName + ').\n\nIt measures 5 dimensions of enablement maturity: onboarding, tooling, coaching, measurement, and culture. Genuinely useful if you\'re being asked "how AI-adopted is your team?" and don\'t have a crisp answer.\n\njasonlanders.com/field-ready/ai-readiness.html';
+  }
+};
 
-    // Radar chart
-    requestAnimationFrame(function() {
-      if (radarChartInstance) { radarChartInstance.destroy(); radarChartInstance = null; }
-      var canvas = document.getElementById('radarChart');
-      var ctx = canvas.getContext('2d');
-      radarChartInstance = new Chart(ctx, {
-        type: 'radar',
-        data: {
-          labels: DIMENSIONS.map(function(d) { return d.name; }),
-          datasets: [{
-            data: dimScores.map(function(s) { return parseFloat(((s / 8) * 10).toFixed(1)); }),
-            backgroundColor: 'rgba(99,102,241,0.2)',
-            borderColor: '#6366f1',
-            borderWidth: 2,
-            pointBackgroundColor: '#6366f1',
-            pointRadius: 4
-          }]
+// ============================================================
+// UI HELPERS
+// ============================================================
+function getData() { return mode === 'manager' ? MANAGER : INDIVIDUAL; }
+
+function updateIntroPills() {
+  var d = getData();
+  var el = document.getElementById('introPills');
+  el.innerHTML = d.dimensions.map(function(dim) {
+    return '<span class="pill">' + dim.icon + ' ' + dim.name + '</span>';
+  }).join('');
+  document.getElementById('introSub').textContent = mode === 'manager'
+    ? '10 questions. 5 dimensions of enablement maturity. Find out how AI-ready your team actually is, and where to focus next.'
+    : '10 questions. 5 dimensions. Find out how AI-native you actually are, and exactly where to level up.';
+  document.getElementById('resultBrand').textContent = mode === 'manager'
+    ? '\u26A1 Field Ready - SE Manager AI Readiness Score'
+    : '\u26A1 Field Ready - SE AI Readiness Score';
+  document.getElementById('radarTitle').textContent = mode === 'manager'
+    ? 'Team AI Readiness Profile'
+    : 'Your AI Readiness Profile';
+  document.getElementById('hoursLabel').innerHTML = mode === 'manager'
+    ? '\u{1F4CA} Team Capacity Left on the Table'
+    : '\u23F1 Hours Recovered Per Week';
+}
+
+function setMode(m) {
+  mode = m;
+  document.getElementById('modeIndividual').classList.toggle('active', m === 'individual');
+  document.getElementById('modeManager').classList.toggle('active', m === 'manager');
+  updateIntroPills();
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active'); s.scrollTop = 0; });
+  document.getElementById(id).classList.add('active');
+}
+
+function startQuiz() {
+  currentQ = 0;
+  answers = new Array(10).fill(null);
+  showScreen('quiz');
+  renderQuestion();
+}
+
+function renderQuestion() {
+  var d = getData();
+  var q = d.questions[currentQ];
+  var dim = d.dimensions[q.dim];
+
+  document.getElementById('progressBar').style.width = ((currentQ / 10) * 100) + '%';
+  document.getElementById('progressLabel').textContent = 'Question ' + (currentQ + 1) + ' of 10';
+  document.getElementById('dimLabel').textContent = dim.icon + ' ' + dim.name;
+  document.getElementById('questionText').textContent = q.text;
+
+  var container = document.getElementById('optionsContainer');
+  container.innerHTML = '';
+  q.options.forEach(function(opt, i) {
+    var btn = document.createElement('button');
+    btn.className = 'option-btn' + (answers[currentQ] === i ? ' selected' : '');
+    btn.textContent = opt;
+    btn.onclick = function() { selectAnswer(i); };
+    container.appendChild(btn);
+  });
+
+  document.getElementById('btnBack').style.visibility = currentQ === 0 ? 'hidden' : 'visible';
+  var btnNext = document.getElementById('btnNext');
+  btnNext.textContent = currentQ === 9 ? 'See My Score \u2192' : 'Next \u2192';
+  btnNext.classList.toggle('enabled', answers[currentQ] !== null);
+  document.getElementById('quiz').scrollTop = 0;
+}
+
+function selectAnswer(i) {
+  answers[currentQ] = i;
+  document.querySelectorAll('.option-btn').forEach(function(btn, idx) {
+    btn.classList.toggle('selected', idx === i);
+  });
+  document.getElementById('btnNext').classList.add('enabled');
+}
+
+function nextQuestion() {
+  if (answers[currentQ] === null) return;
+  if (currentQ < 9) { currentQ++; renderQuestion(); }
+  else { buildResult(); showScreen('result'); }
+}
+
+function prevQuestion() {
+  if (currentQ > 0) { currentQ--; renderQuestion(); }
+}
+
+function buildResult() {
+  var d = getData();
+  var total = answers.reduce(function(s, a) { return s + a; }, 0);
+  var stage = d.stages.find(function(s) { return total >= s.min && total <= s.max; });
+  var dimScores = [0, 0, 0, 0, 0];
+  d.questions.forEach(function(q, i) { dimScores[q.dim] += answers[i]; });
+
+  document.getElementById('stageIcon').textContent = stage.icon;
+  document.getElementById('stageNumber').textContent = stage.number;
+  document.getElementById('stageName').textContent = stage.name;
+  document.getElementById('scoreNum').textContent = total;
+  document.getElementById('stageDesc').textContent = stage.desc;
+  document.getElementById('hoursLabel').textContent = mode === 'manager' ? '\uD83D\uDCCA Team Capacity Left on the Table' : '\u23F1 Hours Recovered Per Week';
+
+  var hoursEl = document.getElementById('hoursText');
+  if (stage.hours.next) {
+    hoursEl.innerHTML = 'Currently: <strong>' + stage.hours.current + '</strong>. ' + stage.hours.nextStage + ' managers unlock <strong>' + stage.hours.next + '</strong>.';
+  } else if (mode === 'manager') {
+    hoursEl.innerHTML = 'You\'ve built a <strong>compounding AI advantage</strong> for your team. This is what best-in-class SE leadership looks like.';
+  } else {
+    hoursEl.innerHTML = 'You\'re recovering <strong>' + stage.hours.current + '</strong> from AI-native workflows. You\'re setting the standard.';
+  }
+
+  // Radar chart
+  requestAnimationFrame(function() {
+    if (radarChartInstance) { radarChartInstance.destroy(); radarChartInstance = null; }
+    var ctx = document.getElementById('radarChart').getContext('2d');
+    radarChartInstance = new Chart(ctx, {
+      type: 'radar',
+      data: {
+        labels: d.dimensions.map(function(dim) { return dim.name; }),
+        datasets: [{
+          data: dimScores.map(function(s) { return parseFloat(((s / 8) * 10).toFixed(1)); }),
+          backgroundColor: 'rgba(99,102,241,0.2)',
+          borderColor: '#6366f1',
+          borderWidth: 2,
+          pointBackgroundColor: '#6366f1',
+          pointRadius: 4
+        }]
+      },
+      options: {
+        responsive: false,
+        scales: {
+          r: {
+            min: 0, max: 10,
+            ticks: { display: false },
+            grid: { color: '#2d3148' },
+            pointLabels: { color: '#6b7280', font: { size: 12, family: 'Inter' } },
+            angleLines: { color: '#2d3148' }
+          }
         },
-        options: {
-          responsive: false,
-          scales: {
-            r: {
-              min: 0, max: 10,
-              ticks: { display: false },
-              grid: { color: '#2d3148' },
-              pointLabels: { color: '#6b7280', font: { size: 12, family: 'Inter' } },
-              angleLines: { color: '#2d3148' }
-            }
-          },
-          plugins: { legend: { display: false } }
-        }
-      });
+        plugins: { legend: { display: false } }
+      }
     });
+  });
 
-    // Dimension bars
-    var breakdown = document.getElementById('dimBreakdown');
-    breakdown.innerHTML = '';
-    DIMENSIONS.forEach(function(dim, i) {
-      var pct = Math.round((dimScores[i] / 8) * 100);
-      breakdown.innerHTML += '<div class="dim-row"><div class="dim-name">' + dim.icon + ' ' + dim.name + '</div><div class="dim-bar-bg"><div class="dim-bar-fill" style="width:' + pct + '%"></div></div><div class="dim-score-label">' + dimScores[i] + '/8</div></div>';
-    });
+  // Dimension bars
+  var breakdown = document.getElementById('dimBreakdown');
+  breakdown.innerHTML = '';
+  d.dimensions.forEach(function(dim, i) {
+    var pct = Math.round((dimScores[i] / 8) * 100);
+    breakdown.innerHTML += '<div class="dim-row"><div class="dim-name">' + dim.icon + ' ' + dim.name + '</div><div class="dim-bar-bg"><div class="dim-bar-fill" style="width:' + pct + '%"></div></div><div class="dim-score-label">' + dimScores[i] + '/8</div></div>';
+  });
 
-    // Weakest dimension
-    var weakIdx = dimScores.indexOf(Math.min.apply(null, dimScores));
-    var weak = WEAK_SPOT_INFO[weakIdx];
-    var modeLabel = mode === 'manager' ? "your team's" : 'your';
-    document.getElementById('weakTitle').textContent = weak.title;
-    document.getElementById('weakDesc').textContent = 'This is ' + modeLabel + ' lowest-scoring area. ' + weak.desc;
+  // Weakest dimension
+  var weakIdx = dimScores.indexOf(Math.min.apply(null, dimScores));
+  var weak = d.weakSpots[weakIdx];
+  document.getElementById('weakTitle').textContent = weak.title;
+  document.getElementById('weakDesc').textContent = weak.desc;
 
-    // Next steps
-    var stepsContainer = document.getElementById('stepsContainer');
-    stepsContainer.innerHTML = '';
-    weak.steps.forEach(function(step, i) {
-      stepsContainer.innerHTML += '<div class="step-card"><div class="step-num">' + (i + 1) + '</div><div class="step-text">' + step + '</div></div>';
-    });
+  // Next steps
+  var stepsContainer = document.getElementById('stepsContainer');
+  stepsContainer.innerHTML = '';
+  weak.steps.forEach(function(step, i) {
+    stepsContainer.innerHTML += '<div class="step-card"><div class="step-num">' + (i + 1) + '</div><div class="step-text">' + step + '</div></div>';
+  });
 
-    // Share text
-    var shareText = mode === 'manager'
-      ? "I just ran my SE team through the AI Readiness Score - we scored " + total + "/40 (" + stage.name + "). The radar chart showing where we're strongest vs where to focus enablement is genuinely useful.\n\njasonlanders.com/field-ready/ai-readiness.html"
-      : "I just took the SE AI Readiness Score and landed at " + total + "/40 - " + stage.name + ".\n\nIf you work in presales/SE, it's worth the 2 minutes. Shows you exactly which dimensions of your job you're leaving AI leverage on the table.\n\njasonlanders.com/field-ready/ai-readiness.html";
+  // Share text
+  var shareText = d.shareText(total, stage.name);
+  document.getElementById('shareTextDisplay').textContent = shareText;
+  document.getElementById('btnCopy').dataset.text = shareText;
+  document.getElementById('btnCopy').classList.remove('copied');
+  document.getElementById('btnCopy').textContent = 'Copy to Clipboard';
+}
 
-    document.getElementById('shareTextDisplay').textContent = shareText;
-    document.getElementById('btnCopy').dataset.text = shareText;
-    document.getElementById('btnCopy').classList.remove('copied');
-    document.getElementById('btnCopy').textContent = 'Copy to Clipboard';
-  }
+function copyShare() {
+  var text = document.getElementById('btnCopy').dataset.text;
+  navigator.clipboard.writeText(text).then(function() {
+    var btn = document.getElementById('btnCopy');
+    btn.textContent = '\u2713 Copied!';
+    btn.classList.add('copied');
+    setTimeout(function() { btn.textContent = 'Copy to Clipboard'; btn.classList.remove('copied'); }, 2500);
+  });
+}
 
-  function copyShare() {
-    var text = document.getElementById('btnCopy').dataset.text;
-    navigator.clipboard.writeText(text).then(function() {
-      var btn = document.getElementById('btnCopy');
-      btn.textContent = '\u2713 Copied!';
-      btn.classList.add('copied');
-      setTimeout(function() { btn.textContent = 'Copy to Clipboard'; btn.classList.remove('copied'); }, 2500);
-    });
-  }
+function retake() {
+  answers = new Array(10).fill(null);
+  currentQ = 0;
+  showScreen('intro');
+}
 
-  function downloadPDF() {
-    window.print();
-  }
-
-  function retake() {
-    answers = new Array(10).fill(null);
-    currentQ = 0;
-    showScreen('intro');
-  }
+// Init
+updateIntroPills();
 </script>
 </body>
 </html>
