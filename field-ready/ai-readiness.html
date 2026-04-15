@@ -129,6 +129,41 @@
       .print-footer { display: block !important; text-align: center; margin-top: 24px; font-size: 12px; color: #888; border-top: 1px solid #ddd; padding-top: 12px; }
     }
     .print-footer { display: none; }
+    .print-header { display: none; }
+
+    @media print {
+      .print-header {
+        display: flex !important;
+        justify-content: space-between;
+        align-items: center;
+        padding-bottom: 16px;
+        margin-bottom: 24px;
+        border-bottom: 2px solid #4f46e5;
+      }
+      .print-header-logo {
+        font-size: 20px;
+        font-weight: 800;
+        color: #4f46e5;
+        letter-spacing: -0.5px;
+      }
+      .print-header-sub {
+        font-weight: 400;
+        color: #555;
+        font-size: 13px;
+        display: block;
+        letter-spacing: 0;
+        margin-top: 2px;
+      }
+      .print-header-tag {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        color: #888;
+        text-align: right;
+        line-height: 1.6;
+      }
+    }
   </style>
 </head>
 <body>
@@ -167,6 +202,12 @@
 <!-- RESULT -->
 <div id="result" class="screen">
   <div class="result-inner">
+    <div class="print-header">
+      <div class="print-header-logo">Field Ready
+        <span class="print-header-sub">by Jason Landers &middot; jasonlanders.com</span>
+      </div>
+      <div class="print-header-tag">SE AI Readiness Score<br>Field Ready Assessment</div>
+    </div>
     <p class="result-brand" id="resultBrand">&#9889; Field Ready - SE AI Readiness Score</p>
     <div class="stage-badge">
       <div class="stage-icon" id="stageIcon"></div>
@@ -752,10 +793,13 @@ function buildResult() {
   });
 
   // Share text
-  // Update page title for PDF
+  // Update page title and print header for PDF
   document.title = mode === 'manager'
     ? 'SE Manager AI Readiness Score | Field Ready'
     : 'SE AI Readiness Score | Field Ready';
+  document.querySelector('.print-header-tag').innerHTML = mode === 'manager'
+    ? 'SE Manager AI<br>Readiness Score'
+    : 'SE AI Readiness Score<br>Field Ready Assessment';
 
   var shareText = d.shareText(total, stage.name);
   document.getElementById('shareTextDisplay').textContent = shareText;
