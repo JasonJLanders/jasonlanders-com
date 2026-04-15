@@ -120,6 +120,8 @@
       .stage-desc, .chart-wrap, .step-card, .weak-spot { border: 1px solid #ddd; }
       .share-section, .result-footer, .result-actions { display: none !important; }
       .hours-card { background: #eef0ff; border: 1px solid #c7d2fe; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .hours-text { color: #111; }
+      .hours-text strong { color: #3730a3; }
       .dim-bar-fill { background: var(--accent); -webkit-print-color-adjust: exact; print-color-adjust: exact; }
       .result-inner { max-width: 100%; }
       .chart-section { break-after: page; }
@@ -749,6 +751,11 @@ function buildResult() {
   });
 
   // Share text
+  // Update page title for PDF
+  document.title = mode === 'manager'
+    ? 'SE Manager AI Readiness Score | Field Ready'
+    : 'SE AI Readiness Score | Field Ready';
+
   var shareText = d.shareText(total, stage.name);
   document.getElementById('shareTextDisplay').textContent = shareText;
   document.getElementById('btnCopy').dataset.text = shareText;
