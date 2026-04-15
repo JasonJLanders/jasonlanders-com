@@ -26,7 +26,8 @@
     #intro { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; overflow: hidden; background: var(--bg); }
     #intro.active { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; text-align: center; }
 
-    .brand-tag { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--accent); margin-bottom: 12px; }
+    .brand-tag { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--accent); margin-bottom: 12px; text-decoration: none; display: inline-block; }
+    .brand-tag:hover { text-decoration: underline; }
     .intro-title { font-size: clamp(26px, 5vw, 44px); font-weight: 800; letter-spacing: -1.5px; color: #fff; line-height: 1.1; margin-bottom: 12px; max-width: 540px; }
     .intro-title span { color: var(--accent); }
     .intro-sub { font-size: 15px; color: var(--muted); line-height: 1.6; max-width: 440px; margin-bottom: 24px; }
@@ -106,8 +107,8 @@
     .btn-pdf:hover { border-color: var(--accent); color: var(--accent); }
     .result-footer { text-align: center; padding-top: 16px; border-top: 1px solid var(--border); }
     .result-footer a { color: var(--accent); text-decoration: none; font-size: 14px; }
-    .btn-retake { background: transparent; border: 1px solid var(--border); border-radius: 10px; padding: 10px 20px; font-family: var(--font); font-size: 14px; color: var(--muted); cursor: pointer; margin-top: 14px; transition: all 0.15s; }
-    .btn-retake:hover { border-color: var(--text); color: var(--text); }
+    .btn-retake { background: transparent; border: 2px solid var(--accent); border-radius: 10px; padding: 12px 28px; font-family: var(--font); font-size: 14px; font-weight: 600; color: var(--accent); cursor: pointer; margin-bottom: 16px; transition: all 0.15s; display: inline-block; }
+    .btn-retake:hover { background: var(--accent-light); }
 
     @media print {
       html, body { height: auto; overflow: visible; background: #fff; color: #111; }
@@ -134,7 +135,7 @@
 
 <!-- INTRO -->
 <div id="intro" class="screen active">
-  <p class="brand-tag">&#9889; Field Ready by Jason Landers</p>
+  <a class="brand-tag" href="/field-ready/">&#8592; Field Ready by Jason Landers</a>
   <h1 class="intro-title">SE <span>AI Readiness</span> Score</h1>
   <p class="intro-sub" id="introSub">10 questions. 5 dimensions. Find out how AI-native you actually are, and exactly where to level up.</p>
   <div class="mode-toggle">
@@ -207,8 +208,8 @@
       </div>
     </div>
     <div class="result-footer">
-      <a href="/field-ready/">&#8592; Back to Field Ready</a><br>
-      <button class="btn-retake" onclick="retake()">Start Over</button>
+      <button class="btn-retake" onclick="retake()">&#8635; Start Over</button><br>
+      <a href="/field-ready/">&#8592; Back to Field Ready</a>
     </div>
     <div class="print-footer">Generated at jasonlanders.com/field-ready/ai-readiness.html</div>
   </div>
@@ -666,7 +667,7 @@ function selectAnswer(i) {
 function nextQuestion() {
   if (answers[currentQ] === null) return;
   if (currentQ < 9) { currentQ++; renderQuestion(); }
-  else { buildResult(); showScreen('result'); }
+  else { buildResult(); showScreen('result'); document.getElementById('result').scrollTop = 0; }
 }
 
 function prevQuestion() {
