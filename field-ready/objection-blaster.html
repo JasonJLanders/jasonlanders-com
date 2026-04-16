@@ -31,7 +31,7 @@
     /* INTRO */
     #intro {
       align-items: center; justify-content: center; text-align: center; padding: 32px 24px;
-      background: radial-gradient(ellipse at 50% 0%, rgba(99,102,241,0.15) 0%, transparent 70%), var(--bg);
+      background: radial-gradient(ellipse at 50% 0%, rgba(217,70,239,0.15) 0%, transparent 70%), var(--bg);
     }
     .brand-tag { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--accent); margin-bottom: 14px; }
     .intro-title { font-size: clamp(36px, 8vw, 56px); font-weight: 900; letter-spacing: -2px; color: #fff; line-height: 1.05; margin-bottom: 10px; }
@@ -42,7 +42,7 @@
       background: var(--surface); color: var(--muted); font-family: var(--font);
       font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.15s;
     }
-    .diff-btn.selected { border-color: var(--accent); color: #fff; background: rgba(99,102,241,0.15); }
+    .diff-btn.selected { border-color: var(--accent); color: #fff; background: rgba(217,70,239,0.15); }
     .btn-play {
       background: var(--accent); color: #fff; border: none; border-radius: 14px;
       padding: 18px 48px; font-family: var(--font); font-size: 18px; font-weight: 800;
@@ -104,7 +104,7 @@
       transition: border-color 0.1s, background 0.1s, transform 0.1s;
       line-height: 1.45;
     }
-    .response-btn:hover { border-color: var(--accent); background: rgba(99,102,241,0.08); }
+    .response-btn:hover { border-color: var(--accent); background: rgba(217,70,239,0.08); }
     .response-btn:active { transform: scale(0.98); }
     .response-btn.correct { border-color: var(--green) !important; background: rgba(16,185,129,0.12) !important; color: #fff; }
     .response-btn.wrong { border-color: var(--red) !important; background: rgba(239,68,68,0.12) !important; }
@@ -141,7 +141,7 @@
     /* GAME OVER */
     #gameover {
       align-items: center; justify-content: flex-start; padding: 32px 24px 80px;
-      background: radial-gradient(ellipse at 50% 0%, rgba(99,102,241,0.12) 0%, transparent 60%), var(--bg);
+      background: radial-gradient(ellipse at 50% 0%, rgba(217,70,239,0.12) 0%, transparent 60%), var(--bg);
     }
     .go-inner { width: 100%; max-width: 480px; margin: 0 auto; }
     .go-header { text-align: center; margin-bottom: 28px; }
@@ -691,11 +691,11 @@ function showScreen(id) {
 }
 </script>
 
-<div id="installHint" style="display:none;position:fixed;bottom:0;left:0;right:0;background:#1a1d27;border-top:1px solid #2d3148;padding:12px 20px;text-align:center;z-index:200;">
+<div id="installHint" style="display:none;position:fixed;bottom:0;left:0;right:0;background:#1e1530;border-top:1px solid #2e2249;padding:12px 20px;text-align:center;z-index:200;">
   <p style="font-size:13px;color:#9ca3af;margin:0;">
     <span style="margin-right:8px;">📱</span>
     Add to your home screen for quick access
-    <button onclick="installApp()" id="installBtn" style="display:none;margin-left:10px;background:#6366f1;color:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;">Install</button>
+    <button onclick="installApp()" id="installBtn" style="display:none;margin-left:10px;background:#d946ef;color:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;">Install</button>
     <span id="iosHint" style="display:none;margin-left:8px;color:#6b7280;">Tap Share then "Add to Home Screen"</span>
     <button onclick="document.getElementById('installHint').style.display='none'" style="margin-left:12px;background:transparent;border:none;color:#6b7280;cursor:pointer;font-size:16px;">x</button>
   </p>
