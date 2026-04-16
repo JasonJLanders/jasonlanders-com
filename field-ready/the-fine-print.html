@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -12,10 +12,11 @@
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --bg: #0f1117; --surface: #1a1d27; --surface2: #222533; --border: #2d3148;
-      --text: #e2e4ef; --muted: #6b7280; --accent: #6366f1; --accent-dark: #4f46e5;
-      --accent-light: rgba(99,102,241,0.12); --green: #22c55e; --yellow: #eab308;
-      --red: #ef4444; --orange: #f97316; --font: 'Inter', system-ui, sans-serif;
+      --bg: #130d1c; --surface: #1e1530; --surface2: #271c3d; --border: #2e2249;
+      --text: #ede8f5; --muted: #8b7fa8; --accent: #d946ef; --accent-dark: #b91fd4;
+      --accent-light: rgba(217,70,239,0.12); --accent-glow: rgba(217,70,239,0.25);
+      --green: #22c55e; --yellow: #eab308; --red: #ef4444; --orange: #f97316;
+      --font: 'Inter', system-ui, sans-serif;
     }
     html, body { min-height: 100%; font-family: var(--font); background: var(--bg); color: var(--text); }
 
@@ -118,7 +119,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Fine Print" />
-  <meta name="theme-color" content="#6366f1" />
+  <meta name="theme-color" content="#130d1c" />
 </head>
 <body>
 <div class="page">
@@ -150,7 +151,7 @@
   <!-- RATE LIMIT -->
   <div id="rateLimit">
     <div class="state-card">
-      <div class="state-emoji">⏳</div>
+      <div class="state-emoji">?</div>
       <div class="state-title">We've hit today's analysis limit</div>
       <div class="state-sub">The Fine Print runs a set number of analyses each day to keep the tool free. Today's limit has been reached. Come back tomorrow and it resets automatically.<br><br>In the meantime, the questions in <a href="/field-ready" style="color:var(--accent);">other Field Ready tools</a> might help you think it through.</div>
     </div>
@@ -160,7 +161,7 @@
   <!-- ERROR -->
   <div id="error">
     <div class="state-card">
-      <div class="state-emoji">🔧</div>
+      <div class="state-emoji">??</div>
       <div class="state-title">Something went wrong</div>
       <div class="state-sub">The analysis didn't complete. Try again in a moment, or check that the job description is long enough to analyze.</div>
     </div>
@@ -203,7 +204,7 @@
   </div>
 
   <div class="field-ready-footer">
-    <a href="/field-ready">Field Ready by Jason Landers &nbsp;·&nbsp; jasonlanders.com</a>
+    <a href="/field-ready">Field Ready by Jason Landers &nbsp;�&nbsp; jasonlanders.com</a>
   </div>
 </div>
 
@@ -317,7 +318,7 @@
 
 <div id="installHint" style="display:none;position:fixed;bottom:0;left:0;right:0;background:#1a1d27;border-top:1px solid #2d3148;padding:12px 20px;text-align:center;z-index:200;">
   <p style="font-size:13px;color:#9ca3af;margin:0;">
-    <span style="margin-right:8px;">📱</span>
+    <span style="margin-right:8px;">??</span>
     Add to your home screen for quick access
     <button onclick="installApp()" id="installBtn" style="display:none;margin-left:10px;background:#6366f1;color:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;">Install</button>
     <span id="iosHint" style="display:none;margin-left:8px;color:#6b7280;">Tap Share then "Add to Home Screen"</span>

@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -7,7 +7,7 @@
   <link rel="manifest" href="/field-ready/manifest-objection-blaster.json" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-title" content="Objection Blaster" />
-  <meta name="theme-color" content="#6366f1" />
+  <meta name="theme-color" content="#130d1c" />
   <title>Objection Blaster | Field Ready</title>
   <meta name="description" content="Objections incoming. 3 seconds. Pick the right response. How long can you last?">
   <script defer src="https://umami-tau-drab.vercel.app/script.js" data-website-id="23015384-bcae-4732-9665-a39f261647e1"></script>
@@ -16,8 +16,9 @@
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --bg: #0a0d12; --surface: #111827; --surface2: #1a2234; --border: #1e2d45;
-      --text: #e2e8f0; --muted: #64748b; --accent: #6366f1;
+      --bg: #130d1c; --surface: #1e1530; --surface2: #271c3d; --border: #2e2249;
+      --text: #ede8f5; --muted: #8b7fa8; --accent: #d946ef; --accent-dark: #b91fd4;
+      --accent-light: rgba(217,70,239,0.12); --accent-glow: rgba(217,70,239,0.25);
       --green: #10b981; --red: #ef4444; --yellow: #f59e0b; --orange: #f97316;
       --font: 'Inter', system-ui, sans-serif;
     }
@@ -193,7 +194,7 @@
     <button class="diff-btn" data-diff="brutal" onclick="setDiff(this)">Brutal</button>
   </div>
   <button class="btn-play" onclick="startGame()">Start Blasting</button>
-  <p class="intro-note">3 lives &nbsp;·&nbsp; Streak bonuses &nbsp;·&nbsp; Speed increases</p>
+  <p class="intro-note">3 lives &nbsp;�&nbsp; Streak bonuses &nbsp;�&nbsp; Speed increases</p>
 </div>
 
 <!-- GAME -->
@@ -203,7 +204,7 @@
       <div class="hud-score-label">Score</div>
       <div class="hud-score" id="scoreDisplay">0</div>
     </div>
-    <div class="hud-streak cold" id="streakDisplay">🔥 0 streak</div>
+    <div class="hud-streak cold" id="streakDisplay">?? 0 streak</div>
     <div class="hud-lives" id="livesDisplay"></div>
   </div>
   <div class="game-arena">
@@ -248,7 +249,7 @@
       <button class="btn-share-go" onclick="shareScore()">Share Score</button>
     </div>
     <div class="field-ready-footer">
-      <a href="/field-ready">Field Ready by Jason Landers &nbsp;·&nbsp; jasonlanders.com</a>
+      <a href="/field-ready">Field Ready by Jason Landers &nbsp;�&nbsp; jasonlanders.com</a>
     </div>
   </div>
 </div>
@@ -613,13 +614,13 @@ function updateHUD() {
   document.getElementById('scoreDisplay').textContent = score.toLocaleString();
 
   const streakEl = document.getElementById('streakDisplay');
-  streakEl.textContent = streak >= 3 ? `🔥 ${streak} streak!` : streak > 0 ? `🔥 ${streak}` : '🔥 0';
+  streakEl.textContent = streak >= 3 ? `?? ${streak} streak!` : streak > 0 ? `?? ${streak}` : '?? 0';
   streakEl.className = 'hud-streak ' + (streak >= 2 ? 'hot' : 'cold');
 
   const livesEl = document.getElementById('livesDisplay');
   const total = DIFFICULTY[difficulty].lives;
   livesEl.innerHTML = Array.from({length: total}, (_, i) =>
-    `<span class="life-heart${i >= lives ? ' lost' : ''}">❤️</span>`
+    `<span class="life-heart${i >= lives ? ' lost' : ''}">??</span>`
   ).join('');
 }
 
@@ -635,19 +636,19 @@ function gameOver() {
 
   let emoji, title, sub, lesson;
   if (pct >= 80) {
-    emoji = '🏆'; title = 'Elite Closer';
+    emoji = '??'; title = 'Elite Closer';
     sub = `${pct}% accuracy. Your objection instincts are sharp.`;
     lesson = `<strong>What separates good SE responses from great ones:</strong> The best answers almost always ask a question before making a claim. Curiosity builds more trust than confidence.`;
   } else if (pct >= 60) {
-    emoji = '🎯'; title = 'Solid Rep';
+    emoji = '??'; title = 'Solid Rep';
     sub = `${pct}% accuracy. Good instincts with room to sharpen.`;
     lesson = `<strong>The pattern in what you missed:</strong> When in doubt, lead with curiosity. Most objections are invitations to learn more, not attacks to defend against.`;
   } else if (pct >= 40) {
-    emoji = '📚'; title = 'Keep Practicing';
+    emoji = '??'; title = 'Keep Practicing';
     sub = `${pct}% accuracy. The right instincts are in there.`;
     lesson = `<strong>The core principle:</strong> Almost every objection has a real concern underneath it. Finding that concern with a question beats any scripted response.`;
   } else {
-    emoji = '💪'; title = 'Back to the Bullpen';
+    emoji = '??'; title = 'Back to the Bullpen';
     sub = `${pct}% accuracy. Everyone starts somewhere.`;
     lesson = `<strong>Start here:</strong> When you hear an objection, your first instinct should be a question, not a defense. "Tell me more about that" is always a safe first move.`;
   }
@@ -692,7 +693,7 @@ function showScreen(id) {
 
 <div id="installHint" style="display:none;position:fixed;bottom:0;left:0;right:0;background:#1a1d27;border-top:1px solid #2d3148;padding:12px 20px;text-align:center;z-index:200;">
   <p style="font-size:13px;color:#9ca3af;margin:0;">
-    <span style="margin-right:8px;">📱</span>
+    <span style="margin-right:8px;">??</span>
     Add to your home screen for quick access
     <button onclick="installApp()" id="installBtn" style="display:none;margin-left:10px;background:#6366f1;color:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;">Install</button>
     <span id="iosHint" style="display:none;margin-left:8px;color:#6b7280;">Tap Share then "Add to Home Screen"</span>

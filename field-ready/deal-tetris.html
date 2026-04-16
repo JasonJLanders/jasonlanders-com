@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -7,7 +7,7 @@
   <link rel="manifest" href="/field-ready/manifest-deal-tetris.json" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-title" content="Deal Tetris" />
-  <meta name="theme-color" content="#6366f1" />
+  <meta name="theme-color" content="#130d1c" />
   <title>Deal Tetris | Field Ready</title>
   <meta name="description" content="Deal elements are falling. Stack the right ones to close. Stack wrong combinations and the deal collapses.">
   <script defer src="https://umami-tau-drab.vercel.app/script.js" data-website-id="23015384-bcae-4732-9665-a39f261647e1"></script>
@@ -16,8 +16,9 @@
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --bg: #0a0d12; --surface: #111827; --surface2: #1a2234; --border: #1e2d45;
-      --text: #e2e8f0; --muted: #64748b; --accent: #6366f1;
+      --bg: #130d1c; --surface: #1e1530; --surface2: #271c3d; --border: #2e2249;
+      --text: #ede8f5; --muted: #8b7fa8; --accent: #d946ef; --accent-dark: #b91fd4;
+      --accent-light: rgba(217,70,239,0.12); --accent-glow: rgba(217,70,239,0.25);
       --green: #10b981; --red: #ef4444; --yellow: #f59e0b; --orange: #f97316;
       --font: 'Inter', system-ui, sans-serif;
     }
@@ -138,15 +139,15 @@
   <p class="intro-sub">Deal elements are falling. Route each one to the right column. Stack the right combination and close the deal. Stack wrong ones and it collapses.</p>
 
   <div class="blocks-preview">
-    <div class="preview-block" style="background:rgba(16,185,129,0.15);border-color:rgba(16,185,129,0.4);color:#10b981;">🏆 Champion</div>
-    <div class="preview-block" style="background:rgba(99,102,241,0.15);border-color:rgba(99,102,241,0.4);color:#818cf8;">💰 Budget</div>
-    <div class="preview-block" style="background:rgba(245,158,11,0.15);border-color:rgba(245,158,11,0.4);color:#f59e0b;">📋 POV</div>
-    <div class="preview-block" style="background:rgba(239,68,68,0.15);border-color:rgba(239,68,68,0.4);color:#ef4444;">⚔️ Risk</div>
-    <div class="preview-block" style="background:rgba(249,115,22,0.15);border-color:rgba(249,115,22,0.4);color:#f97316;">⏰ Timeline</div>
+    <div class="preview-block" style="background:rgba(16,185,129,0.15);border-color:rgba(16,185,129,0.4);color:#10b981;">?? Champion</div>
+    <div class="preview-block" style="background:rgba(99,102,241,0.15);border-color:rgba(99,102,241,0.4);color:#818cf8;">?? Budget</div>
+    <div class="preview-block" style="background:rgba(245,158,11,0.15);border-color:rgba(245,158,11,0.4);color:#f59e0b;">?? POV</div>
+    <div class="preview-block" style="background:rgba(239,68,68,0.15);border-color:rgba(239,68,68,0.4);color:#ef4444;">?? Risk</div>
+    <div class="preview-block" style="background:rgba(249,115,22,0.15);border-color:rgba(249,115,22,0.4);color:#f97316;">? Timeline</div>
   </div>
 
   <button class="btn-play" onclick="startGame()">Start stacking</button>
-  <p class="intro-note">Tap a column to route the falling block there &nbsp;·&nbsp; Speed increases &nbsp;·&nbsp; Match combos for bonuses</p>
+  <p class="intro-note">Tap a column to route the falling block there &nbsp;�&nbsp; Speed increases &nbsp;�&nbsp; Match combos for bonuses</p>
 </div>
 
 <!-- GAME -->
@@ -169,7 +170,7 @@
       <div id="hudStack" style="font-size:18px;font-weight:800;color:var(--yellow);">0</div>
     </div>
   </div>
-  <div class="warning-bar" id="warningBar">⚠️ Deal at risk! Stack needed elements fast!</div>
+  <div class="warning-bar" id="warningBar">?? Deal at risk! Stack needed elements fast!</div>
   <div class="arena" id="arena">
     <div class="stack-area" id="stackArea"></div>
   </div>
@@ -204,35 +205,35 @@
       <button class="btn-share-go" onclick="shareScore()">Share score</button>
     </div>
     <div class="field-ready-footer">
-      <a href="/field-ready">Field Ready by Jason Landers &nbsp;·&nbsp; jasonlanders.com</a>
+      <a href="/field-ready">Field Ready by Jason Landers &nbsp;�&nbsp; jasonlanders.com</a>
     </div>
   </div>
 </div>
 
 <script>
 const COLUMNS = [
-  { id: 'people', label: 'People', emoji: '👥', color: '#10b981', bg: 'rgba(16,185,129,0.15)', border: 'rgba(16,185,129,0.4)' },
-  { id: 'process', label: 'Process', emoji: '📋', color: '#6366f1', bg: 'rgba(99,102,241,0.15)', border: 'rgba(99,102,241,0.4)' },
-  { id: 'commercial', label: 'Commercial', emoji: '💰', color: '#f59e0b', bg: 'rgba(245,158,11,0.15)', border: 'rgba(245,158,11,0.4)' },
-  { id: 'risk', label: 'Risks', emoji: '⚠️', color: '#ef4444', bg: 'rgba(239,68,68,0.15)', border: 'rgba(239,68,68,0.4)' }
+  { id: 'people', label: 'People', emoji: '??', color: '#10b981', bg: 'rgba(16,185,129,0.15)', border: 'rgba(16,185,129,0.4)' },
+  { id: 'process', label: 'Process', emoji: '??', color: '#6366f1', bg: 'rgba(99,102,241,0.15)', border: 'rgba(99,102,241,0.4)' },
+  { id: 'commercial', label: 'Commercial', emoji: '??', color: '#f59e0b', bg: 'rgba(245,158,11,0.15)', border: 'rgba(245,158,11,0.4)' },
+  { id: 'risk', label: 'Risks', emoji: '??', color: '#ef4444', bg: 'rgba(239,68,68,0.15)', border: 'rgba(239,68,68,0.4)' }
 ];
 
 const BLOCKS = [
-  { label: '🏆 Champion', col: 'people', points: 150, good: true, hint: 'Who is it?' },
-  { label: '👤 Economic Buyer', col: 'people', points: 120, good: true, hint: 'Budget owner' },
-  { label: '🔬 Technical Win', col: 'process', points: 100, good: true, hint: 'Validated!' },
-  { label: '📋 POV Criteria', col: 'process', points: 110, good: true, hint: 'Defined?' },
-  { label: '💰 Budget Approved', col: 'commercial', points: 140, good: true, hint: 'It is there' },
-  { label: '📅 Timeline Set', col: 'commercial', points: 90, good: true, hint: 'By when?' },
-  { label: '⚔️ Competitor', col: 'risk', points: -80, good: false, hint: 'Handle it' },
-  { label: '🚫 No Champion', col: 'risk', points: -100, good: false, hint: 'Big problem' },
-  { label: '❓ Vague Criteria', col: 'risk', points: -90, good: false, hint: 'Danger zone' },
-  { label: '📊 Exec Sponsor', col: 'people', points: 130, good: true, hint: 'Leadership' },
-  { label: '🤝 Contract Agreed', col: 'commercial', points: 160, good: true, hint: 'Almost done' },
-  { label: '⏰ Stalled', col: 'risk', points: -70, good: false, hint: 'No urgency' },
-  { label: '🔍 Discovery Done', col: 'process', points: 100, good: true, hint: 'Know the pain' },
-  { label: '💸 Budget Risk', col: 'risk', points: -60, good: false, hint: 'Watch out' },
-  { label: '✅ Success Criteria', col: 'process', points: 120, good: true, hint: 'Agreed on it' }
+  { label: '?? Champion', col: 'people', points: 150, good: true, hint: 'Who is it?' },
+  { label: '?? Economic Buyer', col: 'people', points: 120, good: true, hint: 'Budget owner' },
+  { label: '?? Technical Win', col: 'process', points: 100, good: true, hint: 'Validated!' },
+  { label: '?? POV Criteria', col: 'process', points: 110, good: true, hint: 'Defined?' },
+  { label: '?? Budget Approved', col: 'commercial', points: 140, good: true, hint: 'It is there' },
+  { label: '?? Timeline Set', col: 'commercial', points: 90, good: true, hint: 'By when?' },
+  { label: '?? Competitor', col: 'risk', points: -80, good: false, hint: 'Handle it' },
+  { label: '?? No Champion', col: 'risk', points: -100, good: false, hint: 'Big problem' },
+  { label: '? Vague Criteria', col: 'risk', points: -90, good: false, hint: 'Danger zone' },
+  { label: '?? Exec Sponsor', col: 'people', points: 130, good: true, hint: 'Leadership' },
+  { label: '?? Contract Agreed', col: 'commercial', points: 160, good: true, hint: 'Almost done' },
+  { label: '? Stalled', col: 'risk', points: -70, good: false, hint: 'No urgency' },
+  { label: '?? Discovery Done', col: 'process', points: 100, good: true, hint: 'Know the pain' },
+  { label: '?? Budget Risk', col: 'risk', points: -60, good: false, hint: 'Watch out' },
+  { label: '? Success Criteria', col: 'process', points: 120, good: true, hint: 'Agreed on it' }
 ];
 
 // ---- STATE ----
@@ -509,10 +510,10 @@ function gameOver() {
   showScreen('gameover');
 
   let emoji, title, sub;
-  if (deals >= 5) { emoji = '🏆'; title = 'Deal Machine'; sub = `${deals} deals closed. You understand what it takes.`; }
-  else if (deals >= 3) { emoji = '🎯'; title = 'Strong Close Rate'; sub = `${deals} deals closed. Solid pipeline management instincts.`; }
-  else if (deals >= 1) { emoji = '📈'; title = 'Getting Warmer'; sub = `${deals} deals closed. The pattern is becoming clear.`; }
-  else { emoji = '💪'; title = 'Back to Basics'; sub = `0 deals closed. Every deal needs all the elements. None are optional.`; }
+  if (deals >= 5) { emoji = '??'; title = 'Deal Machine'; sub = `${deals} deals closed. You understand what it takes.`; }
+  else if (deals >= 3) { emoji = '??'; title = 'Strong Close Rate'; sub = `${deals} deals closed. Solid pipeline management instincts.`; }
+  else if (deals >= 1) { emoji = '??'; title = 'Getting Warmer'; sub = `${deals} deals closed. The pattern is becoming clear.`; }
+  else { emoji = '??'; title = 'Back to Basics'; sub = `0 deals closed. Every deal needs all the elements. None are optional.`; }
 
   document.getElementById('goEmoji').textContent = emoji;
   document.getElementById('goTitle').textContent = title;
@@ -551,7 +552,7 @@ function showScreen(id) {
 
 <div id="installHint" style="display:none;position:fixed;bottom:0;left:0;right:0;background:#1a1d27;border-top:1px solid #2d3148;padding:12px 20px;text-align:center;z-index:200;">
   <p style="font-size:13px;color:#9ca3af;margin:0;">
-    <span style="margin-right:8px;">📱</span>
+    <span style="margin-right:8px;">??</span>
     Add to your home screen for quick access
     <button onclick="installApp()" id="installBtn" style="display:none;margin-left:10px;background:#6366f1;color:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;">Install</button>
     <span id="iosHint" style="display:none;margin-left:8px;color:#6b7280;">Tap Share then "Add to Home Screen"</span>

@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -7,7 +7,7 @@
   <link rel="manifest" href="/field-ready/manifest-champion.json" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-title" content="Champion or Not?" />
-  <meta name="theme-color" content="#6366f1" />
+  <meta name="theme-color" content="#130d1c" />
   <title>Champion or Not? | Field Ready</title>
   <meta name="description" content="10 rounds. Can you tell a real champion from a friendly face? The distinction closes deals.">
   <script defer src="https://umami-tau-drab.vercel.app/script.js" data-website-id="23015384-bcae-4732-9665-a39f261647e1"></script>
@@ -16,8 +16,9 @@
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --bg: #0a0d12; --surface: #111827; --surface2: #1a2234; --border: #1e2d45;
-      --text: #e2e8f0; --muted: #64748b; --accent: #6366f1;
+      --bg: #130d1c; --surface: #1e1530; --surface2: #271c3d; --border: #2e2249;
+      --text: #ede8f5; --muted: #8b7fa8; --accent: #d946ef; --accent-dark: #b91fd4;
+      --accent-light: rgba(217,70,239,0.12); --accent-glow: rgba(217,70,239,0.25);
       --green: #10b981; --red: #ef4444; --yellow: #f59e0b;
       --font: 'Inter', system-ui, sans-serif;
     }
@@ -142,7 +143,7 @@
     <h1 class="intro-title">Champion<br>or Not?</h1>
     <p class="intro-sub">You'll be shown someone at an account. Read the signals. One tap: are they a real champion, or just a friendly face? 10 rounds. The distinction closes deals.</p>
     <button class="btn-start" onclick="startQuiz()">Start reading</button>
-    <p class="intro-note">10 rounds &nbsp;·&nbsp; Instant reveal &nbsp;·&nbsp; No time pressure</p>
+    <p class="intro-note">10 rounds &nbsp;�&nbsp; Instant reveal &nbsp;�&nbsp; No time pressure</p>
   </div>
 
   <!-- QUIZ -->
@@ -177,7 +178,7 @@
       <button class="btn-share-r" onclick="shareResult()">Share result</button>
     </div>
     <div class="field-ready-footer">
-      <a href="/field-ready">Field Ready by Jason Landers &nbsp;·&nbsp; jasonlanders.com</a>
+      <a href="/field-ready">Field Ready by Jason Landers &nbsp;�&nbsp; jasonlanders.com</a>
     </div>
   </div>
 </div>
@@ -185,70 +186,70 @@
 <script>
 const PEOPLE = [
   {
-    name: "Marcus Webb", title: "VP of Engineering", avatar: "👨‍💻", isChampion: true,
+    name: "Marcus Webb", title: "VP of Engineering", avatar: "?????", isChampion: true,
     signals: ["Reached out directly after your demo to ask a specific technical question", "Shared your one-pager with two colleagues unprompted", "Asked if he could have a reference call with one of your existing customers"],
     quote: "I've been pushing for something like this for two years. If it works the way you showed, this is exactly what we need.",
     verdict: "Champion",
     explain: "Marcus shows three hallmarks of a real champion: proactive internal sharing, voluntary advocacy, and reference-seeking. He wants you to win."
   },
   {
-    name: "Jennifer Park", title: "Senior Engineer", avatar: "👩‍💼", isChampion: false,
+    name: "Jennifer Park", title: "Senior Engineer", avatar: "?????", isChampion: false,
     signals: ["Asks detailed technical questions in every meeting", "Has attended all four of your sessions", "Responds to your emails within hours"],
     quote: "This is really interesting technology. I've enjoyed learning about how it works.",
     verdict: "Not a champion",
     explain: "Jennifer is engaged and curious, but engagement isn't advocacy. She hasn't shared internally, hasn't advocated to leadership, and hasn't shown any stake in the outcome. Friendly, not fighting for you."
   },
   {
-    name: "Dana Torres", title: "CTO", avatar: "👩‍💼", isChampion: true,
+    name: "Dana Torres", title: "CTO", avatar: "?????", isChampion: true,
     signals: ["Mentioned the product in her quarterly all-hands as a potential solution to a known problem", "Connected you with their CISO proactively to unblock a security review", "Asked your AE directly about implementation timelines"],
     quote: "I need this to work. We've been stuck on this problem for too long.",
     verdict: "Champion",
     explain: "Dana has used her organizational influence -- publicly in an all-hands and by unblocking a security review -- to advance the deal. She's not just interested. She's invested."
   },
   {
-    name: "Kevin Liu", title: "Director of IT", avatar: "👨‍💼", isChampion: false,
+    name: "Kevin Liu", title: "Director of IT", avatar: "?????", isChampion: false,
     signals: ["Attends meetings but rarely speaks", "Said 'I'll pass this along to the right people' twice", "Has not introduced you to anyone else in the org"],
     quote: "Let me think about it and get back to you.",
     verdict: "Not a champion",
     explain: "'I'll pass this along' is one of the most reliable non-champion signals. Real champions make introductions. They don't delegate upward."
   },
   {
-    name: "Priya Nair", title: "Engineering Manager", avatar: "👩‍💻", isChampion: true,
+    name: "Priya Nair", title: "Engineering Manager", avatar: "?????", isChampion: true,
     signals: ["Added the evaluation to her team's Q2 roadmap without being asked", "Escalated an internal objection from her director directly to you so you could address it", "Asked for a proposal template she could customize for her VP"],
     quote: "I need to make this happen. What do you need from me to make it easier to say yes?",
     verdict: "Champion",
     explain: "Priya is doing internal sales work on your behalf -- managing objections, creating budget pathways, and asking what she can do to help. That's a champion."
   },
   {
-    name: "Tom Bradley", title: "VP of Sales", avatar: "👨‍💼", isChampion: false,
+    name: "Tom Bradley", title: "VP of Sales", avatar: "?????", isChampion: false,
     signals: ["Enthusiastic in every meeting", "Said 'this could be game-changing for us' three times", "Has not mentioned the product in any internal communications you're aware of"],
     quote: "I love it. I'm going to tell everyone about this.",
     verdict: "Not a champion",
     explain: "Enthusiasm in meetings without internal advocacy is performance, not partnership. Tom talks a great game but there's no evidence of him actually advancing the deal internally."
   },
   {
-    name: "Rachel Kim", title: "CFO", avatar: "👩‍💼", isChampion: true,
+    name: "Rachel Kim", title: "CFO", avatar: "?????", isChampion: true,
     signals: ["Requested a line item breakdown to include in next quarter's budget planning", "Asked for case studies from companies in your revenue range", "Scheduled a follow-up call at her own initiative"],
     quote: "I've got budget set aside. I need to make sure this solves the problem before I commit it.",
     verdict: "Champion",
     explain: "A CFO who is actively budgeting, seeking validation, and self-scheduling follow-ups is doing the internal work to make a purchase happen. Proceed with urgency."
   },
   {
-    name: "Alex Morgan", title: "Product Manager", avatar: "🧑‍💼", isChampion: false,
+    name: "Alex Morgan", title: "Product Manager", avatar: "?????", isChampion: false,
     signals: ["Said the product 'aligns with our roadmap vision'", "Was added to the eval by someone else, not by choice", "Has mentioned three times that the decision 'isn't really mine to make'"],
     quote: "I can see how this would be useful. You'd really need to convince my VP.",
     verdict: "Not a champion",
     explain: "Someone who explicitly says the decision isn't theirs and hasn't volunteered to help you get to the decision-maker is not a champion. They're a bystander with a friendly face."
   },
   {
-    name: "James Chen", title: "Director of Engineering", avatar: "👨‍💻", isChampion: true,
+    name: "James Chen", title: "Director of Engineering", avatar: "?????", isChampion: true,
     signals: ["Arranged a meeting with his VP without you asking", "Pushed back on procurement's objection to the contract terms on your behalf", "Texted your AE directly to say 'we need to make this happen'"],
     quote: "I'm going to fight for this internally. Just tell me what ammunition you can give me.",
     verdict: "Champion",
     explain: "James is using his political capital for you -- arranging executive access, handling procurement, and asking for help winning internally. This is what an activated champion looks like."
   },
   {
-    name: "Sarah Foster", title: "Head of IT Security", avatar: "👩‍💼", isChampion: false,
+    name: "Sarah Foster", title: "Head of IT Security", avatar: "?????", isChampion: false,
     signals: ["Completed your 40-page security questionnaire thoroughly", "Raised three significant technical concerns about your architecture", "Said she needs to 'escalate her concerns before anything moves forward'"],
     quote: "I have some serious questions that need to be answered before I can sign off on this.",
     verdict: "Not a champion",
@@ -285,18 +286,18 @@ function render() {
         </div>
       </div>
       <div class="signals">
-        ${p.signals.map(s => `<div class="signal-item"><span class="signal-icon">•</span><span>${s}</span></div>`).join('')}
+        ${p.signals.map(s => `<div class="signal-item"><span class="signal-icon">�</span><span>${s}</span></div>`).join('')}
       </div>
       <div class="quote-block">"${p.quote}"</div>
     </div>
     <div class="verdict-prompt">Champion or not?</div>
     <div class="answer-row">
       <button class="answer-btn champion-btn" onclick="answer(true, this)" id="champBtn">
-        <span class="answer-btn-icon">🏆</span>
+        <span class="answer-btn-icon">??</span>
         Champion
       </button>
       <button class="answer-btn not-btn" onclick="answer(false, this)" id="notBtn">
-        <span class="answer-btn-icon">🚫</span>
+        <span class="answer-btn-icon">??</span>
         Not a champion
       </button>
     </div>
@@ -356,10 +357,10 @@ function showResults() {
 
   const pct = Math.round((score / 10) * 100);
   let emoji, title, sub;
-  if (pct >= 90) { emoji = '🏆'; title = 'Champion Detector'; sub = `${score}/10 correct. You can read a room.`; }
-  else if (pct >= 70) { emoji = '🎯'; title = 'Sharp Eye'; sub = `${score}/10 correct. Strong instincts with a few misses.`; }
-  else if (pct >= 50) { emoji = '📖'; title = 'Getting There'; sub = `${score}/10 correct. The patterns are becoming clearer.`; }
-  else { emoji = '💪'; title = 'Keep Watching'; sub = `${score}/10 correct. Champion identification is a learnable skill.`; }
+  if (pct >= 90) { emoji = '??'; title = 'Champion Detector'; sub = `${score}/10 correct. You can read a room.`; }
+  else if (pct >= 70) { emoji = '??'; title = 'Sharp Eye'; sub = `${score}/10 correct. Strong instincts with a few misses.`; }
+  else if (pct >= 50) { emoji = '??'; title = 'Getting There'; sub = `${score}/10 correct. The patterns are becoming clearer.`; }
+  else { emoji = '??'; title = 'Keep Watching'; sub = `${score}/10 correct. Champion identification is a learnable skill.`; }
 
   document.getElementById('resEmoji').textContent = emoji;
   document.getElementById('resTitle').textContent = title;
@@ -398,7 +399,7 @@ function restart() {
 
 <div id="installHint" style="display:none;position:fixed;bottom:0;left:0;right:0;background:#1a1d27;border-top:1px solid #2d3148;padding:12px 20px;text-align:center;z-index:200;">
   <p style="font-size:13px;color:#9ca3af;margin:0;">
-    <span style="margin-right:8px;">📱</span>
+    <span style="margin-right:8px;">??</span>
     Add to your home screen for quick access
     <button onclick="installApp()" id="installBtn" style="display:none;margin-left:10px;background:#6366f1;color:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;">Install</button>
     <span id="iosHint" style="display:none;margin-left:8px;color:#6b7280;">Tap Share then "Add to Home Screen"</span>

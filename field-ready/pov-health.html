@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -12,8 +12,9 @@
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --bg: #0f1117; --surface: #1a1d27; --surface2: #222533; --border: #2d3148;
-      --text: #e2e4ef; --muted: #6b7280; --accent: #6366f1; --accent-dark: #4f46e5;
+      --bg: #130d1c; --surface: #1e1530; --surface2: #271c3d; --border: #2e2249;
+      --text: #ede8f5; --muted: #8b7fa8; --accent: #d946ef; --accent-dark: #b91fd4;
+      --accent-light: rgba(217,70,239,0.12); --accent-glow: rgba(217,70,239,0.25);
       --green: #22c55e; --yellow: #eab308; --red: #ef4444; --orange: #f97316;
       --font: 'Inter', system-ui, sans-serif;
     }
@@ -124,7 +125,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="POV Health" />
-  <meta name="theme-color" content="#6366f1" />
+  <meta name="theme-color" content="#130d1c" />
 </head>
 <body>
 <div class="page">
@@ -185,7 +186,7 @@
     </div>
 
     <div class="field-ready-footer" style="margin-top:24px;">
-      <a href="/field-ready">Field Ready by Jason Landers &nbsp;·&nbsp; jasonlanders.com</a>
+      <a href="/field-ready">Field Ready by Jason Landers &nbsp;�&nbsp; jasonlanders.com</a>
     </div>
   </div>
 </div>
@@ -196,8 +197,8 @@
       id: 'champion',
       text: 'Do you have a named champion?',
       sub: 'Someone with internal influence who wants you to win and is actively advocating.',
-      yes: { label: 'Yes, named and active', icon: '✅' },
-      no: { label: 'No or unclear', icon: '❓' },
+      yes: { label: 'Yes, named and active', icon: '?' },
+      no: { label: 'No or unclear', icon: '?' },
       weight: 20,
       risk: {
         label: 'No defined champion',
@@ -209,8 +210,8 @@
       id: 'criteria',
       text: 'Did the customer help define the success criteria?',
       sub: 'Criteria they helped write are criteria they own. Criteria you handed them are yours.',
-      yes: { label: 'Yes, co-created', icon: '✅' },
-      no: { label: 'No, we wrote them', icon: '❌' },
+      yes: { label: 'Yes, co-created', icon: '?' },
+      no: { label: 'No, we wrote them', icon: '?' },
       weight: 20,
       risk: {
         label: 'Vendor-authored success criteria',
@@ -222,8 +223,8 @@
       id: 'sponsor',
       text: 'Is there an executive sponsor engaged?',
       sub: 'Someone at VP level or above who has visibility into the evaluation and cares about the outcome.',
-      yes: { label: 'Yes, engaged', icon: '✅' },
-      no: { label: 'No or not yet', icon: '⚠️' },
+      yes: { label: 'Yes, engaged', icon: '?' },
+      no: { label: 'No or not yet', icon: '??' },
       weight: 15,
       risk: {
         label: 'No executive sponsor',
@@ -235,8 +236,8 @@
       id: 'timeline',
       text: 'Is there a defined end date both sides agreed to?',
       sub: 'Not just a target in your CRM -- an actual mutual commitment to when the evaluation concludes.',
-      yes: { label: 'Yes, mutually agreed', icon: '✅' },
-      no: { label: 'No or vague', icon: '❓' },
+      yes: { label: 'Yes, mutually agreed', icon: '?' },
+      no: { label: 'No or vague', icon: '?' },
       weight: 15,
       risk: {
         label: 'No defined end date',
@@ -248,8 +249,8 @@
       id: 'progress',
       text: 'Is the evaluation more than 50% complete?',
       sub: 'Based on days elapsed relative to the total planned duration.',
-      yes: { label: 'Less than 50% elapsed', icon: '🟢' },
-      no: { label: 'More than 50% elapsed', icon: '🟡' },
+      yes: { label: 'Less than 50% elapsed', icon: '??' },
+      no: { label: 'More than 50% elapsed', icon: '??' },
       weight: 10,
       risk: {
         label: 'Evaluation is past the halfway point',
@@ -261,8 +262,8 @@
       id: 'activity',
       text: 'Have you had meaningful customer contact in the last 7 days?',
       sub: 'A real conversation or meaningful async update -- not just a status ping.',
-      yes: { label: 'Yes, active contact', icon: '✅' },
-      no: { label: 'No, it has gone quiet', icon: '🔴' },
+      yes: { label: 'Yes, active contact', icon: '?' },
+      no: { label: 'No, it has gone quiet', icon: '??' },
       weight: 10,
       risk: {
         label: 'No meaningful contact in the last week',
@@ -274,8 +275,8 @@
       id: 'business',
       text: 'Have you connected the POV to a specific business outcome the customer cares about?',
       sub: 'Something their leadership is measured on -- not just a technical validation.',
-      yes: { label: 'Yes, clearly linked', icon: '✅' },
-      no: { label: 'Not yet or unclear', icon: '⚠️' },
+      yes: { label: 'Yes, clearly linked', icon: '?' },
+      no: { label: 'Not yet or unclear', icon: '??' },
       weight: 5,
       risk: {
         label: 'POV is not clearly linked to a business outcome',
@@ -287,8 +288,8 @@
       id: 'done',
       text: 'Do both sides agree on what a completed POV looks like?',
       sub: 'Not just "the trial ends" -- a specific moment when results are reviewed and a decision is made.',
-      yes: { label: 'Yes, clearly defined', icon: '✅' },
-      no: { label: 'No or vague', icon: '❓' },
+      yes: { label: 'Yes, clearly defined', icon: '?' },
+      no: { label: 'No or vague', icon: '?' },
       weight: 5,
       risk: {
         label: 'No shared definition of done',
@@ -367,15 +368,15 @@
     // Determine status
     let status, emoji, title, desc, colorClass;
     if (pct >= 80) {
-      status = 'ON TRACK'; emoji = '🟢'; title = 'This POV looks healthy';
+      status = 'ON TRACK'; emoji = '??'; title = 'This POV looks healthy';
       desc = 'The fundamentals are in place. Keep the momentum going and stay close to your champion as you move toward the close.';
       colorClass = 'green';
     } else if (pct >= 55) {
-      status = 'AT RISK'; emoji = '🟡'; title = 'A few things need attention';
+      status = 'AT RISK'; emoji = '??'; title = 'A few things need attention';
       desc = 'There are some gaps that could slow this down or stall it. Address the risks below before they compound.';
       colorClass = 'yellow';
     } else {
-      status = 'IN TROUBLE'; emoji = '🔴'; title = 'This evaluation needs intervention';
+      status = 'IN TROUBLE'; emoji = '??'; title = 'This evaluation needs intervention';
       desc = 'Multiple risk factors are present. The POV may not close without deliberate action this week. Start with the highest-weight risk below.';
       colorClass = 'red';
     }
@@ -400,7 +401,7 @@
       rTitle.textContent = risks.length === 1 ? '1 risk to address' : `${risks.length} risks to address`;
       document.getElementById('risksList').innerHTML = risks.map(r => `
         <div class="risk-item">
-          <div class="risk-icon">⚠️</div>
+          <div class="risk-icon">??</div>
           <div class="risk-content">
             <div class="risk-label">${r.label}</div>
             <div class="risk-action">${r.action}</div>
@@ -462,7 +463,7 @@
 
 <div id="installHint" style="display:none;position:fixed;bottom:0;left:0;right:0;background:#1a1d27;border-top:1px solid #2d3148;padding:12px 20px;text-align:center;z-index:200;">
   <p style="font-size:13px;color:#9ca3af;margin:0;">
-    <span style="margin-right:8px;">📱</span>
+    <span style="margin-right:8px;">??</span>
     Add to your home screen for quick access
     <button onclick="installApp()" id="installBtn" style="display:none;margin-left:10px;background:#6366f1;color:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;">Install</button>
     <span id="iosHint" style="display:none;margin-left:8px;color:#6b7280;">Tap Share then "Add to Home Screen"</span>

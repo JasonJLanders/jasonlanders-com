@@ -1,10 +1,10 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Filler Flags — Field Ready</title>
+  <title>Filler Flags � Field Ready</title>
   <meta name="description" content="Tap every time you hear a filler phrase. See what your meetings are really made of.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -12,14 +12,16 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg: #0f1117;
-      --surface: #1a1d27;
-      --surface2: #222533;
-      --border: #2d3148;
-      --text: #e2e4ef;
-      --muted: #6b7280;
-      --accent: #6366f1;
-      --accent-dark: #4f46e5;
+      --bg: #130d1c;
+      --surface: #1e1530;
+      --surface2: #271c3d;
+      --border: #2e2249;
+      --text: #ede8f5;
+      --muted: #8b7fa8;
+      --accent: #d946ef;
+      --accent-dark: #b91fd4;
+      --accent-light: rgba(217,70,239,0.12);
+      --accent-glow: rgba(217,70,239,0.25);
       --green: #22c55e;
       --red: #ef4444;
       --yellow: #eab308;
@@ -563,7 +565,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Filler Flags" />
-  <meta name="theme-color" content="#6366f1" />
+  <meta name="theme-color" content="#130d1c" />
 </head>
 <body>
 
@@ -635,7 +637,7 @@
 <div class="screen" id="summary">
   <div class="summary-inner">
     <div class="summary-header">
-      <div class="summary-emoji" id="summaryEmoji">📊</div>
+      <div class="summary-emoji" id="summaryEmoji">??</div>
       <div class="summary-title" id="summaryTitle">Meeting Report</div>
       <div class="summary-subtitle" id="summarySubtitle"></div>
     </div>
@@ -672,7 +674,7 @@
     </div>
 
     <div class="field-ready-footer">
-      <a href="/field-ready">Field Ready by Jason Landers &nbsp;·&nbsp; jasonlanders.com</a>
+      <a href="/field-ready">Field Ready by Jason Landers &nbsp;�&nbsp; jasonlanders.com</a>
     </div>
   </div>
 </div>
@@ -744,7 +746,7 @@
   function renderCustomChips() {
     const container = document.getElementById('customChips');
     container.innerHTML = customPhrases.map(p =>
-      `<div class="chip">${p}<span class="chip-remove" onclick="removeCustomPhrase('${p.replace(/'/g, "\\'")}')">×</span></div>`
+      `<div class="chip">${p}<span class="chip-remove" onclick="removeCustomPhrase('${p.replace(/'/g, "\\'")}')">�</span></div>`
     ).join('');
   }
 
@@ -848,7 +850,7 @@
       .sort((a, b) => b[1] - a[1])
       .slice(0, 5);
 
-    const rankLabels = ['🥇', '🥈', '🥉', '4', '5'];
+    const rankLabels = ['??', '??', '??', '4', '5'];
     const rankClasses = ['gold', 'silver', 'bronze', '', ''];
 
     const container = document.getElementById('leaderboardRows');
@@ -869,27 +871,27 @@
     if (perMin === 0) return {
       rating: 'Pristine',
       desc: 'Zero filler. Genuinely impressive.',
-      emoji: '✨'
+      emoji: '?'
     };
     if (perMin < 0.5) return {
       rating: 'Light',
       desc: 'Minimal filler. This was a focused meeting.',
-      emoji: '🟢'
+      emoji: '??'
     };
     if (perMin < 1.5) return {
       rating: 'Moderate',
       desc: 'Some filler but it stayed on track. Typical for most meetings.',
-      emoji: '🟡'
+      emoji: '??'
     };
     if (perMin < 3) return {
       rating: 'Heavy',
       desc: 'Filler was a consistent presence. The signal-to-noise ratio needs work.',
-      emoji: '🟠'
+      emoji: '??'
     };
     return {
       rating: 'Dense',
       desc: 'Filler dominated this meeting. Consider a direct communication workshop.',
-      emoji: '🔴'
+      emoji: '??'
     };
   }
 
@@ -901,7 +903,7 @@
     const top = sorted[0];
     const { rating } = getDensityRating(total / Math.max(1, sessionDuration / 60));
 
-    let text = `Filler Flags report 🚩\n`;
+    let text = `Filler Flags report ??\n`;
     text += `${total} phrases flagged in ${durationMins} min\n`;
     text += `Filler density: ${rating}\n`;
     if (top) text += `Most heard: "${top[0]}" (${top[1]}x)\n`;
@@ -954,7 +956,7 @@
 
 <div id="installHint" style="display:none;position:fixed;bottom:0;left:0;right:0;background:#1a1d27;border-top:1px solid #2d3148;padding:12px 20px;text-align:center;z-index:200;">
   <p style="font-size:13px;color:#9ca3af;margin:0;">
-    <span style="margin-right:8px;">📱</span>
+    <span style="margin-right:8px;">??</span>
     Add to your home screen for quick access
     <button onclick="installApp()" id="installBtn" style="display:none;margin-left:10px;background:#6366f1;color:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;">Install</button>
     <span id="iosHint" style="display:none;margin-left:8px;color:#6b7280;">Tap Share then "Add to Home Screen"</span>
