@@ -1,1 +1,594 @@
-<!DOCTYPE html><html lang="en"><head>  <meta charset="UTF-8" />  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />  <link rel="manifest" href="/field-ready/manifest-deal-tetris.json" />  <meta name="apple-mobile-web-app-capable" content="yes" />  <meta name="apple-mobile-web-app-title" content="Deal Tetris" />  <meta name="theme-color" content="#6366f1" />  <title>Deal Tetris | Field Ready</title>  <meta name="description" content="Deal elements are falling. Stack the right ones to close. Stack wrong combinations and the deal collapses.">  <script defer src="https://umami-tau-drab.vercel.app/script.js" data-website-id="23015384-bcae-4732-9665-a39f261647e1"></script>  <link rel="preconnect" href="https://fonts.googleapis.com">  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">  <style>    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }    :root {      --bg: #130d1c; --surface: #1e1530; --surface2: #271c3d; --border: #2e2249;      --text: #ede8f5; --muted: #8b7fa8; --accent: #d946ef; --accent-dark: #b91fd4;      --accent-light: rgba(217,70,239,0.12); --accent-glow: rgba(217,70,239,0.25);      --green: #10b981; --red: #ef4444; --yellow: #f59e0b; --orange: #f97316;      --font: 'Inter', system-ui, sans-serif;    }    html, body { height: 100%; font-family: var(--font); background: var(--bg); color: var(--text); overflow: hidden; }    /* SCREENS */    .screen { display: none; position: fixed; inset: 0; overflow-y: auto; }    .screen.active { display: flex; flex-direction: column; }    /* INTRO */    #intro {      align-items: center; justify-content: center; text-align: center; padding: 32px 24px;      background: radial-gradient(ellipse at 50% 0%, rgba(99,102,241,0.15) 0%, transparent 70%), var(--bg);    }    .brand-tag { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--accent); margin-bottom: 12px; }    .intro-title { font-size: clamp(36px, 8vw, 52px); font-weight: 900; letter-spacing: -2px; color: #fff; line-height: 1.05; margin-bottom: 10px; }    .intro-sub { font-size: 15px; color: var(--muted); line-height: 1.65; margin-bottom: 24px; max-width: 420px; }    .blocks-preview { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-bottom: 28px; }    .preview-block { padding: 8px 14px; border-radius: 8px; font-size: 13px; font-weight: 700; border: 2px solid transparent; }    .btn-play { background: var(--accent); color: #fff; border: none; border-radius: 14px; padding: 18px 48px; font-family: var(--font); font-size: 18px; font-weight: 800; cursor: pointer; transition: background 0.15s; }    .btn-play:hover { background: #4f46e5; }    .intro-note { font-size: 13px; color: var(--muted); margin-top: 12px; }    /* GAME */    #game { background: var(--bg); flex-direction: column; }    .hud { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: var(--surface); border-bottom: 1px solid var(--border); flex-shrink: 0; }    .hud-score { font-size: 22px; font-weight: 900; color: #fff; letter-spacing: -1px; }    .hud-label { font-size: 10px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }    .hud-level { text-align: center; }    .hud-level-num { font-size: 18px; font-weight: 800; color: var(--accent); }    .hud-deals { text-align: right; }    .hud-deals-num { font-size: 18px; font-weight: 800; color: var(--green); }    /* Arena */    .arena { flex: 1; display: flex; align-items: flex-end; justify-content: center; padding: 16px; gap: 8px; position: relative; overflow: hidden; }    /* Stack columns */    .stack-area { display: flex; gap: 6px; align-items: flex-end; width: 100%; max-width: 480px; }    .column { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; gap: 4px; min-height: 320px; position: relative; border-bottom: 2px solid var(--border); }    .col-label { font-size: 9px; text-align: center; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px; }    /* Falling block */    .falling-block {      position: fixed; left: 50%; transform: translateX(-50%);      padding: 10px 16px; border-radius: 10px; font-size: 13px; font-weight: 800;      text-align: center; cursor: pointer; border: 2px solid transparent;      transition: top 0.05s linear; z-index: 20; white-space: nowrap;      box-shadow: 0 4px 20px rgba(0,0,0,0.4);      user-select: none; -webkit-user-select: none;    }    /* Stacked blocks */    .stacked-block { padding: 8px 6px; border-radius: 8px; font-size: 11px; font-weight: 700; text-align: center; border: 2px solid transparent; }    /* Deal meter */    .deal-meter-wrap { position: absolute; right: 0; top: 0; bottom: 32px; width: 12px; display: flex; flex-direction: column; justify-content: flex-end; }    .deal-meter-fill { background: var(--green); border-radius: 6px; transition: height 0.4s ease; width: 100%; }    /* Combo flash */    .combo-flash {      position: fixed; inset: 0; pointer-events: none; z-index: 50;      display: flex; align-items: center; justify-content: center;      opacity: 0; transition: opacity 0.2s;    }    .combo-flash.show { opacity: 1; }    .combo-text { font-size: 48px; font-weight: 900; color: #fff; text-shadow: 0 0 30px var(--green); letter-spacing: -2px; }    /* Warning */    .warning-bar { background: var(--red); padding: 8px; text-align: center; font-size: 13px; font-weight: 700; display: none; animation: pulse 0.5s infinite; }    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.6; } }    /* Controls */    .controls { display: flex; padding: 12px 16px; gap: 8px; background: var(--surface); border-top: 1px solid var(--border); flex-shrink: 0; }    .ctrl-btn { flex: 1; padding: 14px 8px; border-radius: 10px; border: none; font-family: var(--font); font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.1s; }    .ctrl-btn:active { transform: scale(0.95); }    /* GAME OVER */    #gameover { align-items: center; justify-content: flex-start; padding: 32px 24px 80px; }    .go-inner { width: 100%; max-width: 480px; margin: 0 auto; text-align: center; }    .go-emoji { font-size: 52px; margin-bottom: 12px; }    .go-title { font-size: 28px; font-weight: 900; color: #fff; letter-spacing: -1px; margin-bottom: 6px; }    .go-sub { font-size: 15px; color: var(--muted); margin-bottom: 24px; }    .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }    .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px; }    .stat-num { font-size: 26px; font-weight: 900; color: #fff; letter-spacing: -1px; }    .stat-lbl { font-size: 10px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }    .lesson-box { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; text-align: left; margin-bottom: 16px; }    .lesson-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: var(--accent); margin-bottom: 8px; }    .lesson-text { font-size: 14px; color: var(--muted); line-height: 1.65; }    .lesson-text strong { color: var(--text); }    .nl-box { background: var(--accent); border-radius: 14px; padding: 20px; margin-bottom: 16px; }    .nl-box h3 { font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 6px; }    .nl-box p { font-size: 13px; color: rgba(255,255,255,0.8); margin-bottom: 14px; }    .nl-form { display: flex; gap: 8px; flex-wrap: wrap; }    .nl-input { flex: 1; min-width: 160px; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); border-radius: 8px; padding: 10px 14px; color: #fff; font-family: var(--font); font-size: 14px; outline: none; }    .nl-input::placeholder { color: rgba(255,255,255,0.6); }    .nl-btn { background: #fff; color: var(--accent); border: none; border-radius: 8px; padding: 10px 16px; font-family: var(--font); font-size: 14px; font-weight: 700; cursor: pointer; white-space: nowrap; }    .go-actions { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }    .btn-again { background: var(--accent); color: #fff; border: none; border-radius: 12px; padding: 14px; font-family: var(--font); font-size: 15px; font-weight: 700; cursor: pointer; }    .btn-share-go { background: var(--surface); color: var(--text); border: 1px solid var(--border); border-radius: 12px; padding: 13px; font-family: var(--font); font-size: 14px; font-weight: 600; cursor: pointer; }    .field-ready-footer { text-align: center; }    .field-ready-footer a { font-size: 12px; color: var(--muted); text-decoration: none; }  </style></head><body><div class="combo-flash" id="comboFlash">  <div class="combo-text" id="comboText"></div></div><!-- INTRO --><div class="screen active" id="intro">  <a href="/field-ready/" class="brand-tag" style="text-decoration:none;">&#8592; Field Ready by Jason Landers</a>  <div class="intro-title">Deal<br>Tetris</div>  <p class="intro-sub">Deal elements are falling. Route each one to the right column. Stack the right combination and close the deal. Stack wrong ones and it collapses.</p>  <div class="blocks-preview">    <div class="preview-block" style="background:rgba(16,185,129,0.15);border-color:rgba(16,185,129,0.4);color:#10b981;">🏆 Champion</div>    <div class="preview-block" style="background:rgba(99,102,241,0.15);border-color:rgba(99,102,241,0.4);color:#818cf8;">💰 Budget</div>    <div class="preview-block" style="background:rgba(245,158,11,0.15);border-color:rgba(245,158,11,0.4);color:#f59e0b;">📋 POV</div>    <div class="preview-block" style="background:rgba(239,68,68,0.15);border-color:rgba(239,68,68,0.4);color:#ef4444;">⚔️ Risk</div>    <div class="preview-block" style="background:rgba(249,115,22,0.15);border-color:rgba(249,115,22,0.4);color:#f97316;">⏰ Timeline</div>  </div>  <button class="btn-play" onclick="startGame()">Start stacking</button>  <p class="intro-note">Tap a column to route the falling block there &nbsp;·&nbsp; Speed increases &nbsp;·&nbsp; Match combos for bonuses</p></div><!-- GAME --><div class="screen" id="game">  <div class="hud">    <div>      <div class="hud-label">Score</div>      <div class="hud-score" id="hudScore">0</div>    </div>    <div class="hud-level">      <div class="hud-label">Level</div>      <div class="hud-level-num" id="hudLevel">1</div>    </div>    <div class="hud-deals">      <div class="hud-label">Deals closed</div>      <div class="hud-deals-num" id="hudDeals">0</div>    </div>    <div>      <div class="hud-label">Max stack</div>      <div id="hudStack" style="font-size:18px;font-weight:800;color:var(--yellow);">0</div>    </div>  </div>  <div class="warning-bar" id="warningBar">⚠️ Deal at risk! Stack needed elements fast!</div>  <div class="arena" id="arena">    <div class="stack-area" id="stackArea"></div>  </div>  <div class="controls" id="controls"></div></div><!-- GAME OVER --><div class="screen" id="gameover">  <div class="go-inner">    <div class="go-emoji" id="goEmoji"></div>    <div class="go-title" id="goTitle"></div>    <div class="go-sub" id="goSub"></div>    <div class="stats-grid">      <div class="stat-card"><div class="stat-num" id="goScore">0</div><div class="stat-lbl">Score</div></div>      <div class="stat-card"><div class="stat-num" id="goDeals">0</div><div class="stat-lbl">Deals closed</div></div>      <div class="stat-card"><div class="stat-num" id="goLevel">1</div><div class="stat-lbl">Level reached</div></div>    </div>    <div class="lesson-box">      <div class="lesson-title">The real lesson</div>      <div class="lesson-text" id="goLesson"></div>    </div>    <div class="nl-box">      <h3>Want the actual deal framework?</h3>      <p>The SE Edge covers deal strategy, champion identification, and closing mechanics weekly.</p>      <form class="nl-form" action="https://magic.beehiiv.com/v1/ed62bc9e-56bd-41ca-be98-5ab6463a12bf" method="get" target="_blank">        <input class="nl-input" type="email" name="email" placeholder="your@email.com" required />        <button class="nl-btn" type="submit">Subscribe</button>      </form>    </div>    <div class="go-actions">      <button class="btn-again" onclick="startGame()">Play again</button>      <button class="btn-share-go" onclick="shareScore()">Share score</button>    </div>    <div class="field-ready-footer">      <a href="/field-ready">Field Ready by Jason Landers &nbsp;·&nbsp; jasonlanders.com</a>    </div>  </div></div><script>const COLUMNS = [  { id: 'people', label: 'People', emoji: '👥', color: '#10b981', bg: 'rgba(16,185,129,0.15)', border: 'rgba(16,185,129,0.4)' },  { id: 'process', label: 'Process', emoji: '📋', color: '#6366f1', bg: 'rgba(99,102,241,0.15)', border: 'rgba(99,102,241,0.4)' },  { id: 'commercial', label: 'Commercial', emoji: '💰', color: '#f59e0b', bg: 'rgba(245,158,11,0.15)', border: 'rgba(245,158,11,0.4)' },  { id: 'risk', label: 'Risks', emoji: '⚠️', color: '#ef4444', bg: 'rgba(239,68,68,0.15)', border: 'rgba(239,68,68,0.4)' }];const BLOCKS = [  { label: '🏆 Champion', col: 'people', points: 150, good: true, hint: 'Who is it?' },  { label: '👤 Economic Buyer', col: 'people', points: 120, good: true, hint: 'Budget owner' },  { label: '🔬 Technical Win', col: 'process', points: 100, good: true, hint: 'Validated!' },  { label: '📋 POV Criteria', col: 'process', points: 110, good: true, hint: 'Defined?' },  { label: '💰 Budget Approved', col: 'commercial', points: 140, good: true, hint: 'It is there' },  { label: '📅 Timeline Set', col: 'commercial', points: 90, good: true, hint: 'By when?' },  { label: '⚔️ Competitor', col: 'risk', points: -80, good: false, hint: 'Handle it' },  { label: '🚫 No Champion', col: 'risk', points: -100, good: false, hint: 'Big problem' },  { label: '❓ Vague Criteria', col: 'risk', points: -90, good: false, hint: 'Danger zone' },  { label: '📊 Exec Sponsor', col: 'people', points: 130, good: true, hint: 'Leadership' },  { label: '🤝 Contract Agreed', col: 'commercial', points: 160, good: true, hint: 'Almost done' },  { label: '⏰ Stalled', col: 'risk', points: -70, good: false, hint: 'No urgency' },  { label: '🔍 Discovery Done', col: 'process', points: 100, good: true, hint: 'Know the pain' },  { label: '💸 Budget Risk', col: 'risk', points: -60, good: false, hint: 'Watch out' },  { label: '✅ Success Criteria', col: 'process', points: 120, good: true, hint: 'Agreed on it' }];// ---- STATE ----let score = 0;let level = 1;let deals = 0;let stacks = { people: [], process: [], commercial: [], risk: [] };let currentBlock = null;let fallingEl = null;let gameActive = false;let rafHandle = null;let dropY = 0;let dropSpeed = 80; // pixels per secondlet lastFrameTime = 0;let blockQueue = [];let blockIndex = 0;function startGame() {  score = 0; level = 1; deals = 0;  stacks = { people: [], process: [], commercial: [], risk: [] };  blockQueue = shuffleBlocks();  blockIndex = 0;  dropSpeed = 80; // pixels per second  gameActive = true;  showScreen('game');  buildColumns();  buildControls();  updateHUD();  spawnBlock();}function shuffleBlocks() {  return [...BLOCKS, ...BLOCKS].sort(() => Math.random() - 0.5);}function buildColumns() {  const area = document.getElementById('stackArea');  area.innerHTML = COLUMNS.map(col => `    <div class="column" id="col-${col.id}">      <div class="col-label">${col.emoji} ${col.label}</div>    </div>  `).join('');}function buildControls() {  const ctrl = document.getElementById('controls');  ctrl.innerHTML = COLUMNS.map(col => `    <button class="ctrl-btn" onclick="dropTo('${col.id}')"      style="background:${col.bg};border:2px solid ${col.border};color:${col.color};">      ${col.emoji}<br><span style="font-size:11px">${col.label}</span>    </button>  `).join('');}function updateHUD() {  document.getElementById('hudScore').textContent = score.toLocaleString();  document.getElementById('hudLevel').textContent = level;  document.getElementById('hudDeals').textContent = deals;  const maxStack = Math.max(...Object.values(stacks).map(s => s.length));  const stackEl = document.getElementById('hudStack');  if (stackEl) {    stackEl.textContent = maxStack;    stackEl.style.color = maxStack >= 6 ? 'var(--red)' : maxStack >= 4 ? 'var(--yellow)' : 'var(--green)';  }}function spawnBlock() {  if (!gameActive) return;  if (blockIndex >= blockQueue.length) { blockQueue = shuffleBlocks(); blockIndex = 0; }  currentBlock = blockQueue[blockIndex++];  dropY = 60; // Start just below HUD  const col = COLUMNS.find(c => c.id === currentBlock.col);  if (fallingEl) fallingEl.remove();  fallingEl = document.createElement('div');  fallingEl.className = 'falling-block';  fallingEl.style.cssText = `    top: ${dropY}px;    background: #1e293b;    border-color: #4b5563;    color: #e2e8f0;    padding: 10px 16px;    z-index: 100;  `;  fallingEl.textContent = currentBlock.label;  document.getElementById('game').appendChild(fallingEl);  cancelAnimationFrame(rafHandle);  lastFrameTime = 0;  rafHandle = requestAnimationFrame(tick);}function tick(timestamp) {  if (!gameActive || !currentBlock) return;  if (lastFrameTime === 0) lastFrameTime = timestamp;  const delta = Math.min((timestamp - lastFrameTime) / 1000, 0.033);  lastFrameTime = timestamp;  dropY += dropSpeed * delta;  if (fallingEl) fallingEl.style.top = Math.round(dropY) + 'px';  // Check if falling block hits top of any stacked column  const fallingRect = fallingEl ? fallingEl.getBoundingClientRect() : null;  if (fallingRect) {    for (const col of COLUMNS) {      const colEl = document.getElementById('col-' + col.id);      const topBlock = colEl.querySelector('.stacked-block');      if (topBlock) {        const topRect = topBlock.getBoundingClientRect();        const colRect = colEl.getBoundingClientRect();        // If falling block bottom overlaps the top of the stacked blocks and is within column width        if (fallingRect.bottom >= topRect.top &&            fallingRect.left < colRect.right &&            fallingRect.right > colRect.left) {          cancelAnimationFrame(rafHandle);          rafHandle = null;          dropTo(col.id);          return;        }      }    }  }  const threshold = window.innerHeight - 100;  if (dropY > threshold) {    cancelAnimationFrame(rafHandle);    rafHandle = null;    miss();    return;  }  rafHandle = requestAnimationFrame(tick);}function dropTo(colId) {  if (!gameActive || !currentBlock) return;  cancelAnimationFrame(rafHandle);  rafHandle = null;  const blockToPlace = currentBlock;  currentBlock = null; // prevent tick from running further  const correct = colId === blockToPlace.col;  const pts = blockToPlace.points;  // Animate block to column  const colEl = document.getElementById('col-' + colId);  const colRect = colEl.getBoundingClientRect();  // Fly to top of existing stack, or bottom of column if empty  const topBlock = colEl.querySelector('.stacked-block');  const targetY = topBlock    ? topBlock.getBoundingClientRect().top - 10    : colRect.bottom - 60;  if (fallingEl) {    fallingEl.style.transition = 'top 0.2s ease, left 0.2s ease';    fallingEl.style.left = (colRect.left + colRect.width / 2) + 'px';    fallingEl.style.top = targetY + 'px';  }  setTimeout(() => {    if (fallingEl) { fallingEl.remove(); fallingEl = null; }    const col = COLUMNS.find(c => c.id === colId);    const blockEl = document.createElement('div');    blockEl.className = 'stacked-block';    blockEl.textContent = blockToPlace.label;    if (correct) {      // Correct column -- green, clearable      blockEl.style.cssText = `background:rgba(16,185,129,0.15);border-color:rgba(16,185,129,0.5);color:#6ee7b7;`;      blockEl.dataset.correct = 'true';      score += Math.max(0, pts);    } else {      // Wrong column -- red flash then dim, permanent dead weight      blockEl.style.cssText = `background:rgba(239,68,68,0.2);border-color:rgba(239,68,68,0.5);color:#fca5a5;`;      blockEl.dataset.correct = 'false';      score = Math.max(0, score - 30);      loseLife();      // Dim after flash to show it's permanently stuck      setTimeout(() => {        blockEl.style.cssText = `background:rgba(239,68,68,0.07);border-color:rgba(100,116,139,0.3);color:#475569;opacity:0.7;`;      }, 600);    }    // Insert after any existing stacked blocks so new blocks appear on top    const firstBlock = colEl.querySelector('.stacked-block');    if (firstBlock) {      colEl.insertBefore(blockEl, firstBlock);    } else {      colEl.insertBefore(blockEl, colEl.querySelector('.col-label'));    }    stacks[colId].push({ block: blockToPlace, correct });    updateHUD();    checkDealClose();    checkColumnOverflow();    setTimeout(spawnBlock, 500);  }, 250);}function miss() {  if (fallingEl) { fallingEl.remove(); fallingEl = null; }  // Missed block -- no penalty, just respawn  setTimeout(spawnBlock, 400);}function loseLife() { /* no-op -- game ends on column overflow */ }function checkCombo(colId) {  const col = stacks[colId];  if (col.length >= 3 && col.slice(-3).every(s => s.correct)) {    score += 200;    showCombo('COMBO! +200');  }}function checkDealClose() {  const people = stacks.people.filter(s => s.correct && s.block.good).length;  const process = stacks.process.filter(s => s.correct && s.block.good).length;  const commercial = stacks.commercial.filter(s => s.correct && s.block.good).length;  if (people >= 2 && process >= 2 && commercial >= 2) {    deals++;    level = Math.floor(deals / 2) + 1;    score += 500 * level;    // Remove only correct blocks -- wrong blocks stay as permanent dead weight    ['people','process','commercial','risk'].forEach(colId => {      const colEl = document.getElementById('col-' + colId);      colEl.querySelectorAll('.stacked-block[data-correct="true"]').forEach(b => b.remove());      stacks[colId] = stacks[colId].filter(s => !s.correct);    });    dropSpeed = 80 + (deals * 15); // speed up with each deal closed    showCombo(`DEAL CLOSED! +${500 * level}`);    document.getElementById('warningBar').style.display = 'none';    updateHUD();  }}function checkColumnOverflow() {  if (!gameActive) return;  const arena = document.getElementById('arena');  const arenaTop = arena.getBoundingClientRect().top;  for (const colId of ['people','process','commercial','risk']) {    const colEl = document.getElementById('col-' + colId);    // Use visual check only -- first .stacked-block is the topmost one    const topBlock = colEl.querySelector('.stacked-block');    if (topBlock) {      const blockTop = topBlock.getBoundingClientRect().top;      if (blockTop <= arenaTop + 10) {        gameActive = false;        cancelAnimationFrame(rafHandle);        rafHandle = null;        setTimeout(gameOver, 400);        return;      }    }  }}function showCombo(text) {  const f = document.getElementById('comboFlash');  document.getElementById('comboText').textContent = text;  f.classList.add('show');  setTimeout(() => f.classList.remove('show'), 800);}function gameOver() {  gameActive = false;  cancelAnimationFrame(rafHandle);  if (fallingEl) { fallingEl.remove(); fallingEl = null; }  showScreen('gameover');  let emoji, title, sub;  if (deals >= 5) { emoji = '🏆'; title = 'Deal Machine'; sub = `${deals} deals closed. You understand what it takes.`; }  else if (deals >= 3) { emoji = '🎯'; title = 'Strong Close Rate'; sub = `${deals} deals closed. Solid pipeline management instincts.`; }  else if (deals >= 1) { emoji = '📈'; title = 'Getting Warmer'; sub = `${deals} deals closed. The pattern is becoming clear.`; }  else { emoji = '💪'; title = 'Back to Basics'; sub = `0 deals closed. Every deal needs all the elements. None are optional.`; }  document.getElementById('goEmoji').textContent = emoji;  document.getElementById('goTitle').textContent = title;  document.getElementById('goSub').textContent = sub;  document.getElementById('goScore').textContent = score.toLocaleString();  document.getElementById('goDeals').textContent = deals;  document.getElementById('goLevel').textContent = level;  document.getElementById('goLesson').innerHTML = `    <strong>What the game models:</strong> Every enterprise deal needs the right elements in the right buckets. People (champion + economic buyer), Process (discovery + criteria + technical win), and Commercial (budget + timeline + contract) must all be present. Risk elements -- missing champion, vague criteria, a strong competitor -- are inevitable. The question is whether you address them fast enough. A deal with great people but no commercial structure doesn't close. Neither does one with budget but no champion.  `;  window._tetrisResult = { score, deals, level };}function shareScore() {  const r = window._tetrisResult;  if (!r) return;  const text = `Deal Tetris: ${r.score.toLocaleString()} pts | ${r.deals} deals closed | Level ${r.level}\n\nStack the right deal elements: jasonlanders.com/field-ready/deal-tetris.html`;  if (navigator.share) {    navigator.share({ text }).catch(() => copyText(text));  } else { copyText(text); }}function copyText(text) {  navigator.clipboard.writeText(text).catch(() => {});  document.querySelector('.btn-share-go').textContent = 'Copied!';  setTimeout(() => document.querySelector('.btn-share-go').textContent = 'Share score', 2000);}function showScreen(id) {  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));  document.getElementById(id).classList.add('active');  window.scrollTo(0, 0);}</script><div id="installHint" style="display:none;position:fixed;bottom:0;left:0;right:0;background:#1a1d27;border-top:1px solid #2d3148;padding:12px 20px;text-align:center;z-index:200;">  <p style="font-size:13px;color:#9ca3af;margin:0;">    <span style="margin-right:8px;">📱</span>    Add to your home screen for quick access    <button onclick="installApp()" id="installBtn" style="display:none;margin-left:10px;background:#6366f1;color:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;">Install</button>    <span id="iosHint" style="display:none;margin-left:8px;color:#6b7280;">Tap Share then "Add to Home Screen"</span>    <button onclick="document.getElementById('installHint').style.display='none'" style="margin-left:12px;background:transparent;border:none;color:#6b7280;cursor:pointer;font-size:16px;">x</button>  </p></div><script>  // Show install hint on any mobile browser  if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent) && !window.navigator.standalone) {    document.getElementById('installHint').style.display = 'block';    if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {      document.getElementById('iosHint').style.display = 'inline';    } else {      // Android -- show generic hint, upgrade to native prompt if available      document.getElementById('iosHint').style.display = 'inline';      document.getElementById('iosHint').textContent = 'Tap menu (\u22ee) then "Add to Home screen"';    }  }  let deferredPrompt;  window.addEventListener('beforeinstallprompt', (e) => {    e.preventDefault(); deferredPrompt = e;    document.getElementById('installBtn').style.display = 'inline-block';    document.getElementById('iosHint').style.display = 'none';  });  function installApp() {    if (deferredPrompt) {      deferredPrompt.prompt();      deferredPrompt.userChoice.then(() => {        document.getElementById('installHint').style.display = 'none';        deferredPrompt = null;      });    }  }  window.addEventListener('appinstalled', () => {    document.getElementById('installHint').style.display = 'none';  });</script></body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="manifest" href="/field-ready/manifest-deal-tetris.json" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="Deal Tetris" />
+  <meta name="theme-color" content="#6366f1" />
+  <title>Deal Tetris | Field Ready</title>
+  <meta name="description" content="Deal elements are falling. Stack the right ones to close. Stack wrong combinations and the deal collapses.">
+  <script defer src="https://umami-tau-drab.vercel.app/script.js" data-website-id="23015384-bcae-4732-9665-a39f261647e1"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #130d1c; --surface: #1e1530; --surface2: #271c3d; --border: #2e2249;
+      --text: #ede8f5; --muted: #8b7fa8; --accent: #d946ef; --accent-dark: #b91fd4;
+      --accent-light: rgba(217,70,239,0.12); --accent-glow: rgba(217,70,239,0.25);
+      --green: #10b981; --red: #ef4444; --yellow: #f59e0b; --orange: #f97316;
+      --font: 'Inter', system-ui, sans-serif;
+    }
+    html, body { height: 100%; font-family: var(--font); background: var(--bg); color: var(--text); overflow: hidden; }
+
+    /* SCREENS */
+    .screen { display: none; position: fixed; inset: 0; overflow-y: auto; }
+    .screen.active { display: flex; flex-direction: column; }
+
+    /* INTRO */
+    #intro {
+      align-items: center; justify-content: center; text-align: center; padding: 32px 24px;
+      background: radial-gradient(ellipse at 50% 0%, rgba(99,102,241,0.15) 0%, transparent 70%), var(--bg);
+    }
+    .brand-tag { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--accent); margin-bottom: 12px; }
+    .intro-title { font-size: clamp(36px, 8vw, 52px); font-weight: 900; letter-spacing: -2px; color: #fff; line-height: 1.05; margin-bottom: 10px; }
+    .intro-sub { font-size: 15px; color: var(--muted); line-height: 1.65; margin-bottom: 24px; max-width: 420px; }
+
+    .blocks-preview { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-bottom: 28px; }
+    .preview-block { padding: 8px 14px; border-radius: 8px; font-size: 13px; font-weight: 700; border: 2px solid transparent; }
+
+    .btn-play { background: var(--accent); color: #fff; border: none; border-radius: 14px; padding: 18px 48px; font-family: var(--font); font-size: 18px; font-weight: 800; cursor: pointer; transition: background 0.15s; }
+    .btn-play:hover { background: #4f46e5; }
+    .intro-note { font-size: 13px; color: var(--muted); margin-top: 12px; }
+
+    /* GAME */
+    #game { background: var(--bg); flex-direction: column; }
+
+    .hud { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: var(--surface); border-bottom: 1px solid var(--border); flex-shrink: 0; }
+    .hud-score { font-size: 22px; font-weight: 900; color: #fff; letter-spacing: -1px; }
+    .hud-label { font-size: 10px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+    .hud-level { text-align: center; }
+    .hud-level-num { font-size: 18px; font-weight: 800; color: var(--accent); }
+    .hud-deals { text-align: right; }
+    .hud-deals-num { font-size: 18px; font-weight: 800; color: var(--green); }
+
+    /* Arena */
+    .arena { flex: 1; display: flex; align-items: flex-end; justify-content: center; padding: 16px; gap: 8px; position: relative; overflow: hidden; }
+
+    /* Stack columns */
+    .stack-area { display: flex; gap: 6px; align-items: flex-end; width: 100%; max-width: 480px; }
+    .column { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; gap: 4px; min-height: 320px; position: relative; border-bottom: 2px solid var(--border); }
+    .col-label { font-size: 9px; text-align: center; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px; }
+
+    /* Falling block */
+    .falling-block {
+      position: fixed; left: 50%; transform: translateX(-50%);
+      padding: 10px 16px; border-radius: 10px; font-size: 13px; font-weight: 800;
+      text-align: center; cursor: pointer; border: 2px solid transparent;
+      transition: top 0.05s linear; z-index: 20; white-space: nowrap;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+      user-select: none; -webkit-user-select: none;
+    }
+
+    /* Stacked blocks */
+    .stacked-block { padding: 8px 6px; border-radius: 8px; font-size: 11px; font-weight: 700; text-align: center; border: 2px solid transparent; }
+
+    /* Deal meter */
+    .deal-meter-wrap { position: absolute; right: 0; top: 0; bottom: 32px; width: 12px; display: flex; flex-direction: column; justify-content: flex-end; }
+    .deal-meter-fill { background: var(--green); border-radius: 6px; transition: height 0.4s ease; width: 100%; }
+
+    /* Combo flash */
+    .combo-flash {
+      position: fixed; inset: 0; pointer-events: none; z-index: 50;
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; transition: opacity 0.2s;
+    }
+    .combo-flash.show { opacity: 1; }
+    .combo-text { font-size: 48px; font-weight: 900; color: #fff; text-shadow: 0 0 30px var(--green); letter-spacing: -2px; }
+
+    /* Warning */
+    .warning-bar { background: var(--red); padding: 8px; text-align: center; font-size: 13px; font-weight: 700; display: none; animation: pulse 0.5s infinite; }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.6; } }
+
+    /* Controls */
+    .controls { display: flex; padding: 12px 16px; gap: 8px; background: var(--surface); border-top: 1px solid var(--border); flex-shrink: 0; }
+    .ctrl-btn { flex: 1; padding: 14px 8px; border-radius: 10px; border: none; font-family: var(--font); font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.1s; }
+    .ctrl-btn:active { transform: scale(0.95); }
+
+    /* GAME OVER */
+    #gameover { align-items: center; justify-content: flex-start; padding: 32px 24px 80px; }
+    .go-inner { width: 100%; max-width: 480px; margin: 0 auto; text-align: center; }
+    .go-emoji { font-size: 52px; margin-bottom: 12px; }
+    .go-title { font-size: 28px; font-weight: 900; color: #fff; letter-spacing: -1px; margin-bottom: 6px; }
+    .go-sub { font-size: 15px; color: var(--muted); margin-bottom: 24px; }
+    .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
+    .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px; }
+    .stat-num { font-size: 26px; font-weight: 900; color: #fff; letter-spacing: -1px; }
+    .stat-lbl { font-size: 10px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
+    .lesson-box { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; text-align: left; margin-bottom: 16px; }
+    .lesson-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: var(--accent); margin-bottom: 8px; }
+    .lesson-text { font-size: 14px; color: var(--muted); line-height: 1.65; }
+    .lesson-text strong { color: var(--text); }
+    .nl-box { background: var(--accent); border-radius: 14px; padding: 20px; margin-bottom: 16px; }
+    .nl-box h3 { font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 6px; }
+    .nl-box p { font-size: 13px; color: rgba(255,255,255,0.8); margin-bottom: 14px; }
+    .nl-form { display: flex; gap: 8px; flex-wrap: wrap; }
+    .nl-input { flex: 1; min-width: 160px; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); border-radius: 8px; padding: 10px 14px; color: #fff; font-family: var(--font); font-size: 14px; outline: none; }
+    .nl-input::placeholder { color: rgba(255,255,255,0.6); }
+    .nl-btn { background: #fff; color: var(--accent); border: none; border-radius: 8px; padding: 10px 16px; font-family: var(--font); font-size: 14px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+    .go-actions { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+    .btn-again { background: var(--accent); color: #fff; border: none; border-radius: 12px; padding: 14px; font-family: var(--font); font-size: 15px; font-weight: 700; cursor: pointer; }
+    .btn-share-go { background: var(--surface); color: var(--text); border: 1px solid var(--border); border-radius: 12px; padding: 13px; font-family: var(--font); font-size: 14px; font-weight: 600; cursor: pointer; }
+    .field-ready-footer { text-align: center; }
+    .field-ready-footer a { font-size: 12px; color: var(--muted); text-decoration: none; }
+  </style>
+</head>
+<body>
+
+<div class="combo-flash" id="comboFlash">
+  <div class="combo-text" id="comboText"></div>
+</div>
+
+<!-- INTRO -->
+<div class="screen active" id="intro">
+  <a href="/field-ready/" class="brand-tag" style="text-decoration:none;">&#8592; Field Ready by Jason Landers</a>
+  <div class="intro-title">Deal<br>Tetris</div>
+  <p class="intro-sub">Deal elements are falling. Route each one to the right column. Stack the right combination and close the deal. Stack wrong ones and it collapses.</p>
+
+  <div class="blocks-preview">
+    <div class="preview-block" style="background:rgba(16,185,129,0.15);border-color:rgba(16,185,129,0.4);color:#10b981;">🏆 Champion</div>
+    <div class="preview-block" style="background:rgba(99,102,241,0.15);border-color:rgba(99,102,241,0.4);color:#818cf8;">💰 Budget</div>
+    <div class="preview-block" style="background:rgba(245,158,11,0.15);border-color:rgba(245,158,11,0.4);color:#f59e0b;">📋 POV</div>
+    <div class="preview-block" style="background:rgba(239,68,68,0.15);border-color:rgba(239,68,68,0.4);color:#ef4444;">⚔️ Risk</div>
+    <div class="preview-block" style="background:rgba(249,115,22,0.15);border-color:rgba(249,115,22,0.4);color:#f97316;">⏰ Timeline</div>
+  </div>
+
+  <button class="btn-play" onclick="startGame()">Start stacking</button>
+  <p class="intro-note">Tap a column to route the falling block there &nbsp;·&nbsp; Speed increases &nbsp;·&nbsp; Match combos for bonuses</p>
+</div>
+
+<!-- GAME -->
+<div class="screen" id="game">
+  <div class="hud">
+    <div>
+      <div class="hud-label">Score</div>
+      <div class="hud-score" id="hudScore">0</div>
+    </div>
+    <div class="hud-level">
+      <div class="hud-label">Level</div>
+      <div class="hud-level-num" id="hudLevel">1</div>
+    </div>
+    <div class="hud-deals">
+      <div class="hud-label">Deals closed</div>
+      <div class="hud-deals-num" id="hudDeals">0</div>
+    </div>
+    <div>
+      <div class="hud-label">Max stack</div>
+      <div id="hudStack" style="font-size:18px;font-weight:800;color:var(--yellow);">0</div>
+    </div>
+  </div>
+  <div class="warning-bar" id="warningBar">⚠️ Deal at risk! Stack needed elements fast!</div>
+  <div class="arena" id="arena">
+    <div class="stack-area" id="stackArea"></div>
+  </div>
+  <div class="controls" id="controls"></div>
+</div>
+
+<!-- GAME OVER -->
+<div class="screen" id="gameover">
+  <div class="go-inner">
+    <div class="go-emoji" id="goEmoji"></div>
+    <div class="go-title" id="goTitle"></div>
+    <div class="go-sub" id="goSub"></div>
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-num" id="goScore">0</div><div class="stat-lbl">Score</div></div>
+      <div class="stat-card"><div class="stat-num" id="goDeals">0</div><div class="stat-lbl">Deals closed</div></div>
+      <div class="stat-card"><div class="stat-num" id="goLevel">1</div><div class="stat-lbl">Level reached</div></div>
+    </div>
+    <div class="lesson-box">
+      <div class="lesson-title">The real lesson</div>
+      <div class="lesson-text" id="goLesson"></div>
+    </div>
+    <div class="nl-box">
+      <h3>Want the actual deal framework?</h3>
+      <p>The SE Edge covers deal strategy, champion identification, and closing mechanics weekly.</p>
+      <form class="nl-form" action="https://magic.beehiiv.com/v1/ed62bc9e-56bd-41ca-be98-5ab6463a12bf" method="get" target="_blank">
+        <input class="nl-input" type="email" name="email" placeholder="your@email.com" required />
+        <button class="nl-btn" type="submit">Subscribe</button>
+      </form>
+    </div>
+    <div class="go-actions">
+      <button class="btn-again" onclick="startGame()">Play again</button>
+      <button class="btn-share-go" onclick="shareScore()">Share score</button>
+    </div>
+    <div class="field-ready-footer">
+      <a href="/field-ready">Field Ready by Jason Landers &nbsp;·&nbsp; jasonlanders.com</a>
+    </div>
+  </div>
+</div>
+
+<script>
+const COLUMNS = [
+  { id: 'people', label: 'People', emoji: '👥', color: '#10b981', bg: 'rgba(16,185,129,0.15)', border: 'rgba(16,185,129,0.4)' },
+  { id: 'process', label: 'Process', emoji: '📋', color: '#6366f1', bg: 'rgba(99,102,241,0.15)', border: 'rgba(99,102,241,0.4)' },
+  { id: 'commercial', label: 'Commercial', emoji: '💰', color: '#f59e0b', bg: 'rgba(245,158,11,0.15)', border: 'rgba(245,158,11,0.4)' },
+  { id: 'risk', label: 'Risks', emoji: '⚠️', color: '#ef4444', bg: 'rgba(239,68,68,0.15)', border: 'rgba(239,68,68,0.4)' }
+];
+
+const BLOCKS = [
+  { label: '🏆 Champion', col: 'people', points: 150, good: true, hint: 'Who is it?' },
+  { label: '👤 Economic Buyer', col: 'people', points: 120, good: true, hint: 'Budget owner' },
+  { label: '🔬 Technical Win', col: 'process', points: 100, good: true, hint: 'Validated!' },
+  { label: '📋 POV Criteria', col: 'process', points: 110, good: true, hint: 'Defined?' },
+  { label: '💰 Budget Approved', col: 'commercial', points: 140, good: true, hint: 'It is there' },
+  { label: '📅 Timeline Set', col: 'commercial', points: 90, good: true, hint: 'By when?' },
+  { label: '⚔️ Competitor', col: 'risk', points: -80, good: false, hint: 'Handle it' },
+  { label: '🚫 No Champion', col: 'risk', points: -100, good: false, hint: 'Big problem' },
+  { label: '❓ Vague Criteria', col: 'risk', points: -90, good: false, hint: 'Danger zone' },
+  { label: '📊 Exec Sponsor', col: 'people', points: 130, good: true, hint: 'Leadership' },
+  { label: '🤝 Contract Agreed', col: 'commercial', points: 160, good: true, hint: 'Almost done' },
+  { label: '⏰ Stalled', col: 'risk', points: -70, good: false, hint: 'No urgency' },
+  { label: '🔍 Discovery Done', col: 'process', points: 100, good: true, hint: 'Know the pain' },
+  { label: '💸 Budget Risk', col: 'risk', points: -60, good: false, hint: 'Watch out' },
+  { label: '✅ Success Criteria', col: 'process', points: 120, good: true, hint: 'Agreed on it' }
+];
+
+// ---- STATE ----
+let score = 0;
+let level = 1;
+let deals = 0;
+let stacks = { people: [], process: [], commercial: [], risk: [] };
+let currentBlock = null;
+let fallingEl = null;
+let gameActive = false;
+let rafHandle = null;
+let dropY = 0;
+let dropSpeed = 80; // pixels per second
+let lastFrameTime = 0;
+let blockQueue = [];
+let blockIndex = 0;
+
+function startGame() {
+  score = 0; level = 1; deals = 0;
+  stacks = { people: [], process: [], commercial: [], risk: [] };
+  blockQueue = shuffleBlocks();
+  blockIndex = 0;
+  dropSpeed = 80; // pixels per second
+  gameActive = true;
+
+  showScreen('game');
+  buildColumns();
+  buildControls();
+  updateHUD();
+  spawnBlock();
+}
+
+function shuffleBlocks() {
+  return [...BLOCKS, ...BLOCKS].sort(() => Math.random() - 0.5);
+}
+
+function buildColumns() {
+  const area = document.getElementById('stackArea');
+  area.innerHTML = COLUMNS.map(col => `
+    <div class="column" id="col-${col.id}">
+      <div class="col-label">${col.emoji} ${col.label}</div>
+    </div>
+  `).join('');
+}
+
+function buildControls() {
+  const ctrl = document.getElementById('controls');
+  ctrl.innerHTML = COLUMNS.map(col => `
+    <button class="ctrl-btn" onclick="dropTo('${col.id}')"
+      style="background:${col.bg};border:2px solid ${col.border};color:${col.color};">
+      ${col.emoji}<br><span style="font-size:11px">${col.label}</span>
+    </button>
+  `).join('');
+}
+
+function updateHUD() {
+  document.getElementById('hudScore').textContent = score.toLocaleString();
+  document.getElementById('hudLevel').textContent = level;
+  document.getElementById('hudDeals').textContent = deals;
+  const maxStack = Math.max(...Object.values(stacks).map(s => s.length));
+  const stackEl = document.getElementById('hudStack');
+  if (stackEl) {
+    stackEl.textContent = maxStack;
+    stackEl.style.color = maxStack >= 6 ? 'var(--red)' : maxStack >= 4 ? 'var(--yellow)' : 'var(--green)';
+  }
+}
+
+function spawnBlock() {
+  if (!gameActive) return;
+  if (blockIndex >= blockQueue.length) { blockQueue = shuffleBlocks(); blockIndex = 0; }
+  currentBlock = blockQueue[blockIndex++];
+
+  dropY = 60; // Start just below HUD
+  const col = COLUMNS.find(c => c.id === currentBlock.col);
+
+  if (fallingEl) fallingEl.remove();
+  fallingEl = document.createElement('div');
+  fallingEl.className = 'falling-block';
+  fallingEl.style.cssText = `
+    top: ${dropY}px;
+    background: #1e293b;
+    border-color: #4b5563;
+    color: #e2e8f0;
+    padding: 10px 16px;
+    z-index: 100;
+  `;
+  fallingEl.textContent = currentBlock.label;
+  document.getElementById('game').appendChild(fallingEl);
+
+  cancelAnimationFrame(rafHandle);
+  lastFrameTime = 0;
+  rafHandle = requestAnimationFrame(tick);
+}
+
+function tick(timestamp) {
+  if (!gameActive || !currentBlock) return;
+  if (lastFrameTime === 0) lastFrameTime = timestamp;
+  const delta = Math.min((timestamp - lastFrameTime) / 1000, 0.033);
+  lastFrameTime = timestamp;
+
+  dropY += dropSpeed * delta;
+  if (fallingEl) fallingEl.style.top = Math.round(dropY) + 'px';
+
+  // Check if falling block hits top of any stacked column
+  const fallingRect = fallingEl ? fallingEl.getBoundingClientRect() : null;
+  if (fallingRect) {
+    for (const col of COLUMNS) {
+      const colEl = document.getElementById('col-' + col.id);
+      const topBlock = colEl.querySelector('.stacked-block');
+      if (topBlock) {
+        const topRect = topBlock.getBoundingClientRect();
+        const colRect = colEl.getBoundingClientRect();
+        // If falling block bottom overlaps the top of the stacked blocks and is within column width
+        if (fallingRect.bottom >= topRect.top &&
+            fallingRect.left < colRect.right &&
+            fallingRect.right > colRect.left) {
+          cancelAnimationFrame(rafHandle);
+          rafHandle = null;
+          dropTo(col.id);
+          return;
+        }
+      }
+    }
+  }
+
+  const threshold = window.innerHeight - 100;
+  if (dropY > threshold) {
+    cancelAnimationFrame(rafHandle);
+    rafHandle = null;
+    miss();
+    return;
+  }
+  rafHandle = requestAnimationFrame(tick);
+}
+
+function dropTo(colId) {
+  if (!gameActive || !currentBlock) return;
+  cancelAnimationFrame(rafHandle);
+  rafHandle = null;
+  const blockToPlace = currentBlock;
+  currentBlock = null; // prevent tick from running further
+
+  const correct = colId === blockToPlace.col;
+  const pts = blockToPlace.points;
+
+  // Animate block to column
+  const colEl = document.getElementById('col-' + colId);
+  const colRect = colEl.getBoundingClientRect();
+  // Fly to top of existing stack, or bottom of column if empty
+  const topBlock = colEl.querySelector('.stacked-block');
+  const targetY = topBlock
+    ? topBlock.getBoundingClientRect().top - 10
+    : colRect.bottom - 60;
+  if (fallingEl) {
+    fallingEl.style.transition = 'top 0.2s ease, left 0.2s ease';
+    fallingEl.style.left = (colRect.left + colRect.width / 2) + 'px';
+    fallingEl.style.top = targetY + 'px';
+  }
+
+  setTimeout(() => {
+    if (fallingEl) { fallingEl.remove(); fallingEl = null; }
+
+    const col = COLUMNS.find(c => c.id === colId);
+    const blockEl = document.createElement('div');
+    blockEl.className = 'stacked-block';
+    blockEl.textContent = blockToPlace.label;
+
+    if (correct) {
+      // Correct column -- green, clearable
+      blockEl.style.cssText = `background:rgba(16,185,129,0.15);border-color:rgba(16,185,129,0.5);color:#6ee7b7;`;
+      blockEl.dataset.correct = 'true';
+      score += Math.max(0, pts);
+    } else {
+      // Wrong column -- red flash then dim, permanent dead weight
+      blockEl.style.cssText = `background:rgba(239,68,68,0.2);border-color:rgba(239,68,68,0.5);color:#fca5a5;`;
+      blockEl.dataset.correct = 'false';
+      score = Math.max(0, score - 30);
+      loseLife();
+      // Dim after flash to show it's permanently stuck
+      setTimeout(() => {
+        blockEl.style.cssText = `background:rgba(239,68,68,0.07);border-color:rgba(100,116,139,0.3);color:#475569;opacity:0.7;`;
+      }, 600);
+    }
+
+    // Insert after any existing stacked blocks so new blocks appear on top
+    const firstBlock = colEl.querySelector('.stacked-block');
+    if (firstBlock) {
+      colEl.insertBefore(blockEl, firstBlock);
+    } else {
+      colEl.insertBefore(blockEl, colEl.querySelector('.col-label'));
+    }
+    stacks[colId].push({ block: blockToPlace, correct });
+
+    updateHUD();
+    checkDealClose();
+
+    checkColumnOverflow();
+    setTimeout(spawnBlock, 500);
+  }, 250);
+}
+
+function miss() {
+  if (fallingEl) { fallingEl.remove(); fallingEl = null; }
+  // Missed block -- no penalty, just respawn
+  setTimeout(spawnBlock, 400);
+}
+
+function loseLife() { /* no-op -- game ends on column overflow */ }
+
+function checkCombo(colId) {
+  const col = stacks[colId];
+  if (col.length >= 3 && col.slice(-3).every(s => s.correct)) {
+    score += 200;
+    showCombo('COMBO! +200');
+  }
+}
+
+function checkDealClose() {
+  const people = stacks.people.filter(s => s.correct && s.block.good).length;
+  const process = stacks.process.filter(s => s.correct && s.block.good).length;
+  const commercial = stacks.commercial.filter(s => s.correct && s.block.good).length;
+
+  if (people >= 2 && process >= 2 && commercial >= 2) {
+    deals++;
+    level = Math.floor(deals / 2) + 1;
+    score += 500 * level;
+    // Remove only correct blocks -- wrong blocks stay as permanent dead weight
+    ['people','process','commercial','risk'].forEach(colId => {
+      const colEl = document.getElementById('col-' + colId);
+      colEl.querySelectorAll('.stacked-block[data-correct="true"]').forEach(b => b.remove());
+      stacks[colId] = stacks[colId].filter(s => !s.correct);
+    });
+
+    dropSpeed = 80 + (deals * 15); // speed up with each deal closed
+    showCombo(`DEAL CLOSED! +${500 * level}`);
+    document.getElementById('warningBar').style.display = 'none';
+    updateHUD();
+  }
+}
+
+function checkColumnOverflow() {
+  if (!gameActive) return;
+  const arena = document.getElementById('arena');
+  const arenaTop = arena.getBoundingClientRect().top;
+  for (const colId of ['people','process','commercial','risk']) {
+    const colEl = document.getElementById('col-' + colId);
+    // Use visual check only -- first .stacked-block is the topmost one
+    const topBlock = colEl.querySelector('.stacked-block');
+    if (topBlock) {
+      const blockTop = topBlock.getBoundingClientRect().top;
+      if (blockTop <= arenaTop + 10) {
+        gameActive = false;
+        cancelAnimationFrame(rafHandle);
+        rafHandle = null;
+        setTimeout(gameOver, 400);
+        return;
+      }
+    }
+  }
+}
+
+function showCombo(text) {
+  const f = document.getElementById('comboFlash');
+  document.getElementById('comboText').textContent = text;
+  f.classList.add('show');
+  setTimeout(() => f.classList.remove('show'), 800);
+}
+
+function gameOver() {
+  gameActive = false;
+  cancelAnimationFrame(rafHandle);
+  if (fallingEl) { fallingEl.remove(); fallingEl = null; }
+
+  showScreen('gameover');
+
+  let emoji, title, sub;
+  if (deals >= 5) { emoji = '🏆'; title = 'Deal Machine'; sub = `${deals} deals closed. You understand what it takes.`; }
+  else if (deals >= 3) { emoji = '🎯'; title = 'Strong Close Rate'; sub = `${deals} deals closed. Solid pipeline management instincts.`; }
+  else if (deals >= 1) { emoji = '📈'; title = 'Getting Warmer'; sub = `${deals} deals closed. The pattern is becoming clear.`; }
+  else { emoji = '💪'; title = 'Back to Basics'; sub = `0 deals closed. Every deal needs all the elements. None are optional.`; }
+
+  document.getElementById('goEmoji').textContent = emoji;
+  document.getElementById('goTitle').textContent = title;
+  document.getElementById('goSub').textContent = sub;
+  document.getElementById('goScore').textContent = score.toLocaleString();
+  document.getElementById('goDeals').textContent = deals;
+  document.getElementById('goLevel').textContent = level;
+  document.getElementById('goLesson').innerHTML = `
+    <strong>What the game models:</strong> Every enterprise deal needs the right elements in the right buckets. People (champion + economic buyer), Process (discovery + criteria + technical win), and Commercial (budget + timeline + contract) must all be present. Risk elements -- missing champion, vague criteria, a strong competitor -- are inevitable. The question is whether you address them fast enough. A deal with great people but no commercial structure doesn't close. Neither does one with budget but no champion.
+  `;
+
+  window._tetrisResult = { score, deals, level };
+}
+
+function shareScore() {
+  const r = window._tetrisResult;
+  if (!r) return;
+  const text = `Deal Tetris: ${r.score.toLocaleString()} pts | ${r.deals} deals closed | Level ${r.level}\n\nStack the right deal elements: jasonlanders.com/field-ready/deal-tetris.html`;
+  if (navigator.share) {
+    navigator.share({ text }).catch(() => copyText(text));
+  } else { copyText(text); }
+}
+
+function copyText(text) {
+  navigator.clipboard.writeText(text).catch(() => {});
+  document.querySelector('.btn-share-go').textContent = 'Copied!';
+  setTimeout(() => document.querySelector('.btn-share-go').textContent = 'Share score', 2000);
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0, 0);
+}
+</script>
+
+<div id="installHint" style="display:none;position:fixed;bottom:0;left:0;right:0;background:#1a1d27;border-top:1px solid #2d3148;padding:12px 20px;text-align:center;z-index:200;">
+  <p style="font-size:13px;color:#9ca3af;margin:0;">
+    <span style="margin-right:8px;">📱</span>
+    Add to your home screen for quick access
+    <button onclick="installApp()" id="installBtn" style="display:none;margin-left:10px;background:#6366f1;color:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;">Install</button>
+    <span id="iosHint" style="display:none;margin-left:8px;color:#6b7280;">Tap Share then "Add to Home Screen"</span>
+    <button onclick="document.getElementById('installHint').style.display='none'" style="margin-left:12px;background:transparent;border:none;color:#6b7280;cursor:pointer;font-size:16px;">x</button>
+  </p>
+</div>
+<script>
+  // Show install hint on any mobile browser
+  if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent) && !window.navigator.standalone) {
+    document.getElementById('installHint').style.display = 'block';
+    if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+      document.getElementById('iosHint').style.display = 'inline';
+    } else {
+      // Android -- show generic hint, upgrade to native prompt if available
+      document.getElementById('iosHint').style.display = 'inline';
+      document.getElementById('iosHint').textContent = 'Tap menu (\u22ee) then "Add to Home screen"';
+    }
+  }
+  let deferredPrompt;
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault(); deferredPrompt = e;
+    document.getElementById('installBtn').style.display = 'inline-block';
+    document.getElementById('iosHint').style.display = 'none';
+  });
+  function installApp() {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then(() => {
+        document.getElementById('installHint').style.display = 'none';
+        deferredPrompt = null;
+      });
+    }
+  }
+  window.addEventListener('appinstalled', () => {
+    document.getElementById('installHint').style.display = 'none';
+  });
+</script>
+</body>
+</html>
