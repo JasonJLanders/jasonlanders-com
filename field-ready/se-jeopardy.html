@@ -4,8 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-  <title>SE Jeopardy | Field Ready</title>
-  <meta name="description" content="Turn any product documentation into a live Jeopardy game for your SE team. Host it on Zoom, award points, track scores.">
+  <title>Trivia Squares | Field Ready</title>
+  <meta name="description" content="Turn any product documentation into a live jeopardy-style trivia game for your SE team. Host it on Zoom, award points, track scores.">
   <script defer src="https://umami-tau-drab.vercel.app/script.js" data-website-id="23015384-bcae-4732-9665-a39f261647e1"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Anton&display=swap" rel="stylesheet">
@@ -175,8 +175,8 @@
 <!-- SETUP -->
 <div id="setup" class="screen active">
   <a href="/field-ready/" class="brand-tag">&#8592; Field Ready by Jason Landers</a>
-  <h1 class="setup-title">SE Jeopardy</h1>
-  <p class="setup-sub">Turn any product documentation into a live Jeopardy game for your team. Paste content or a URL, add your players, and host it on your next Zoom call.</p>
+  <h1 class="setup-title">Trivia Squares</h1>
+  <p class="setup-sub">Turn any product documentation into a live jeopardy-style trivia game for your team. Paste content or a URL, add your players, and host it on your next Zoom call.</p>
 
   <div class="setup-section">
     <label class="setup-label">Paste documentation or content</label>
@@ -202,7 +202,7 @@
     <label class="setup-label">Game Options</label>
     <label style="display:flex;align-items:center;gap:12px;cursor:pointer;">
       <input type="checkbox" id="showChoicesToggle" style="width:18px;height:18px;accent-color:var(--accent);cursor:pointer;">
-      <span style="font-size:14px;color:var(--text);">Show multiple choice answers on main board <span style="color:var(--muted);font-size:13px;">(uncheck for classic Jeopardy style)</span></span>
+      <span style="font-size:14px;color:var(--text);">Show multiple choice answers on main board <span style="color:var(--muted);font-size:13px;">(uncheck for classic trivia style)</span></span>
     </label>
   </div>
 
@@ -220,7 +220,7 @@
 <!-- GAME -->
 <div id="game" class="screen">
   <div class="game-header">
-    <div class="game-title" id="gameTitle">SE JEOPARDY</div>
+    <div class="game-title" id="gameTitle">TRIVIA SQUARES</div>
     <div class="game-controls">
       <button class="btn-host-panel" onclick="openHostPanel()">&#9654; Host Panel</button>
       <button class="btn-new-game" onclick="newGame()">New Game</button>
@@ -268,7 +268,7 @@ function init() {
 
   // Init BroadcastChannel
   if (typeof BroadcastChannel !== 'undefined') {
-    channel = new BroadcastChannel('se-jeopardy');
+    channel = new BroadcastChannel('trivia-squares');
     channel.onmessage = function(e) { handleChannelMsg(e.data); };
   }
 }
@@ -383,7 +383,7 @@ function showGame(activePlayers) {
   document.getElementById('generatingState').style.display = 'none';
   showScreen('game');
 
-  document.getElementById('gameTitle').textContent = (board.title || 'SE JEOPARDY').toUpperCase();
+  document.getElementById('gameTitle').textContent = (board.title || 'TRIVIA SQUARES').toUpperCase();
   renderScoreboard(activePlayers);
   renderBoard();
   broadcast({ type: 'game_start', board: board, players: activePlayers, scores: scores });
@@ -499,7 +499,7 @@ function showFinalScores() {
   var finalDiv = document.createElement('div');
   finalDiv.className = 'final-screen';
   finalDiv.innerHTML = '<div class="final-title">FINAL SCORES</div>' +
-    '<div class="final-sub">Thanks for playing SE Jeopardy!</div>' +
+    '<div class="final-sub">Thanks for playing TRIVIA SQUARES!</div>' +
     '<div class="final-podium">' +
     sorted.map(function(entry, i) {
       return '<div class="final-player ' + (i === 0 ? 'first' : '') + '">' +
@@ -538,7 +538,7 @@ function newGame() {
 // ============================================================
 function openHostPanel() {
   var url = window.location.origin + window.location.pathname + '?host=1';
-  hostWindow = window.open(url, 'se-jeopardy-host', 'width=480,height=700,scrollbars=yes');
+  hostWindow = window.open(url, 'trivia-squares-host', 'width=480,height=700,scrollbars=yes');
   // Send current state
   setTimeout(function() {
     broadcast({ type: 'sync', board: board, scores: scores, usedCells: usedCells, clue: currentClue });
@@ -603,7 +603,7 @@ function isHostMode() {
 
 function initHostMode() {
   document.body.innerHTML = '<div class="host-panel"><div class="hp-header"><span class="hp-title">Host Control Panel</span><span class="hp-badge">PRIVATE</span></div><div class="hp-body" id="hpBody"></div></div>';
-  document.title = 'Host Panel | SE Jeopardy';
+  document.title = 'Host Panel | TRIVIA SQUARES';
   renderHostIdle();
   broadcast({ type: 'host_ready' });
 }
@@ -693,7 +693,7 @@ function escAttr(s) {
 if (isHostMode()) {
   document.addEventListener('DOMContentLoaded', function() {
     if (typeof BroadcastChannel !== 'undefined') {
-      channel = new BroadcastChannel('se-jeopardy');
+      channel = new BroadcastChannel('trivia-squares');
       channel.onmessage = function(e) { handleChannelMsg(e.data); };
     }
     initHostMode();
