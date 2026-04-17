@@ -332,7 +332,8 @@ async function fetchUrl() {
 
 async function generateBoard() {
   var content = document.getElementById('contentInput').value.trim();
-  if (content.length < 200) return;
+  var url = document.getElementById('urlInput').value.trim();
+  if (content.length < 200 && !url) return;
 
   var activePlayers = players.filter(function(p) { return p.trim().length > 0; });
   if (activePlayers.length === 0) return;
@@ -342,7 +343,6 @@ async function generateBoard() {
   document.getElementById('generateError').classList.remove('show');
 
   try {
-    var url = document.getElementById('urlInput').value.trim();
     var res = await fetch('/api/jeopardy', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
