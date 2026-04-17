@@ -5,9 +5,13 @@
   "functions": {
     "api/fine-print.js": {
       "maxDuration": 30
+    },
+    "api/jeopardy.js": {
+      "maxDuration": 30
     }
   },
   "rewrites": [
-    { "source": "/api/fine-print", "destination": "/api/fine-print" }
+    { "source": "/api/fine-print", "destination": "/api/fine-print" },
+    { "source": "/api/jeopardy", "destination": "/api/jeopardy" }
   ]
 }
