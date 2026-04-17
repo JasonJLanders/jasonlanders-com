@@ -300,8 +300,9 @@ function updateCharCount() {
 
 function updateGenerateBtn() {
   var hasContent = document.getElementById('contentInput').value.trim().length >= 200;
+  var hasUrl = document.getElementById('urlInput').value.trim().length > 0;
   var hasPlayers = players.some(function(p) { return p.trim().length > 0; });
-  document.getElementById('generateBtn').disabled = !(hasContent && hasPlayers);
+  document.getElementById('generateBtn').disabled = !((hasContent || hasUrl) && hasPlayers);
 }
 
 async function fetchUrl() {
@@ -313,29 +314,16 @@ async function fetchUrl() {
   btn.disabled = true;
   btn.textContent = 'Fetching...';
 
+  // Store URL for backend to fetch - we pass it along at generation time
+  // Just validate it looks like a URL and show a ready state
   try {
-    // Use a CORS proxy to fetch the URL content
-    var proxyUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent(url);
-    var res = await fetch(proxyUrl);
-    var data = await res.json();
-    if (!data.contents) throw new Error('No content returned');
-
-    // Strip HTML tags
-    var tmp = document.createElement('div');
-    tmp.innerHTML = data.contents;
-    // Remove scripts and styles
-    tmp.querySelectorAll('script, style, nav, footer, header').forEach(function(el) { el.remove(); });
-    var text = tmp.innerText || tmp.textContent || '';
-    text = text.replace(/\s+/g, ' ').trim();
-
-    if (text.length < 200) throw new Error('Not enough readable content found at that URL. Try pasting the text directly.');
-
-    document.getElementById('contentInput').value = text.slice(0, 12000);
-    updateCharCount();
-    btn.textContent = 'Fetched!';
-    setTimeout(function() { btn.textContent = 'Fetch URL'; btn.disabled = false; }, 2000);
+    new URL(url); // throws if invalid
+    btn.textContent = 'URL Ready';
+    document.getElementById('contentInput').placeholder = 'URL set: ' + url + '\n\nYou can also paste content here to override it.';
+    updateGenerateBtn();
+    setTimeout(function() { btn.textContent = 'Change URL'; btn.disabled = false; }, 1500);
   } catch(e) {
-    errEl.textContent = e.message || 'Could not fetch that URL. Try pasting the content directly instead.';
+    errEl.textContent = 'That doesn\'t look like a valid URL.';
     errEl.classList.add('show');
     btn.textContent = 'Fetch URL';
     btn.disabled = false;
@@ -354,10 +342,11 @@ async function generateBoard() {
   document.getElementById('generateError').classList.remove('show');
 
   try {
+    var url = document.getElementById('urlInput').value.trim();
     var res = await fetch('/api/jeopardy', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ content: content })
+      body: JSON.stringify({ content: content, url: content.length < 200 ? url : '' })
     });
     var data = await res.json();
 

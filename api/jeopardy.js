@@ -15,8 +15,38 @@ module.exports = async function handler(req, res) {
   }
 
   const { content, url } = body;
-  const sourceText = content || '';
+  let sourceText = content || '';
   console.log('Content length:', sourceText.length, 'URL:', url || 'none');
+
+  // If URL provided and no content, fetch the URL server-side
+  if (url && sourceText.trim().length < 200) {
+    try {
+      console.log('Fetching URL:', url);
+      const urlRes = await fetch(url, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (compatible; SE-Jeopardy/1.0)',
+          'Accept': 'text/html,application/xhtml+xml'
+        },
+        redirect: 'follow'
+      });
+      if (!urlRes.ok) throw new Error('URL returned status ' + urlRes.status);
+      const html = await urlRes.text();
+      // Strip HTML tags - simple but effective
+      sourceText = html
+        .replace(/<script[^>]*>.*?<\/script>/gis, '')
+        .replace(/<style[^>]*>.*?<\/style>/gis, '')
+        .replace(/<nav[^>]*>.*?<\/nav>/gis, '')
+        .replace(/<footer[^>]*>.*?<\/footer>/gis, '')
+        .replace(/<header[^>]*>.*?<\/header>/gis, '')
+        .replace(/<[^>]+>/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+      console.log('Fetched text length:', sourceText.length);
+    } catch (fetchErr) {
+      console.log('URL fetch error:', fetchErr.message);
+      return res.status(400).json({ error: 'Could not fetch that URL: ' + fetchErr.message + '. Try pasting the content directly instead.' });
+    }
+  }
 
   if (sourceText.trim().length < 200) {
     return res.status(400).json({ error: 'Not enough content to generate a game. Paste more text or try a different URL.' });
