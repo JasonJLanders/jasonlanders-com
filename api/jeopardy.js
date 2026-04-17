@@ -15,7 +15,7 @@ module.exports = async function handler(req, res) {
   }
 
   const { content, url } = body;
-  let sourceText = content || '';
+  let sourceText = (content || '').slice(0, 50000); // cap input at 50k chars before processing
   console.log('Content length:', sourceText.length, 'URL:', url || 'none');
 
   // If URL provided and no content, fetch the URL server-side

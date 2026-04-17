@@ -17,7 +17,7 @@ module.exports = async function handler(req, res) {
     return res.status(400).json({ error: 'Invalid request body' });
   }
 
-  const jobDescription = body?.jobDescription;
+  const jobDescription = (body?.jobDescription || '').slice(0, 20000); // cap at 20k chars
   console.log('JD length:', jobDescription?.length);
 
   if (!jobDescription || jobDescription.trim().length < 100) {
