@@ -136,6 +136,6 @@ The "correct" field is the 0-based index of the correct option in the options ar
 
   } catch (err) {
     console.log('Error:', err?.message || String(err));
-    return res.status(503).json({ error: 'Failed to generate board. Try again.' });
+    return res.status(503).json({ error: 'Failed to generate board: ' + (err?.message || String(err)) });
   }
 };
