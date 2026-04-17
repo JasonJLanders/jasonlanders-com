@@ -198,6 +198,14 @@
     <button class="btn-add-player" onclick="addPlayer()">+ Add player</button>
   </div>
 
+  <div class="setup-section">
+    <label class="setup-label">Game Options</label>
+    <label style="display:flex;align-items:center;gap:12px;cursor:pointer;">
+      <input type="checkbox" id="showChoicesToggle" style="width:18px;height:18px;accent-color:var(--accent);cursor:pointer;">
+      <span style="font-size:14px;color:var(--text);">Show answer choices on main board <span style="color:var(--muted);font-size:13px;">(uncheck for classic Jeopardy style)</span></span>
+    </label>
+  </div>
+
   <div id="setupActions">
     <button class="btn-generate" id="generateBtn" onclick="generateBoard()" disabled>Generate Board</button>
     <div class="error-msg" id="generateError"></div>
@@ -432,15 +440,24 @@ function openClue(colIdx, rowIdx, pts) {
   document.getElementById('modalPoints').textContent = '$' + pts;
   document.getElementById('modalClue').textContent = clue.clue;
 
-  var letters = ['A', 'B', 'C', 'D'];
+  var showChoices = document.getElementById('showChoicesToggle') && document.getElementById('showChoicesToggle').checked;
   var opts = document.getElementById('modalOptions');
-  opts.innerHTML = clue.options.map(function(opt, i) {
-    return '<button class="modal-option" onclick="selectOption(' + i + ')">' +
-      '<span class="modal-letter">' + letters[i] + '</span>' + escHtml(opt) +
-      '</button>';
-  }).join('');
+  if (showChoices) {
+    var letters = ['A', 'B', 'C', 'D'];
+    opts.innerHTML = clue.options.map(function(opt, i) {
+      return '<button class="modal-option" onclick="selectOption(' + i + ')">' +
+        '<span class="modal-letter">' + letters[i] + '</span>' + escHtml(opt) +
+        '</button>';
+    }).join('');
+    opts.style.display = '';
+  } else {
+    opts.innerHTML = '';
+    opts.style.display = 'none';
+  }
 
-  document.getElementById('modalCloseBtn').style.display = 'block';
+  var closeBtn = document.getElementById('modalCloseBtn');
+  closeBtn.textContent = showChoices ? 'Close & Award Points in Host Panel' : 'Close';
+  closeBtn.style.display = 'block';
   document.getElementById('clueModal').classList.add('active');
 
   // Broadcast to host panel
