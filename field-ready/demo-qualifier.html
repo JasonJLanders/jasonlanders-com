@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <title>Demo Qualifier | Field Ready</title>
+  <meta name="description" content="6 questions. Find out if you actually know enough to run an effective demo -- and exactly what to fix before you do.">
+  <script defer src="https://umami-tau-drab.vercel.app/script.js" data-website-id="23015384-bcae-4732-9665-a39f261647e1"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #130d1c; --surface: #1e1530; --surface2: #271c3d;
+      --border: #2e2249; --text: #ede8f5; --muted: #8b7fa8;
+      --accent: #d946ef; --accent-dark: #b91fd4;
+      --accent-light: rgba(217,70,239,0.12); --accent-glow: rgba(217,70,239,0.25);
+      --green: #22c55e; --yellow: #f59e0b; --red: #ef4444;
+      --green-bg: rgba(34,197,94,0.1); --yellow-bg: rgba(245,158,11,0.1); --red-bg: rgba(239,68,68,0.1);
+      --font: 'Inter', system-ui, sans-serif;
+    }
+
+    html, body { min-height: 100%; font-family: var(--font); background: var(--bg); color: var(--text); -webkit-tap-highlight-color: transparent; }
+
+    .screen { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; overflow-y: auto; background: var(--bg); }
+    .screen.active { display: block; }
+
+    #intro { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--bg); overflow: hidden; }
+    #intro.active { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 32px 24px; text-align: center; }
+
+    .brand-tag { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--accent); text-decoration: none; display: inline-block; margin-bottom: 20px; transition: opacity 0.15s; }
+    .brand-tag:hover { opacity: 0.75; }
+
+    /* ---- INTRO ---- */
+    .intro-eyebrow { font-size: 12px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--accent); margin-bottom: 16px; }
+    .intro-title { font-size: clamp(28px, 6vw, 48px); font-weight: 900; letter-spacing: -1.5px; color: #fff; line-height: 1.1; margin-bottom: 14px; max-width: 560px; }
+    .intro-title em { font-style: normal; background: linear-gradient(135deg, var(--accent), #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .intro-sub { font-size: 16px; color: var(--muted); line-height: 1.65; max-width: 440px; margin-bottom: 32px; }
+    .intro-stats { display: flex; gap: 24px; justify-content: center; margin-bottom: 32px; flex-wrap: wrap; }
+    .intro-stat { font-size: 13px; color: var(--muted); }
+    .intro-stat strong { color: var(--text); font-weight: 700; }
+
+    .btn-start { background: var(--accent); color: #fff; border: none; border-radius: 100px; padding: 16px 44px; font-family: var(--font); font-size: 17px; font-weight: 700; cursor: pointer; transition: background 0.15s, box-shadow 0.15s; box-shadow: 0 0 24px var(--accent-glow); }
+    .btn-start:hover { background: var(--accent-dark); }
+    .intro-footer { margin-top: 16px; font-size: 13px; color: var(--muted); }
+
+    /* ---- QUIZ ---- */
+    #quiz { padding: 24px; }
+    .quiz-inner { max-width: 620px; margin: 0 auto; padding-bottom: 60px; }
+
+    .quiz-topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; }
+    .progress-wrap { flex: 1; margin: 0 20px; }
+    .progress-bg { background: var(--surface); border-radius: 100px; height: 3px; overflow: hidden; margin-bottom: 8px; }
+    .progress-fill { background: linear-gradient(90deg, var(--accent), #a78bfa); height: 100%; border-radius: 100px; transition: width 0.4s ease; }
+    .progress-label { font-size: 12px; color: var(--muted); text-align: center; }
+
+    .question-eyebrow { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--accent); margin-bottom: 12px; }
+    .question-text { font-size: clamp(18px, 4vw, 24px); font-weight: 800; color: #fff; line-height: 1.3; letter-spacing: -0.3px; margin-bottom: 8px; }
+    .question-sub { font-size: 14px; color: var(--muted); line-height: 1.6; margin-bottom: 28px; }
+
+    .options { display: flex; flex-direction: column; gap: 10px; }
+    .option-btn { background: var(--surface); border: 2px solid var(--border); border-radius: 14px; padding: 18px 20px; font-family: var(--font); font-size: 15px; color: var(--text); text-align: left; cursor: pointer; transition: all 0.15s; line-height: 1.5; display: flex; align-items: flex-start; gap: 14px; }
+    .option-btn:hover { border-color: var(--accent); background: var(--accent-light); }
+    .option-btn.selected { border-color: var(--accent); background: var(--accent-light); color: #fff; }
+    .option-indicator { width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--border); flex-shrink: 0; margin-top: 2px; transition: all 0.15s; }
+    .option-btn:hover .option-indicator { border-color: var(--accent); }
+    .option-btn.selected .option-indicator { background: var(--accent); border-color: var(--accent); }
+
+    .quiz-nav { display: flex; justify-content: space-between; align-items: center; margin-top: 28px; }
+    .btn-back { background: transparent; border: 1.5px solid var(--border); border-radius: 10px; padding: 11px 20px; font-family: var(--font); font-size: 14px; color: var(--muted); cursor: pointer; transition: all 0.15s; }
+    .btn-back:hover { border-color: var(--text); color: var(--text); }
+    .btn-next { background: var(--accent); border: none; border-radius: 10px; padding: 12px 28px; font-family: var(--font); font-size: 15px; font-weight: 700; color: #fff; cursor: pointer; transition: background 0.15s; opacity: 0.4; pointer-events: none; }
+    .btn-next.enabled { opacity: 1; pointer-events: all; }
+    .btn-next.enabled:hover { background: var(--accent-dark); }
+
+    /* ---- RESULT ---- */
+    #result { padding: 0 0 60px; }
+    .result-inner { max-width: 680px; margin: 0 auto; }
+
+    /* Result hero */
+    .result-hero { padding: 40px 24px 32px; text-align: center; position: relative; overflow: hidden; }
+    .result-hero::before { content: ''; position: absolute; top: -60px; left: 50%; transform: translateX(-50%); width: 500px; height: 300px; background: radial-gradient(ellipse, var(--hero-glow, rgba(217,70,239,0.2)) 0%, transparent 70%); pointer-events: none; }
+
+    .result-brand { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--accent); margin-bottom: 20px; }
+    .result-verdict-badge { display: inline-flex; align-items: center; gap: 8px; border-radius: 100px; padding: 8px 20px; font-size: 13px; font-weight: 700; letter-spacing: 0.5px; margin-bottom: 16px; }
+    .result-verdict-badge.ready { background: var(--green-bg); color: var(--green); border: 1.5px solid rgba(34,197,94,0.3); }
+    .result-verdict-badge.risk { background: var(--yellow-bg); color: var(--yellow); border: 1.5px solid rgba(245,158,11,0.3); }
+    .result-verdict-badge.notready { background: var(--red-bg); color: var(--red); border: 1.5px solid rgba(239,68,68,0.3); }
+
+    .result-title { font-size: clamp(26px, 5vw, 40px); font-weight: 900; letter-spacing: -1px; color: #fff; margin-bottom: 12px; line-height: 1.1; }
+    .result-subtitle { font-size: 16px; color: var(--muted); line-height: 1.65; max-width: 480px; margin: 0 auto 24px; }
+
+    .score-row { display: flex; align-items: center; justify-content: center; gap: 6px; margin-bottom: 8px; }
+    .score-num { font-size: 52px; font-weight: 900; letter-spacing: -2px; }
+    .score-num.ready { color: var(--green); }
+    .score-num.risk { color: var(--yellow); }
+    .score-num.notready { color: var(--red); }
+    .score-denom { font-size: 24px; color: var(--muted); font-weight: 600; }
+    .score-label { font-size: 13px; color: var(--muted); }
+
+    /* Score bar */
+    .score-bar-wrap { max-width: 360px; margin: 20px auto 0; }
+    .score-bar-track { background: var(--surface); border-radius: 100px; height: 8px; overflow: hidden; }
+    .score-bar-fill { height: 100%; border-radius: 100px; transition: width 1s ease; }
+    .score-bar-fill.ready { background: linear-gradient(90deg, #16a34a, var(--green)); }
+    .score-bar-fill.risk { background: linear-gradient(90deg, #d97706, var(--yellow)); }
+    .score-bar-fill.notready { background: linear-gradient(90deg, #dc2626, var(--red)); }
+
+    /* Result sections */
+    .result-sections { padding: 0 24px; }
+
+    .bottom-line { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 20px 24px; margin-bottom: 16px; }
+    .bottom-line-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: var(--accent); margin-bottom: 10px; }
+    .bottom-line-text { font-size: 16px; color: var(--text); line-height: 1.65; font-style: italic; }
+
+    .section-title { font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; }
+
+    /* Strengths */
+    .strengths-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+    .strength-item { display: flex; align-items: flex-start; gap: 12px; background: rgba(34,197,94,0.06); border: 1px solid rgba(34,197,94,0.2); border-radius: 10px; padding: 12px 16px; }
+    .strength-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); flex-shrink: 0; margin-top: 5px; }
+    .strength-text { font-size: 14px; color: var(--text); line-height: 1.5; }
+
+    /* Gaps */
+    .gaps-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; }
+    .gap-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
+    .gap-card.critical { border-left: 3px solid var(--red); }
+    .gap-card.moderate { border-left: 3px solid var(--yellow); }
+    .gap-header { padding: 14px 18px 10px; display: flex; align-items: flex-start; gap: 10px; }
+    .gap-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+    .gap-title { font-size: 15px; font-weight: 700; color: #fff; line-height: 1.3; }
+    .gap-body { padding: 0 18px 16px; }
+    .gap-action-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--accent); margin-bottom: 6px; }
+    .gap-action { font-size: 14px; color: var(--muted); line-height: 1.65; }
+    .gap-ask { background: var(--surface2); border-radius: 8px; padding: 10px 14px; margin-top: 10px; font-size: 13px; color: var(--text); line-height: 1.6; font-style: italic; border-left: 2px solid var(--accent); }
+
+    /* Share / PDF */
+    .result-actions { padding: 0 24px; margin-top: 24px; display: flex; flex-direction: column; gap: 10px; }
+    .btn-share { background: var(--accent); color: #fff; border: none; border-radius: 12px; padding: 14px; font-family: var(--font); font-size: 15px; font-weight: 700; cursor: pointer; transition: background 0.15s, box-shadow 0.15s; box-shadow: 0 0 18px var(--accent-glow); }
+    .btn-share:hover { background: var(--accent-dark); }
+    .btn-share.copied { background: #16a34a; box-shadow: none; }
+    .btn-pdf { background: var(--surface2); color: var(--text); border: 1.5px solid var(--border); border-radius: 12px; padding: 13px; font-family: var(--font); font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.15s; }
+    .btn-pdf:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-retake { background: transparent; color: var(--muted); border: 1.5px solid var(--border); border-radius: 12px; padding: 12px; font-family: var(--font); font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.15s; }
+    .btn-retake:hover { border-color: var(--accent); color: var(--accent); }
+
+    .result-footer { text-align: center; padding: 20px 24px 0; }
+    .result-footer a { font-size: 12px; color: var(--muted); text-decoration: none; }
+    .result-footer a:hover { color: var(--accent); }
+
+    /* ---- PRINT ---- */
+    @media print {
+      html, body { height: auto; overflow: visible; background: #fff; color: #111; }
+      .screen { display: none !important; position: static !important; overflow: visible !important; }
+      #result { display: block !important; position: static !important; overflow: visible !important; padding: 0; }
+      :root { --bg: #fff; --surface: #f5f4f0; --surface2: #eeecf5; --border: #ddd; --text: #111; --muted: #555; --accent: #9333ea; --accent-light: rgba(147,51,234,0.08); --green: #16a34a; --yellow: #d97706; --red: #dc2626; --green-bg: rgba(22,163,74,0.06); --yellow-bg: rgba(217,119,6,0.06); --red-bg: rgba(220,38,38,0.06); }
+      .result-hero::before { display: none; }
+      .result-brand { color: var(--accent); }
+      .result-title { color: #111; }
+      .score-num.ready { color: var(--green); }
+      .score-num.risk { color: var(--yellow); }
+      .score-num.notready { color: var(--red); }
+      .result-actions, .result-footer, .btn-retake { display: none !important; }
+      .gap-card { break-inside: avoid; }
+      .print-header { display: flex !important; justify-content: space-between; align-items: center; padding-bottom: 14px; margin-bottom: 20px; border-bottom: 2px solid var(--accent); }
+      .print-header-logo { font-size: 18px; font-weight: 800; color: var(--accent); }
+      .print-header-sub { font-size: 12px; color: #888; display: block; margin-top: 2px; }
+      .print-header-tag { font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: #888; text-align: right; }
+      .score-bar-fill { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .result-verdict-badge, .strength-item, .gap-card, .bottom-line { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    }
+    .print-header { display: none; }
+  </style>
+</head>
+<body>
+
+<!-- INTRO -->
+<div id="intro" class="screen active">
+  <a href="/field-ready/" class="brand-tag">&#8592; Field Ready by Jason Landers</a>
+  <div class="intro-eyebrow">Before you agree to that demo</div>
+  <h1 class="intro-title">The <em>Demo</em> Qualifier</h1>
+  <p class="intro-sub">6 questions about what you actually know going in. Find out if you have enough to run an effective demo -- and exactly what to fix if you don't.</p>
+  <div class="intro-stats">
+    <span class="intro-stat"><strong>6</strong> questions</span>
+    <span class="intro-stat"><strong>~2</strong> minutes</span>
+    <span class="intro-stat"><strong>3</strong> possible verdicts</span>
+  </div>
+  <button class="btn-start" onclick="startQuiz()">Qualify this demo &#8594;</button>
+  <p class="intro-footer">Your answers stay in your browser. Nothing is stored or sent anywhere.</p>
+</div>
+
+<!-- QUIZ -->
+<div id="quiz" class="screen">
+  <div class="quiz-inner">
+    <div class="quiz-topbar">
+      <a href="/field-ready/" class="brand-tag">&#8592; Field Ready</a>
+      <div class="progress-wrap">
+        <div class="progress-bg"><div class="progress-fill" id="progressFill"></div></div>
+        <div class="progress-label" id="progressLabel">1 of 6</div>
+      </div>
+    </div>
+    <div id="questionBlock"></div>
+    <div class="quiz-nav">
+      <button class="btn-back" id="btnBack" onclick="prevQ()">&#8592; Back</button>
+      <button class="btn-next" id="btnNext" onclick="nextQ()">Next &#8594;</button>
+    </div>
+  </div>
+</div>
+
+<!-- RESULT -->
+<div id="result" class="screen">
+  <div class="result-inner">
+    <div class="print-header">
+      <div class="print-header-logo">Field Ready
+        <span class="print-header-sub">by Jason Landers &middot; jasonlanders.com</span>
+      </div>
+      <div class="print-header-tag">Demo Qualifier<br>Field Ready Assessment</div>
+    </div>
+
+    <div class="result-hero">
+      <div class="result-brand">&#9889; Field Ready &mdash; Demo Qualifier</div>
+      <div class="result-verdict-badge" id="verdictBadge"></div>
+      <div class="result-title" id="resultTitle"></div>
+      <div class="result-subtitle" id="resultSubtitle"></div>
+      <div class="score-row">
+        <div class="score-num" id="scoreNum"></div>
+        <div class="score-denom">/&nbsp;18</div>
+      </div>
+      <div class="score-label">readiness score</div>
+      <div class="score-bar-wrap">
+        <div class="score-bar-track"><div class="score-bar-fill" id="scoreBarFill"></div></div>
+      </div>
+    </div>
+
+    <div class="result-sections">
+      <div class="bottom-line" id="bottomLine">
+        <div class="bottom-line-label">Bottom line</div>
+        <div class="bottom-line-text" id="bottomLineText"></div>
+      </div>
+
+      <div id="strengthsSection" style="margin-bottom:20px;">
+        <div class="section-title">What you know going in</div>
+        <div class="strengths-list" id="strengthsList"></div>
+      </div>
+
+      <div id="gapsSection">
+        <div class="section-title" id="gapsLabel">Fix before the demo</div>
+        <div class="gaps-list" id="gapsList"></div>
+      </div>
+    </div>
+
+    <div class="result-actions">
+      <button class="btn-share" id="btnShare" onclick="copyShare()">Copy result to clipboard</button>
+      <button class="btn-pdf" onclick="window.print()">&#8595; Download as PDF</button>
+      <button class="btn-retake" onclick="retake()">&#8635; Qualify a different demo</button>
+    </div>
+
+    <div class="result-footer">
+      <a href="/field-ready/">&#8592; Back to Field Ready</a>
+    </div>
+  </div>
+</div>
+
+<script>
+var currentQ = 0;
+var answers = new Array(6).fill(null);
+
+var QUESTIONS = [
+  {
+    eyebrow: 'The Problem',
+    text: 'What specific business problem does this prospect need to solve?',
+    sub: 'Not the use case for your product -- the problem on their side that creates urgency.',
+    options: [
+      { text: 'I know the exact problem in their words, with the business context behind it', score: 3 },
+      { text: 'I have a clear sense of the problem area but don\'t have their specific language', score: 2 },
+      { text: 'I know which product capabilities they want to see, but not the underlying business problem', score: 1 },
+      { text: 'I don\'t know yet -- I\'m planning to figure it out during the demo', score: 0 }
+    ],
+    gap: {
+      title: 'You don\'t know the business problem in their words',
+      severity: 'critical',
+      action: 'A demo without a named problem is a product tour. Before agreeing to run it, ask your AE:',
+      ask: '"When you spoke with them, what problem did they describe? What did they say would happen if it isn\'t solved?" If they can\'t answer, ask for a 10-minute pre-call with the customer before demo day.'
+    },
+    strength: 'You know the specific business problem they\'re trying to solve.'
+  },
+  {
+    eyebrow: 'The Consequence',
+    text: 'What happens to them if this problem isn\'t solved in the next 6 months?',
+    sub: 'The cost of inaction -- financial, operational, or competitive.',
+    options: [
+      { text: 'I know the specific consequence and who owns it internally', score: 3 },
+      { text: 'I have a general sense (it\'s costing them time/money) but not specifics', score: 2 },
+      { text: 'I don\'t know but I can make an educated guess based on their industry', score: 1 },
+      { text: 'I don\'t know', score: 0 }
+    ],
+    gap: {
+      title: 'You don\'t know the cost of inaction',
+      severity: 'moderate',
+      action: 'Without this, you can\'t build urgency or a business case. Ask your AE:',
+      ask: '"What did they say would happen if they don\'t solve this? What\'s the impact on the business?" If they don\'t know either, this is a discovery gap that will surface during the demo at the worst possible moment.'
+    },
+    strength: 'You know the specific consequence of inaction -- that\'s your business case anchor.'
+  },
+  {
+    eyebrow: 'The Room',
+    text: 'Who is attending this demo and what does each person actually care about?',
+    sub: 'Not just names and titles -- what each person is trying to get out of this meeting.',
+    options: [
+      { text: 'I have role-by-role priorities and know what a win looks like for each person', score: 3 },
+      { text: 'I know the titles and org chart but not individual priorities', score: 2 },
+      { text: 'I know the main contact but not who else will be there', score: 1 },
+      { text: 'I just have a meeting invite with names', score: 0 }
+    ],
+    gap: {
+      title: 'You don\'t know what each attendee cares about',
+      severity: 'critical',
+      action: 'Every unknown stakeholder is a demo risk. Before the call, ask your AE:',
+      ask: '"Who else is joining? What does [name] care most about in this evaluation? What would make this a success for them specifically?" If there are attendees neither of you know, consider asking the customer\'s champion to brief you on the room beforehand.'
+    },
+    strength: 'You know your audience and what each person is trying to get out of this demo.'
+  },
+  {
+    eyebrow: 'The Bar',
+    text: 'What would they need to see to agree to a clear next step after this demo?',
+    sub: 'The specific outcome that moves this deal forward -- not just "they liked it."',
+    options: [
+      { text: 'We have agreed success criteria or a defined evaluation bar going in', score: 3 },
+      { text: 'I have a strong hypothesis based on discovery, but it hasn\'t been confirmed with them', score: 2 },
+      { text: 'I\'m planning to read the room and adjust during the demo', score: 1 },
+      { text: 'I don\'t know -- I\'m hoping the demo speaks for itself', score: 0 }
+    ],
+    gap: {
+      title: 'You don\'t know what a successful demo looks like to them',
+      severity: 'critical',
+      action: 'Without a bar, you can\'t win. You can only not lose. Before the demo, align with your AE on:',
+      ask: '"What specific things does this customer need to see to agree to a next step?" Better yet, consider opening the demo by asking the customer directly: "Before we start, what would make this time well spent for you?"'
+    },
+    strength: 'You know what a successful demo looks like to this specific customer.'
+  },
+  {
+    eyebrow: 'The Risks',
+    text: 'What are the 2-3 things most likely to derail this demo?',
+    sub: 'Technical gaps, stakeholder objections, competitive comparisons, feature gaps.',
+    options: [
+      { text: 'I\'ve identified the specific risks and have a plan for each one', score: 3 },
+      { text: 'I have a general sense of the risks but haven\'t prepared specific responses', score: 2 },
+      { text: 'I\'m aware of one risk but haven\'t thought through the others', score: 1 },
+      { text: 'I haven\'t thought about this yet', score: 0 }
+    ],
+    gap: {
+      title: 'You haven\'t mapped the risks going in',
+      severity: 'moderate',
+      action: 'Unplanned risks become visible to the customer. Before the demo, spend 10 minutes asking:',
+      ask: '"What\'s the most likely hard question? Is there a feature gap I know about? Are they evaluating a competitor? What has tripped up similar demos?" For each risk you identify, write one sentence on how you\'ll handle it if it comes up.'
+    },
+    strength: 'You\'ve mapped the risks and have a plan for each one going in.'
+  },
+  {
+    eyebrow: 'The Next Step',
+    text: 'What is the agreed next step if this demo goes well?',
+    sub: 'Not "we\'ll follow up" -- a specific action with an owner and a timeline.',
+    options: [
+      { text: 'There is a confirmed next step already on the calendar or clearly defined', score: 3 },
+      { text: 'We have discussed a likely next step but nothing is confirmed', score: 2 },
+      { text: 'The plan is to propose a next step at the end of the demo', score: 1 },
+      { text: 'There is no defined next step yet', score: 0 }
+    ],
+    gap: {
+      title: 'There\'s no agreed next step after the demo',
+      severity: 'moderate',
+      action: 'Demos without a next step are expensive dead ends. Before the call, align with your AE:',
+      ask: '"What\'s the next step we\'re asking for at the end of this demo? Who are we asking?" Then at the start of the demo, set the agenda out loud: "Our goal today is X. If it goes well, we\'d love to discuss Y as a next step -- does that work for you?"'
+    },
+    strength: 'You have a clear next step defined going in. That\'s how demos become deals.'
+  }
+];
+
+var VERDICTS = {
+  ready: {
+    label: '&#10003; Ready to Run',
+    cssClass: 'ready',
+    heroGlow: 'rgba(34,197,94,0.2)',
+    title: 'You\'re ready for this demo.',
+    subtitle: 'You know enough to run a targeted, credible demo that can actually move this deal forward. Prep well and execute.',
+    bottomLine: 'You have the fundamentals in place. Your job now is to deliver -- not discover. Keep the demo focused on what they told you matters.'
+  },
+  risk: {
+    label: '&#9888; Proceed with Risk',
+    cssClass: 'risk',
+    heroGlow: 'rgba(245,158,11,0.2)',
+    title: 'You can run this demo -- with gaps.',
+    subtitle: 'You have enough to proceed, but specific things are unknown that could hurt you mid-demo. Fix what you can before you go in.',
+    bottomLine: 'You\'re not flying blind, but you\'re not fully prepared either. The gaps below are the things most likely to surface during the demo at the worst possible moment. Address what you can before the call.'
+  },
+  notready: {
+    label: '&#10005; Not Ready',
+    cssClass: 'notready',
+    heroGlow: 'rgba(239,68,68,0.2)',
+    title: 'This demo isn\'t ready to run.',
+    subtitle: 'Running it in this state is likely to hurt more than help. The gaps below are fundamental -- not cosmetic. Address them first.',
+    bottomLine: 'A demo run without this information does discovery on the customer\'s time, positions you as unprepared, and burns credibility you\'ll need later. It\'s better to delay by 24 hours and get the answers than to show up and wing it.'
+  }
+};
+
+function startQuiz() {
+  currentQ = 0;
+  answers = new Array(6).fill(null);
+  showScreen('quiz');
+  renderQ();
+}
+
+function renderQ() {
+  var q = QUESTIONS[currentQ];
+  var pct = (currentQ / 6) * 100;
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressLabel').textContent = (currentQ + 1) + ' of 6';
+  document.getElementById('btnBack').style.visibility = currentQ === 0 ? 'hidden' : 'visible';
+
+  var btnNext = document.getElementById('btnNext');
+  btnNext.textContent = currentQ === 5 ? 'See my result \u2192' : 'Next \u2192';
+  btnNext.classList.toggle('enabled', answers[currentQ] !== null);
+
+  document.getElementById('questionBlock').innerHTML =
+    '<div class="question-eyebrow">' + q.eyebrow + '</div>' +
+    '<div class="question-text">' + q.text + '</div>' +
+    '<div class="question-sub">' + q.sub + '</div>' +
+    '<div class="options">' +
+    q.options.map(function(opt, i) {
+      return '<button class="option-btn' + (answers[currentQ] === i ? ' selected' : '') + '" onclick="selectOpt(' + i + ')">' +
+        '<span class="option-indicator"></span>' +
+        '<span>' + opt.text + '</span>' +
+        '</button>';
+    }).join('') +
+    '</div>';
+
+  document.getElementById('quiz').scrollTop = 0;
+}
+
+function selectOpt(idx) {
+  answers[currentQ] = idx;
+  document.querySelectorAll('.option-btn').forEach(function(b, i) {
+    b.classList.toggle('selected', i === idx);
+    b.querySelector('.option-indicator').style.background = i === idx ? 'var(--accent)' : '';
+    b.querySelector('.option-indicator').style.borderColor = i === idx ? 'var(--accent)' : '';
+  });
+  document.getElementById('btnNext').classList.add('enabled');
+}
+
+function nextQ() {
+  if (answers[currentQ] === null) return;
+  if (currentQ < 5) { currentQ++; renderQ(); }
+  else { buildResult(); showScreen('result'); }
+}
+
+function prevQ() {
+  if (currentQ > 0) { currentQ--; renderQ(); }
+}
+
+function buildResult() {
+  var total = 0;
+  var strengths = [];
+  var gaps = [];
+
+  QUESTIONS.forEach(function(q, i) {
+    var ans = answers[i];
+    var score = q.options[ans].score;
+    total += score;
+    if (score >= 2) {
+      strengths.push(q.strength);
+    } else {
+      gaps.push({ gap: q.gap, score: score });
+    }
+  });
+
+  var verdict = total >= 14 ? 'ready' : total >= 8 ? 'risk' : 'notready';
+  var v = VERDICTS[verdict];
+
+  document.getElementById('result').style.setProperty('--hero-glow', v.heroGlow);
+  document.getElementById('verdictBadge').innerHTML = v.label;
+  document.getElementById('verdictBadge').className = 'result-verdict-badge ' + v.cssClass;
+  document.getElementById('resultTitle').textContent = v.title;
+  document.getElementById('resultSubtitle').textContent = v.subtitle;
+  document.getElementById('scoreNum').textContent = total;
+  document.getElementById('scoreNum').className = 'score-num ' + v.cssClass;
+  document.getElementById('bottomLineText').textContent = v.bottomLine;
+
+  var barFill = document.getElementById('scoreBarFill');
+  barFill.className = 'score-bar-fill ' + v.cssClass;
+  setTimeout(function() { barFill.style.width = Math.round((total / 18) * 100) + '%'; }, 100);
+
+  // Strengths
+  var sl = document.getElementById('strengthsList');
+  if (strengths.length === 0) {
+    document.getElementById('strengthsSection').style.display = 'none';
+  } else {
+    sl.innerHTML = strengths.map(function(s) {
+      return '<div class="strength-item"><div class="strength-dot"></div><div class="strength-text">' + s + '</div></div>';
+    }).join('');
+  }
+
+  // Gaps -- sort critical first
+  gaps.sort(function(a, b) {
+    var order = { critical: 0, moderate: 1 };
+    return order[a.gap.severity] - order[b.gap.severity];
+  });
+
+  var gl = document.getElementById('gapsList');
+  var gapsLabel = document.getElementById('gapsLabel');
+  if (gaps.length === 0) {
+    document.getElementById('gapsSection').style.display = 'none';
+  } else {
+    gapsLabel.textContent = gaps.length === 1 ? '1 thing to fix before the demo' : gaps.length + ' things to fix before the demo';
+    gl.innerHTML = gaps.map(function(g) {
+      var icon = g.gap.severity === 'critical' ? '\u26A0\uFE0F' : '\uD83D\uDFE1';
+      return '<div class="gap-card ' + g.gap.severity + '">' +
+        '<div class="gap-header"><div class="gap-icon">' + icon + '</div><div class="gap-title">' + g.gap.title + '</div></div>' +
+        '<div class="gap-body">' +
+        '<div class="gap-action-label">What to do</div>' +
+        '<div class="gap-action">' + g.gap.action + '</div>' +
+        '<div class="gap-ask">' + g.gap.ask + '</div>' +
+        '</div></div>';
+    }).join('');
+  }
+
+  // Share text
+  var verdictText = verdict === 'ready' ? 'Ready to Run' : verdict === 'risk' ? 'Proceed with Risk' : 'Not Ready';
+  var shareText = 'I just ran my upcoming demo through the Field Ready Demo Qualifier.\n\nResult: ' + verdictText + ' (' + total + '/18)\n\nIf you\'re an SE who runs demos, this takes 2 minutes and tells you exactly what you don\'t know going in.\n\njasonlanders.com/field-ready/demo-qualifier';
+  document.getElementById('btnShare').dataset.text = shareText;
+
+  // PDF title
+  document.title = 'Demo Qualifier Result | Field Ready';
+}
+
+function copyShare() {
+  var text = document.getElementById('btnShare').dataset.text;
+  navigator.clipboard.writeText(text).then(function() {
+    var btn = document.getElementById('btnShare');
+    btn.textContent = '\u2713 Copied!';
+    btn.classList.add('copied');
+    setTimeout(function() { btn.textContent = 'Copy result to clipboard'; btn.classList.remove('copied'); }, 2500);
+  });
+}
+
+function retake() {
+  answers = new Array(6).fill(null);
+  currentQ = 0;
+  showScreen('intro');
+  document.title = 'Demo Qualifier | Field Ready';
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active'); s.scrollTop = 0; });
+  document.getElementById(id).classList.add('active');
+}
+</script>
+</body>
+</html>
