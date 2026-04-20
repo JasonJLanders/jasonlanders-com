@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <title>POV MAP Builder | Field Ready</title>
+  <meta name="description" content="Build a Mutual Action Plan for your active POV. Opinionated, SE-authored, and ready to share with your AE and customer in minutes.">
+  <script defer src="https://umami-tau-drab.vercel.app/script.js" data-website-id="23015384-bcae-4732-9665-a39f261647e1"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #130d1c; --surface: #1e1530; --surface2: #271c3d;
+      --border: #2e2249; --text: #ede8f5; --muted: #8b7fa8;
+      --accent: #d946ef; --accent-dark: #b91fd4;
+      --accent-light: rgba(217,70,239,0.12); --accent-glow: rgba(217,70,239,0.25);
+      --green: #22c55e; --yellow: #f59e0b; --red: #ef4444;
+      --font: 'Inter', system-ui, sans-serif;
+    }
+
+    html, body { min-height: 100%; font-family: var(--font); background: var(--bg); color: var(--text); -webkit-tap-highlight-color: transparent; }
+
+    .brand-tag { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--accent); text-decoration: none; display: inline-block; margin-bottom: 20px; transition: opacity 0.15s; }
+    .brand-tag:hover { opacity: 0.75; }
+
+    /* ---- BUILDER ---- */
+    .page { max-width: 720px; margin: 0 auto; padding: 40px 24px 80px; }
+
+    .page-eyebrow { font-size: 13px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); border: 1.5px solid var(--border); border-radius: 100px; padding: 6px 16px; display: inline-block; margin-bottom: 16px; }
+    .page-title { font-size: clamp(36px, 7vw, 56px); font-weight: 900; letter-spacing: -2px; color: #fff; line-height: 1.0; margin-bottom: 14px; }
+    .page-title em { font-style: normal; background: linear-gradient(135deg, var(--accent), #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .page-sub { font-size: 16px; color: var(--muted); line-height: 1.65; max-width: 560px; margin-bottom: 40px; }
+
+    /* Sections */
+    .section { margin-bottom: 32px; }
+    .section-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+    .section-num { background: var(--accent-light); color: var(--accent); border-radius: 8px; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; flex-shrink: 0; }
+    .section-title { font-size: 16px; font-weight: 800; color: #fff; }
+    .section-hint { font-size: 13px; color: var(--muted); margin-left: auto; font-style: italic; }
+
+    .field-group { display: flex; flex-direction: column; gap: 12px; }
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    .field-label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); }
+    .field-hint { font-size: 12px; color: var(--muted); font-style: italic; margin-top: 2px; }
+
+    input[type="text"], input[type="date"], textarea, select {
+      background: var(--surface); border: 1.5px solid var(--border); border-radius: 10px;
+      padding: 12px 14px; color: var(--text); font-family: var(--font); font-size: 14px;
+      line-height: 1.6; outline: none; transition: border-color 0.15s; width: 100%;
+    }
+    input[type="text"]:focus, input[type="date"]:focus, textarea:focus, select:focus { border-color: var(--accent); }
+    input::placeholder, textarea::placeholder { color: var(--muted); }
+    textarea { resize: vertical; min-height: 80px; }
+    select { cursor: pointer; }
+    select option { background: var(--surface2); }
+
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media (max-width: 520px) { .two-col { grid-template-columns: 1fr; } }
+
+    /* Success criteria repeater */
+    .criteria-list { display: flex; flex-direction: column; gap: 8px; }
+    .criteria-row { display: flex; gap: 8px; align-items: flex-start; }
+    .criteria-row input { flex: 1; }
+    .btn-remove { background: transparent; border: 1.5px solid var(--border); border-radius: 8px; padding: 8px 10px; color: var(--muted); cursor: pointer; transition: all 0.15s; font-size: 14px; flex-shrink: 0; }
+    .btn-remove:hover { border-color: var(--red); color: var(--red); }
+    .btn-add { background: transparent; border: 1.5px dashed var(--border); border-radius: 10px; padding: 10px; width: 100%; font-family: var(--font); font-size: 14px; color: var(--muted); cursor: pointer; transition: all 0.15s; margin-top: 4px; }
+    .btn-add:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* Milestones */
+    .milestone-list { display: flex; flex-direction: column; gap: 10px; }
+    .milestone-row { background: var(--surface); border: 1.5px solid var(--border); border-radius: 10px; padding: 14px 16px; display: grid; grid-template-columns: 1fr 140px auto; gap: 10px; align-items: center; }
+    @media (max-width: 520px) { .milestone-row { grid-template-columns: 1fr; } }
+    .milestone-row input { background: var(--surface2); border-color: transparent; }
+    .milestone-row input:focus { border-color: var(--accent); }
+
+    /* Generate button */
+    .generate-wrap { position: sticky; bottom: 0; background: linear-gradient(to top, var(--bg) 70%, transparent); padding: 24px 0 0; margin-top: 16px; }
+    .btn-generate { width: 100%; background: var(--accent); color: #fff; border: none; border-radius: 12px; padding: 17px; font-family: var(--font); font-size: 17px; font-weight: 800; cursor: pointer; transition: background 0.15s, box-shadow 0.15s; box-shadow: 0 0 28px var(--accent-glow); letter-spacing: -0.3px; }
+    .btn-generate:hover { background: var(--accent-dark); }
+
+    /* ---- OUTPUT ---- */
+    #output { display: none; }
+    #output.show { display: block; }
+
+    .output-topbar { display: flex; justify-content: space-between; align-items: center; padding: 20px 24px; border-bottom: 1px solid var(--border); margin: 0 -24px 32px; flex-wrap: wrap; gap: 12px; }
+    .output-title { font-size: 14px; font-weight: 700; color: #fff; }
+    .output-actions { display: flex; gap: 8px; }
+    .btn-action { border: none; border-radius: 8px; padding: 9px 18px; font-family: var(--font); font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.15s; }
+    .btn-action.primary { background: var(--accent); color: #fff; }
+    .btn-action.primary:hover { background: var(--accent-dark); }
+    .btn-action.primary.copied { background: #16a34a; }
+    .btn-action.secondary { background: var(--surface2); color: var(--text); border: 1.5px solid var(--border); }
+    .btn-action.secondary:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-action.ghost { background: transparent; color: var(--muted); border: 1.5px solid var(--border); }
+    .btn-action.ghost:hover { border-color: var(--text); color: var(--text); }
+
+    /* MAP document */
+    .map-doc { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
+
+    .map-header { background: linear-gradient(135deg, #1e0a2e, #2d1650); padding: 28px 32px; border-bottom: 1px solid var(--border); }
+    .map-header-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; margin-bottom: 16px; }
+    .map-doc-label { font-size: 10px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--accent); margin-bottom: 6px; }
+    .map-doc-title { font-size: clamp(20px, 4vw, 28px); font-weight: 900; color: #fff; letter-spacing: -0.5px; line-height: 1.2; }
+    .map-doc-meta { font-size: 13px; color: var(--muted); }
+    .map-status-badge { display: inline-flex; align-items: center; gap: 6px; background: var(--accent-light); border: 1.5px solid var(--accent); border-radius: 100px; padding: 5px 14px; font-size: 12px; font-weight: 700; color: var(--accent); white-space: nowrap; }
+    .map-parties { display: flex; gap: 24px; flex-wrap: wrap; }
+    .map-party { font-size: 13px; color: var(--muted); }
+    .map-party strong { color: var(--text); }
+
+    .map-section { padding: 24px 32px; border-bottom: 1px solid var(--border); }
+    .map-section:last-child { border-bottom: none; }
+    .map-section-title { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--accent); margin-bottom: 16px; }
+
+    .map-objective { font-size: 16px; color: var(--text); line-height: 1.7; }
+
+    /* Criteria table */
+    .criteria-table { width: 100%; border-collapse: collapse; }
+    .criteria-table th { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--border); }
+    .criteria-table td { padding: 12px; font-size: 14px; color: var(--text); border-bottom: 1px solid var(--border); vertical-align: top; line-height: 1.5; }
+    .criteria-table tr:last-child td { border-bottom: none; }
+    .criteria-table td:first-child { font-weight: 600; color: #fff; }
+    .status-chip { display: inline-block; border-radius: 100px; padding: 3px 10px; font-size: 11px; font-weight: 700; }
+    .status-open { background: var(--accent-light); color: var(--accent); }
+    .status-done { background: rgba(34,197,94,0.1); color: var(--green); }
+
+    /* Milestones timeline */
+    .milestone-timeline { display: flex; flex-direction: column; gap: 0; }
+    .milestone-item { display: flex; gap: 16px; align-items: flex-start; padding: 12px 0; border-bottom: 1px solid var(--border); }
+    .milestone-item:last-child { border-bottom: none; }
+    .milestone-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); flex-shrink: 0; margin-top: 5px; }
+    .milestone-content { flex: 1; }
+    .milestone-date { font-size: 12px; font-weight: 700; color: var(--accent); margin-bottom: 3px; }
+    .milestone-name { font-size: 14px; color: var(--text); font-weight: 600; }
+    .milestone-owner { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+    /* Contacts */
+    .contacts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media (max-width: 520px) { .contacts-grid { grid-template-columns: 1fr; } }
+    .contact-card { background: var(--surface2); border-radius: 10px; padding: 14px 16px; }
+    .contact-side { font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+    .contact-side.vendor { color: var(--accent); }
+    .contact-side.customer { color: var(--green); }
+    .contact-name { font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 2px; }
+    .contact-role { font-size: 12px; color: var(--muted); }
+
+    /* Escalation */
+    .escalation-box { background: rgba(239,68,68,0.06); border: 1px solid rgba(239,68,68,0.2); border-radius: 10px; padding: 16px 20px; }
+    .escalation-box p { font-size: 14px; color: var(--text); line-height: 1.65; }
+
+    /* Definition of done */
+    .done-box { background: rgba(34,197,94,0.06); border: 1px solid rgba(34,197,94,0.2); border-radius: 10px; padding: 16px 20px; }
+    .done-box p { font-size: 14px; color: var(--text); line-height: 1.65; }
+
+    /* Footer */
+    .map-footer { padding: 20px 32px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--muted); flex-wrap: wrap; gap: 8px; }
+
+    /* ---- PRINT ---- */
+    @media print {
+      html, body { background: #fff; color: #111; }
+      .page { padding: 0; max-width: 100%; }
+      .page-eyebrow, .page-title, .page-sub, .section, .generate-wrap, .output-topbar { display: none !important; }
+      #output { display: block !important; }
+      .map-doc { border: none; border-radius: 0; }
+      .map-header { background: #f8f4ff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; border-bottom: 2px solid #9333ea; }
+      .map-doc-label { color: #9333ea; }
+      .map-doc-title { color: #111; }
+      .map-doc-meta, .map-party { color: #555; }
+      .map-party strong { color: #111; }
+      .map-status-badge { background: #f3e8ff; color: #9333ea; border-color: #9333ea; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .map-section-title { color: #9333ea; }
+      .map-objective { color: #111; }
+      .criteria-table th { color: #555; }
+      .criteria-table td { color: #111; }
+      .criteria-table td:first-child { color: #111; }
+      .status-chip.status-open { background: #f3e8ff; color: #9333ea; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .status-chip.status-done { background: #dcfce7; color: #16a34a; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .milestone-dot { background: #9333ea; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .milestone-date { color: #9333ea; }
+      .milestone-name, .milestone-content { color: #111; }
+      .milestone-owner { color: #555; }
+      .contact-card { background: #f8f4ff; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .contact-side.vendor { color: #9333ea; }
+      .contact-side.customer { color: #16a34a; }
+      .contact-name { color: #111; }
+      .contact-role { color: #555; }
+      .escalation-box { background: #fff5f5; border-color: #fca5a5; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .escalation-box p, .done-box p { color: #111; }
+      .done-box { background: #f0fdf4; border-color: #86efac; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .map-footer { color: #888; border-top: 1px solid #ddd; }
+      .map-section { border-bottom: 1px solid #eee; }
+      .criteria-table td { border-bottom: 1px solid #eee; }
+      .milestone-item { border-bottom: 1px solid #eee; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="page">
+  <a href="/field-ready/" class="brand-tag">&#8592; Field Ready by Jason Landers</a>
+
+  <p class="page-eyebrow">Mutual Action Plan</p>
+  <h1 class="page-title"><em>POV</em> MAP Builder</h1>
+  <p class="page-sub">Build a real Mutual Action Plan for your active evaluation. Fill in what you know, generate the document, and share it with your AE and customer. Takes about 5 minutes.</p>
+
+  <!-- SECTION 1: Deal basics -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">1</div>
+      <div class="section-title">Deal Basics</div>
+    </div>
+    <div class="field-group">
+      <div class="two-col">
+        <div class="field">
+          <label class="field-label">Account Name</label>
+          <input type="text" id="accountName" placeholder="Acme Corp" />
+        </div>
+        <div class="field">
+          <label class="field-label">Your Company</label>
+          <input type="text" id="vendorName" placeholder="Your company name" />
+        </div>
+      </div>
+      <div class="two-col">
+        <div class="field">
+          <label class="field-label">POV Start Date</label>
+          <input type="date" id="povStart" />
+        </div>
+        <div class="field">
+          <label class="field-label">POV End Date</label>
+          <input type="date" id="povEnd" />
+        </div>
+      </div>
+      <div class="field">
+        <label class="field-label">POV Objective</label>
+        <p class="field-hint">One sentence. What specific problem is this evaluation proving you can solve?</p>
+        <textarea id="povObjective" placeholder="e.g. Prove that [product] can reduce mean time to resolution for P1 incidents from 4 hours to under 45 minutes for the Payments engineering team."></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 2: Success criteria -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">2</div>
+      <div class="section-title">Success Criteria</div>
+      <span class="section-hint">Co-created with the customer</span>
+    </div>
+    <div class="field-group">
+      <p style="font-size:13px;color:var(--muted);margin-bottom:8px;">Each criterion should be specific and measurable. If you can't define what "pass" looks like, neither can the customer.</p>
+      <div class="criteria-list" id="criteriaList"></div>
+      <button class="btn-add" onclick="addCriteria()">+ Add success criterion</button>
+    </div>
+  </div>
+
+  <!-- SECTION 3: Milestones -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">3</div>
+      <div class="section-title">Key Milestones</div>
+    </div>
+    <div class="field-group">
+      <p style="font-size:13px;color:var(--muted);margin-bottom:8px;">The dates and owners that keep this evaluation on track. Include both technical milestones and decision checkpoints.</p>
+      <div class="milestone-list" id="milestoneList"></div>
+      <button class="btn-add" onclick="addMilestone()">+ Add milestone</button>
+    </div>
+  </div>
+
+  <!-- SECTION 4: Contacts -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">4</div>
+      <div class="section-title">Key Contacts</div>
+    </div>
+    <div class="field-group">
+      <div class="two-col">
+        <div class="field">
+          <label class="field-label">SE (you)</label>
+          <input type="text" id="seName" placeholder="Your name" />
+          <input type="text" id="seRole" placeholder="Role (e.g. Senior SE)" style="margin-top:8px;" />
+        </div>
+        <div class="field">
+          <label class="field-label">AE</label>
+          <input type="text" id="aeName" placeholder="AE name" />
+          <input type="text" id="aeRole" placeholder="Role (e.g. Account Executive)" style="margin-top:8px;" />
+        </div>
+      </div>
+      <div class="two-col">
+        <div class="field">
+          <label class="field-label">Customer Champion</label>
+          <input type="text" id="champName" placeholder="Champion name" />
+          <input type="text" id="champRole" placeholder="Title" style="margin-top:8px;" />
+        </div>
+        <div class="field">
+          <label class="field-label">Customer Technical Contact</label>
+          <input type="text" id="techName" placeholder="Technical contact name" />
+          <input type="text" id="techRole" placeholder="Title" style="margin-top:8px;" />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 5: Definition of done + escalation -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">5</div>
+      <div class="section-title">Definition of Done</div>
+    </div>
+    <div class="field-group">
+      <div class="field">
+        <label class="field-label">What does a completed POV look like?</label>
+        <p class="field-hint">The specific moment when the evaluation ends and a decision is made. Not "the trial ends" -- a defined review meeting with an owner.</p>
+        <textarea id="definitionOfDone" placeholder="e.g. By [end date], [Champion name] will present POV results to [VP name]. At that meeting, both teams will review results against the success criteria and determine next steps. A written summary will be shared within 3 business days."></textarea>
+      </div>
+      <div class="field">
+        <label class="field-label">Escalation Path</label>
+        <p class="field-hint">If something goes wrong during the POV (blockers, scope creep, silence), who resolves it and how?</p>
+        <textarea id="escalationPath" placeholder="e.g. Technical blockers are escalated to [SE name] within 24 hours. If unresolved after 48 hours, [AE name] escalates to [Champion name]. Any scope changes require written agreement from both sides before proceeding."></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="generate-wrap">
+    <button class="btn-generate" onclick="generateMAP()">Build my MAP &#8594;</button>
+  </div>
+
+  <!-- OUTPUT -->
+  <div id="output">
+    <div class="output-topbar">
+      <div class="output-title">Your Mutual Action Plan</div>
+      <div class="output-actions">
+        <button class="btn-action primary" id="btnCopy" onclick="copyMAP()">Copy as text</button>
+        <button class="btn-action secondary" onclick="window.print()">&#8595; Download PDF</button>
+        <button class="btn-action ghost" onclick="resetBuilder()">Start over</button>
+      </div>
+    </div>
+
+    <div class="map-doc" id="mapDoc">
+      <div class="map-header">
+        <div class="map-header-top">
+          <div>
+            <div class="map-doc-label">Mutual Action Plan</div>
+            <div class="map-doc-title" id="mapTitle"></div>
+            <div class="map-doc-meta" id="mapMeta"></div>
+          </div>
+          <div class="map-status-badge">&#9679; Active Evaluation</div>
+        </div>
+        <div class="map-parties" id="mapParties"></div>
+      </div>
+
+      <div class="map-section">
+        <div class="map-section-title">POV Objective</div>
+        <div class="map-objective" id="mapObjective"></div>
+      </div>
+
+      <div class="map-section">
+        <div class="map-section-title">Success Criteria</div>
+        <table class="criteria-table">
+          <thead>
+            <tr>
+              <th style="width:50%">Criterion</th>
+              <th>Owner</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="mapCriteriaRows"></tbody>
+        </table>
+      </div>
+
+      <div class="map-section">
+        <div class="map-section-title">Key Milestones</div>
+        <div class="milestone-timeline" id="mapMilestones"></div>
+      </div>
+
+      <div class="map-section">
+        <div class="map-section-title">Key Contacts</div>
+        <div class="contacts-grid" id="mapContacts"></div>
+      </div>
+
+      <div class="map-section">
+        <div class="map-section-title">Definition of Done</div>
+        <div class="done-box"><p id="mapDone"></p></div>
+      </div>
+
+      <div class="map-section">
+        <div class="map-section-title">Escalation Path</div>
+        <div class="escalation-box"><p id="mapEscalation"></p></div>
+      </div>
+
+      <div class="map-footer">
+        <span id="mapFooterLeft"></span>
+        <span>Built with Field Ready by Jason Landers &nbsp;&middot;&nbsp; jasonlanders.com</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ---- DEFAULT DATA ----
+function init() {
+  addCriteria('', 'Customer');
+  addCriteria('', 'SE');
+  addCriteria('', 'Customer');
+  addMilestone('', '', 'SE');
+  addMilestone('', '', 'Both');
+  addMilestone('', '', 'Customer');
+}
+
+// ---- CRITERIA ----
+var criteriaCount = 0;
+function addCriteria(val, owner) {
+  criteriaCount++;
+  var id = 'crit_' + criteriaCount;
+  var row = document.createElement('div');
+  row.className = 'criteria-row';
+  row.id = 'row_' + id;
+  row.innerHTML =
+    '<input type="text" id="' + id + '_text" placeholder="e.g. Ingest and display logs from all 3 production clusters within 15 minutes" value="' + esc(val||'') + '" />' +
+    '<select id="' + id + '_owner" style="width:130px;flex-shrink:0;">' +
+    ['Customer','SE','Both','AE'].map(function(o) { return '<option value="' + o + '"' + (o === (owner||'Customer') ? ' selected' : '') + '>' + o + '</option>'; }).join('') +
+    '</select>' +
+    '<button class="btn-remove" onclick="removeCriteria(\'' + id + '\')">&#10005;</button>';
+  document.getElementById('criteriaList').appendChild(row);
+}
+
+function removeCriteria(id) {
+  var row = document.getElementById('row_' + id);
+  if (row) row.remove();
+}
+
+// ---- MILESTONES ----
+var milestoneCount = 0;
+function addMilestone(name, date, owner) {
+  milestoneCount++;
+  var id = 'ms_' + milestoneCount;
+  var row = document.createElement('div');
+  row.className = 'milestone-row';
+  row.id = 'mrow_' + id;
+  row.innerHTML =
+    '<input type="text" id="' + id + '_name" placeholder="Milestone (e.g. Technical kickoff call)" value="' + esc(name||'') + '" />' +
+    '<input type="date" id="' + id + '_date" value="' + esc(date||'') + '" />' +
+    '<button class="btn-remove" onclick="removeMilestone(\'' + id + '\')">&#10005;</button>';
+  document.getElementById('milestoneList').appendChild(row);
+}
+
+function removeMilestone(id) {
+  var row = document.getElementById('mrow_' + id);
+  if (row) row.remove();
+}
+
+// ---- GENERATE ----
+function generateMAP() {
+  var account = val('accountName') || 'Account';
+  var vendor = val('vendorName') || 'Vendor';
+  var start = fmtDate(val('povStart'));
+  var end = fmtDate(val('povEnd'));
+  var objective = val('povObjective') || 'To be defined.';
+  var done = val('definitionOfDone') || 'To be defined.';
+  var escalation = val('escalationPath') || 'To be defined.';
+
+  // Title + meta
+  document.getElementById('mapTitle').textContent = account + ' x ' + vendor + ' Proof of Value';
+  document.getElementById('mapMeta').textContent = (start && end) ? start + ' through ' + end : (start ? 'Starting ' + start : 'Dates TBD');
+  document.getElementById('mapObjective').textContent = objective;
+  document.getElementById('mapDone').textContent = done;
+  document.getElementById('mapEscalation').textContent = escalation;
+  document.getElementById('mapFooterLeft').textContent = 'Generated ' + new Date().toLocaleDateString('en-US', {month:'long',day:'numeric',year:'numeric'});
+
+  // Parties
+  document.getElementById('mapParties').innerHTML =
+    '<div class="map-party"><strong>' + (val('vendorName')||'Vendor') + '</strong> &nbsp;x&nbsp; <strong>' + (val('accountName')||'Account') + '</strong></div>';
+
+  // Criteria
+  var criteriaRows = '';
+  document.querySelectorAll('[id^="crit_"][id$="_text"]').forEach(function(el) {
+    var base = el.id.replace('_text','');
+    var owner = document.getElementById(base + '_owner');
+    var text = el.value.trim();
+    if (!text) return;
+    criteriaRows += '<tr><td>' + esc(text) + '</td><td>' + esc(owner ? owner.value : '') + '</td><td><span class="status-chip status-open">Open</span></td></tr>';
+  });
+  document.getElementById('mapCriteriaRows').innerHTML = criteriaRows || '<tr><td colspan="3" style="color:var(--muted);font-style:italic;">No criteria added</td></tr>';
+
+  // Milestones
+  var msHTML = '';
+  var msItems = [];
+  document.querySelectorAll('[id^="ms_"][id$="_name"]').forEach(function(el) {
+    var base = el.id.replace('_name','');
+    var dateEl = document.getElementById(base + '_date');
+    var name = el.value.trim();
+    var date = dateEl ? dateEl.value : '';
+    if (!name) return;
+    msItems.push({ name: name, date: date });
+  });
+  msItems.sort(function(a,b) { return a.date.localeCompare(b.date); });
+  msItems.forEach(function(ms) {
+    msHTML += '<div class="milestone-item"><div class="milestone-dot"></div><div class="milestone-content"><div class="milestone-date">' + (ms.date ? fmtDate(ms.date) : 'Date TBD') + '</div><div class="milestone-name">' + esc(ms.name) + '</div></div></div>';
+  });
+  document.getElementById('mapMilestones').innerHTML = msHTML || '<div style="color:var(--muted);font-style:italic;font-size:14px;">No milestones added</div>';
+
+  // Contacts
+  var contacts = [
+    { side: 'vendor', label: 'SE', name: val('seName'), role: val('seRole') },
+    { side: 'vendor', label: 'AE', name: val('aeName'), role: val('aeRole') },
+    { side: 'customer', label: 'Champion', name: val('champName'), role: val('champRole') },
+    { side: 'customer', label: 'Technical Contact', name: val('techName'), role: val('techRole') }
+  ];
+  var contactsHTML = contacts.filter(function(c) { return c.name; }).map(function(c) {
+    return '<div class="contact-card"><div class="contact-side ' + c.side + '">' + esc(c.label) + '</div><div class="contact-name">' + esc(c.name) + '</div><div class="contact-role">' + esc(c.role||'') + '</div></div>';
+  }).join('');
+  document.getElementById('mapContacts').innerHTML = contactsHTML || '<div style="color:var(--muted);font-style:italic;font-size:14px;grid-column:1/-1;">No contacts added</div>';
+
+  // Show output
+  var out = document.getElementById('output');
+  out.classList.add('show');
+  setTimeout(function() { out.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 100);
+
+  // Build plain text for copy
+  buildCopyText(account, vendor, start, end, objective, done, escalation, msItems);
+}
+
+function buildCopyText(account, vendor, start, end, objective, done, escalation, msItems) {
+  var lines = [];
+  lines.push('MUTUAL ACTION PLAN: ' + account + ' x ' + vendor);
+  if (start || end) lines.push('POV Period: ' + (start||'TBD') + (end ? ' through ' + end : ''));
+  lines.push('');
+  lines.push('OBJECTIVE');
+  lines.push(objective);
+  lines.push('');
+  lines.push('SUCCESS CRITERIA');
+  document.querySelectorAll('[id^="crit_"][id$="_text"]').forEach(function(el) {
+    var text = el.value.trim();
+    if (text) lines.push('- ' + text);
+  });
+  lines.push('');
+  lines.push('KEY MILESTONES');
+  msItems.forEach(function(ms) { lines.push('- ' + (ms.date ? fmtDate(ms.date) + ': ' : '') + ms.name); });
+  lines.push('');
+  lines.push('DEFINITION OF DONE');
+  lines.push(done);
+  lines.push('');
+  lines.push('ESCALATION PATH');
+  lines.push(escalation);
+  lines.push('');
+  lines.push('Built with Field Ready by Jason Landers: jasonlanders.com/field-ready');
+  document.getElementById('btnCopy').dataset.text = lines.join('\n');
+}
+
+function copyMAP() {
+  var text = document.getElementById('btnCopy').dataset.text || '';
+  navigator.clipboard.writeText(text).then(function() {
+    var btn = document.getElementById('btnCopy');
+    btn.textContent = '\u2713 Copied!';
+    btn.classList.add('copied');
+    setTimeout(function() { btn.textContent = 'Copy as text'; btn.classList.remove('copied'); }, 2500);
+  });
+}
+
+function resetBuilder() {
+  document.getElementById('output').classList.remove('show');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ---- UTILS ----
+function val(id) { var el = document.getElementById(id); return el ? el.value.trim() : ''; }
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function fmtDate(d) {
+  if (!d) return '';
+  var parts = d.split('-');
+  if (parts.length !== 3) return d;
+  var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return months[parseInt(parts[1])-1] + ' ' + parseInt(parts[2]) + ', ' + parts[0];
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
