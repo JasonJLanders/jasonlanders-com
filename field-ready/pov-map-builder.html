@@ -34,6 +34,19 @@
     .page-title em { font-style: normal; background: linear-gradient(135deg, var(--accent), #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
     .page-sub { font-size: 16px; color: var(--muted); line-height: 1.65; max-width: 560px; margin-bottom: 40px; }
 
+    /* Best practices */
+    .best-practices { background: var(--surface); border: 1.5px solid var(--border); border-radius: 14px; margin-bottom: 36px; overflow: hidden; }
+    .bp-summary { font-size: 14px; font-weight: 700; color: var(--accent); padding: 16px 20px; cursor: pointer; list-style: none; display: flex; align-items: center; gap: 10px; user-select: none; }
+    .bp-summary::-webkit-details-marker { display: none; }
+    details[open] .bp-summary { border-bottom: 1px solid var(--border); }
+    details[open] .bp-summary::before { content: '\25BC'; font-size: 10px; }
+    .bp-summary::before { content: '\25BA'; font-size: 10px; }
+    .bp-body { padding: 20px; display: flex; flex-direction: column; gap: 20px; }
+    .bp-item { padding-bottom: 20px; border-bottom: 1px solid var(--border); }
+    .bp-item:last-child { border-bottom: none; padding-bottom: 0; }
+    .bp-title { font-size: 14px; font-weight: 800; color: #fff; margin-bottom: 8px; line-height: 1.3; }
+    .bp-text { font-size: 14px; color: var(--muted); line-height: 1.7; }
+
     /* Sections */
     .section { margin-bottom: 32px; }
     .section-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
@@ -161,7 +174,7 @@
     @media print {
       html, body { background: #fff; color: #111; }
       .page { padding: 0; max-width: 100%; }
-      .page-eyebrow, .page-title, .page-sub, .section, .generate-wrap, .output-topbar, #mapNotesSection input { display: none !important; }
+      .page-eyebrow, .page-title, .page-sub, .section, .generate-wrap, .output-topbar, .best-practices, #mapNotesSection input { display: none !important; }
       #mapNotesSection { display: block !important; }
       #output { display: block !important; }
       .map-doc { border: none; border-radius: 0; }
@@ -205,6 +218,53 @@
   <p class="page-eyebrow">Mutual Action Plan</p>
   <h1 class="page-title"><em>POV</em> MAP Builder</h1>
   <p class="page-sub">Build a real Mutual Action Plan for your active evaluation. Fill in what you know, generate the document, and share it with your AE and customer. Takes about 5 minutes.</p>
+
+  <details class="best-practices">
+    <summary class="bp-summary">&#9654; Why this MAP is built the way it is</summary>
+    <div class="bp-body">
+
+      <div class="bp-item">
+        <div class="bp-title">The objective is one sentence. That is intentional.</div>
+        <div class="bp-text">Most MAPs start with a paragraph of context that nobody reads. A one-sentence objective forces clarity before the evaluation begins. If you cannot write it in one sentence, the evaluation scope is too broad. The customer and the AE should be able to read it and immediately know whether this POV is tracking to what they care about.</div>
+      </div>
+
+      <div class="bp-item">
+        <div class="bp-title">Success criteria need an owner, not just a description.</div>
+        <div class="bp-text">Vendor-authored success criteria are the SE's problem to prove. Customer-authored criteria are the customer's problem to validate. The difference matters enormously at the end of a POV. When you write the criteria together and assign ownership, you shift from "we think we proved it" to "you agreed this was the bar." Criteria without owners are just a feature list.</div>
+      </div>
+
+      <div class="bp-item">
+        <div class="bp-title">Co-created criteria close deals. Handed-down criteria produce polite feedback.</div>
+        <div class="bp-text">The moment the customer writes or edits even one criterion, they own the evaluation. Their internal credibility is now tied to whether the POV succeeds. That is the champion activation moment most SEs miss because they come to the kickoff with a pre-built template instead of a blank page.</div>
+      </div>
+
+      <div class="bp-item">
+        <div class="bp-title">Milestones are sorted by date on purpose.</div>
+        <div class="bp-text">A MAP is a timeline, not a checklist. When milestones are chronological, both sides can see at a glance whether the evaluation is on track. When they are out of order, nobody reads them. Enter dates as you go and the builder handles the rest.</div>
+      </div>
+
+      <div class="bp-item">
+        <div class="bp-title">The Definition of Done is the section most MAPs leave out.</div>
+        <div class="bp-text">Without a defined end state, POVs do not conclude. They drift. "We will review results and decide" is not a definition of done. A definition of done names the meeting, the attendees, the owner of the decision, and what happens next. If you cannot fill this section in, the evaluation has not started yet in any meaningful sense.</div>
+      </div>
+
+      <div class="bp-item">
+        <div class="bp-title">The escalation path protects the relationship when things go wrong.</div>
+        <div class="bp-text">Something will go wrong in every POV of any complexity. A blocker, a scope creep, a stakeholder who goes quiet. Without an agreed escalation path, both sides improvise in ways that create friction. With one, the response is pre-agreed and depersonalized. It is not "the SE dropped the ball" -- it is "we both agreed this is how we handle blockers." Write it before you need it.</div>
+      </div>
+
+      <div class="bp-item">
+        <div class="bp-title">The AE and SE are listed as separate contacts, not as "the vendor team."</div>
+        <div class="bp-text">Customers work with people, not company names. When the champion needs to escalate something internally and wants to reach the right person, they should know whether to call the SE or the AE. Ambiguity here causes deals to stall on avoidable friction.</div>
+      </div>
+
+      <div class="bp-item">
+        <div class="bp-title">Share this document before the POV starts, not after.</div>
+        <div class="bp-text">A MAP sent after kickoff is a recap. A MAP sent before kickoff is a contract. The difference in how customers treat it is significant. Send a draft with the criteria sections partially empty and ask the customer to fill them in with you on the kickoff call. That is the move most SEs never make.</div>
+      </div>
+
+    </div>
+  </details>
 
   <!-- SECTION 1: Deal basics -->
   <div class="section">
