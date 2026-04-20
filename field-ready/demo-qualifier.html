@@ -145,6 +145,12 @@
     .btn-pdf:hover { border-color: var(--accent); color: var(--accent); }
     .btn-retake { background: transparent; color: var(--muted); border: 1.5px solid var(--border); border-radius: 12px; padding: 12px; font-family: var(--font); font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.15s; }
     .btn-retake:hover { border-color: var(--accent); color: var(--accent); }
+    .report-details { background: var(--surface); border: 1.5px solid var(--border); border-radius: 12px; padding: 16px 18px; }
+    .report-details-label { font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; }
+    .report-details-fields { display: flex; gap: 10px; flex-wrap: wrap; }
+    .report-input { flex: 1; min-width: 180px; background: var(--surface2); border: 1.5px solid var(--border); border-radius: 8px; padding: 10px 14px; color: var(--text); font-family: var(--font); font-size: 14px; outline: none; transition: border-color 0.15s; }
+    .report-input:focus { border-color: var(--accent); }
+    .report-input::placeholder { color: var(--muted); }
 
     .result-footer { text-align: center; padding: 20px 24px 0; }
     .result-footer a { font-size: 12px; color: var(--muted); text-decoration: none; }
@@ -165,7 +171,9 @@
       .result-actions, .result-footer, .btn-retake { display: none !important; }
       .gap-card { break-inside: avoid; }
       #gapsSection { break-before: page; }
-      .print-header { display: flex !important; justify-content: space-between; align-items: center; padding-bottom: 14px; margin-bottom: 20px; border-bottom: 2px solid var(--accent); }
+      .print-header { display: flex !important; justify-content: space-between; align-items: center; padding-bottom: 14px; margin-bottom: 8px; border-bottom: 2px solid var(--accent); }
+      .print-deal-info { display: block !important; font-size: 13px; color: #555; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid #ddd; }
+      .report-details { display: none !important; }
       .print-header-logo { font-size: 18px; font-weight: 800; color: var(--accent); }
       .print-header-sub { font-size: 12px; color: #888; display: block; margin-top: 2px; }
       .print-header-tag { font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: #888; text-align: right; }
@@ -173,6 +181,7 @@
       .result-verdict-badge, .strength-item, .gap-card, .bottom-line { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     }
     .print-header { display: none; }
+    .print-deal-info { display: none; }
   </style>
 </head>
 <body>
@@ -219,6 +228,7 @@
       </div>
       <div class="print-header-tag">Demo Qualifier<br>Field Ready Assessment</div>
     </div>
+    <div class="print-deal-info" id="printDealInfo"></div>
 
     <div class="result-hero">
       <div class="result-brand">&#9889; Field Ready &mdash; Demo Qualifier</div>
@@ -253,6 +263,13 @@
     </div>
 
     <div class="result-actions">
+      <div class="report-details">
+        <div class="report-details-label">Optional: customize the PDF report</div>
+        <div class="report-details-fields">
+          <input type="text" id="accountName" class="report-input" placeholder="Account name (e.g. Acme Corp)" oninput="updateReportDetails()" />
+          <input type="text" id="demoDate" class="report-input" placeholder="Demo date (e.g. April 22, 2026)" oninput="updateReportDetails()" />
+        </div>
+      </div>
       <button class="btn-share" id="btnShare" onclick="copyShare()">Copy result to clipboard</button>
       <button class="btn-pdf" onclick="window.print()">&#8595; Download as PDF</button>
       <button class="btn-retake" onclick="retake()">&#8635; Qualify a different demo</button>
@@ -550,6 +567,16 @@ function retake() {
   currentQ = 0;
   showScreen('intro');
   document.title = 'Demo Qualifier | Field Ready';
+}
+
+function updateReportDetails() {
+  var account = document.getElementById('accountName').value.trim();
+  var date = document.getElementById('demoDate').value.trim();
+  var dealInfo = document.getElementById('printDealInfo');
+  var parts = [];
+  if (account) parts.push('Account: <strong>' + account + '</strong>');
+  if (date) parts.push('Demo date: <strong>' + date + '</strong>');
+  dealInfo.innerHTML = parts.length ? parts.join('&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;') : '';
 }
 
 function showScreen(id) {
