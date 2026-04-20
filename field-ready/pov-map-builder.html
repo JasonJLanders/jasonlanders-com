@@ -161,7 +161,8 @@
     @media print {
       html, body { background: #fff; color: #111; }
       .page { padding: 0; max-width: 100%; }
-      .page-eyebrow, .page-title, .page-sub, .section, .generate-wrap, .output-topbar { display: none !important; }
+      .page-eyebrow, .page-title, .page-sub, .section, .generate-wrap, .output-topbar, #mapNotesSection input { display: none !important; }
+      #mapNotesSection { display: block !important; }
       #output { display: block !important; }
       .map-doc { border: none; border-radius: 0; }
       .map-header { background: #f8f4ff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; border-bottom: 2px solid #9333ea; }
@@ -301,10 +302,40 @@
     </div>
   </div>
 
-  <!-- SECTION 5: Definition of done + escalation -->
+  <!-- SECTION 5: Customer logo -->
   <div class="section">
     <div class="section-header">
       <div class="section-num">5</div>
+      <div class="section-title">Customer Logo <span style="font-size:12px;font-weight:500;color:var(--muted);">(optional)</span></div>
+    </div>
+    <div class="field-group">
+      <div class="field">
+        <label class="field-label">Logo URL</label>
+        <p class="field-hint">Link to the customer's logo image. Will appear in the PDF header. Use a publicly accessible URL (e.g. from their press kit or website).</p>
+        <input type="text" id="customerLogoUrl" placeholder="https://example.com/logo.png" />
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 6: Additional notes -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">6</div>
+      <div class="section-title">Additional Notes <span style="font-size:12px;font-weight:500;color:var(--muted);">(optional)</span></div>
+    </div>
+    <div class="field-group">
+      <div class="field">
+        <label class="field-label">Custom text to include</label>
+        <p class="field-hint">Anything else to include in the MAP. Background context, agreed scope boundaries, special terms, links to related documents.</p>
+        <textarea id="additionalNotes" placeholder="e.g. This evaluation is scoped to the Payments team only. Infrastructure team access requires a separate approval from the CISO. Related RFI responses available at: [link]"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 7: Definition of done + escalation -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">7</div>
       <div class="section-title">Definition of Done</div>
     </div>
     <div class="field-group">
@@ -339,10 +370,13 @@
     <div class="map-doc" id="mapDoc">
       <div class="map-header">
         <div class="map-header-top">
-          <div>
-            <div class="map-doc-label">Mutual Action Plan</div>
-            <div class="map-doc-title" id="mapTitle"></div>
-            <div class="map-doc-meta" id="mapMeta"></div>
+          <div style="display:flex;align-items:flex-start;gap:16px;">
+            <div id="mapLogoWrap" style="display:none;"><img id="mapLogo" src="" alt="Customer logo" style="max-height:48px;max-width:120px;object-fit:contain;border-radius:6px;background:#fff;padding:4px;" /></div>
+            <div>
+              <div class="map-doc-label">Mutual Action Plan</div>
+              <div class="map-doc-title" id="mapTitle"></div>
+              <div class="map-doc-meta" id="mapMeta"></div>
+            </div>
           </div>
           <div class="map-status-badge">&#9679; Active Evaluation</div>
         </div>
@@ -388,6 +422,11 @@
         <div class="escalation-box"><p id="mapEscalation"></p></div>
       </div>
 
+      <div class="map-section" id="mapNotesSection" style="display:none;">
+        <div class="map-section-title">Additional Notes</div>
+        <div style="font-size:14px;color:var(--text);line-height:1.7;" id="mapNotes"></div>
+      </div>
+
       <div class="map-footer">
         <span id="mapFooterLeft"></span>
         <span>Built with Field Ready by Jason Landers &nbsp;&middot;&nbsp; jasonlanders.com</span>
@@ -419,7 +458,7 @@ function addCriteria(val, owner) {
   row.innerHTML =
     '<input type="text" id="' + id + '_text" placeholder="e.g. Ingest and display logs from all 3 production clusters within 15 minutes" value="' + esc(val||'') + '" />' +
     '<select id="' + id + '_owner" style="width:130px;flex-shrink:0;">' +
-    ['Customer','SE','Both','AE'].map(function(o) { return '<option value="' + o + '"' + (o === (owner||'Customer') ? ' selected' : '') + '>' + o + '</option>'; }).join('') +
+    ['Customer','SE','AE','AE / SE (Both)','All Parties'].map(function(o) { return '<option value="' + o + '"' + (o === (owner||'Customer') ? ' selected' : '') + '>' + o + '</option>'; }).join('') +
     '</select>' +
     '<button class="btn-remove" onclick="removeCriteria(\'' + id + '\')">&#10005;</button>';
   document.getElementById('criteriaList').appendChild(row);
@@ -511,6 +550,26 @@ function generateMAP() {
     return '<div class="contact-card"><div class="contact-side ' + c.side + '">' + esc(c.label) + '</div><div class="contact-name">' + esc(c.name) + '</div><div class="contact-role">' + esc(c.role||'') + '</div></div>';
   }).join('');
   document.getElementById('mapContacts').innerHTML = contactsHTML || '<div style="color:var(--muted);font-style:italic;font-size:14px;grid-column:1/-1;">No contacts added</div>';
+
+  // Customer logo
+  var logoUrl = val('customerLogoUrl');
+  var logoWrap = document.getElementById('mapLogoWrap');
+  if (logoUrl) {
+    document.getElementById('mapLogo').src = logoUrl;
+    logoWrap.style.display = 'block';
+  } else {
+    logoWrap.style.display = 'none';
+  }
+
+  // Additional notes
+  var notes = val('additionalNotes');
+  var notesSection = document.getElementById('mapNotesSection');
+  if (notes) {
+    document.getElementById('mapNotes').textContent = notes;
+    notesSection.style.display = 'block';
+  } else {
+    notesSection.style.display = 'none';
+  }
 
   // Show output
   var out = document.getElementById('output');
