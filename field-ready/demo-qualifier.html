@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <title>Demo Qualifier | Field Ready</title>
-  <meta name="description" content="6 questions. Find out if you actually know enough to run an effective demo -- and exactly what to fix before you do.">
+  <meta name="description" content="6 questions. Find out if you actually know enough to run an effective demo, and exactly what to fix before you do.">
   <script defer src="https://umami-tau-drab.vercel.app/script.js" data-website-id="23015384-bcae-4732-9665-a39f261647e1"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -35,7 +35,7 @@
 
     /* ---- INTRO ---- */
     .intro-eyebrow { font-size: 12px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--accent); margin-bottom: 16px; }
-    .intro-title { font-size: clamp(28px, 6vw, 48px); font-weight: 900; letter-spacing: -1.5px; color: #fff; line-height: 1.1; margin-bottom: 14px; max-width: 560px; }
+    .intro-title { font-size: clamp(40px, 9vw, 68px); font-weight: 900; letter-spacing: -2.5px; color: #fff; line-height: 1.0; margin-bottom: 14px; max-width: 560px; }
     .intro-title em { font-style: normal; background: linear-gradient(135deg, var(--accent), #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
     .intro-sub { font-size: 16px; color: var(--muted); line-height: 1.65; max-width: 440px; margin-bottom: 32px; }
     .intro-stats { display: flex; gap: 24px; justify-content: center; margin-bottom: 32px; flex-wrap: wrap; }
@@ -164,6 +164,7 @@
       .score-num.notready { color: var(--red); }
       .result-actions, .result-footer, .btn-retake { display: none !important; }
       .gap-card { break-inside: avoid; }
+      #gapsSection { break-before: page; }
       .print-header { display: flex !important; justify-content: space-between; align-items: center; padding-bottom: 14px; margin-bottom: 20px; border-bottom: 2px solid var(--accent); }
       .print-header-logo { font-size: 18px; font-weight: 800; color: var(--accent); }
       .print-header-sub { font-size: 12px; color: #888; display: block; margin-top: 2px; }
@@ -181,7 +182,7 @@
   <a href="/field-ready/" class="brand-tag">&#8592; Field Ready by Jason Landers</a>
   <div class="intro-eyebrow">Before you agree to that demo</div>
   <h1 class="intro-title">The <em>Demo</em> Qualifier</h1>
-  <p class="intro-sub">6 questions about what you actually know going in. Find out if you have enough to run an effective demo -- and exactly what to fix if you don't.</p>
+  <p class="intro-sub">6 questions about what you actually know going in. Find out if you have enough to run an effective demo, and exactly what to fix if you don't.</p>
   <div class="intro-stats">
     <span class="intro-stat"><strong>6</strong> questions</span>
     <span class="intro-stat"><strong>~2</strong> minutes</span>
@@ -271,12 +272,12 @@ var QUESTIONS = [
   {
     eyebrow: 'The Problem',
     text: 'What specific business problem does this prospect need to solve?',
-    sub: 'Not the use case for your product -- the problem on their side that creates urgency.',
+    sub: 'Not the use case for your product. The problem on their side that creates urgency.',
     options: [
       { text: 'I know the exact problem in their words, with the business context behind it', score: 3 },
       { text: 'I have a clear sense of the problem area but don\'t have their specific language', score: 2 },
       { text: 'I know which product capabilities they want to see, but not the underlying business problem', score: 1 },
-      { text: 'I don\'t know yet -- I\'m planning to figure it out during the demo', score: 0 }
+      { text: 'I don't know yet. I'm planning to figure it out during the demo', score: 0 }
     ],
     gap: {
       title: 'You don\'t know the business problem in their words',
@@ -289,7 +290,7 @@ var QUESTIONS = [
   {
     eyebrow: 'The Consequence',
     text: 'What happens to them if this problem isn\'t solved in the next 6 months?',
-    sub: 'The cost of inaction -- financial, operational, or competitive.',
+    sub: 'The cost of inaction: financial, operational, or competitive.',
     options: [
       { text: 'I know the specific consequence and who owns it internally', score: 3 },
       { text: 'I have a general sense (it\'s costing them time/money) but not specifics', score: 2 },
@@ -302,12 +303,12 @@ var QUESTIONS = [
       action: 'Without this, you can\'t build urgency or a business case. Ask your AE:',
       ask: '"What did they say would happen if they don\'t solve this? What\'s the impact on the business?" If they don\'t know either, this is a discovery gap that will surface during the demo at the worst possible moment.'
     },
-    strength: 'You know the specific consequence of inaction -- that\'s your business case anchor.'
+    strength: 'You know the specific consequence of inaction. That's your business case anchor.'
   },
   {
     eyebrow: 'The Room',
     text: 'Who is attending this demo and what does each person actually care about?',
-    sub: 'Not just names and titles -- what each person is trying to get out of this meeting.',
+    sub: 'Not just names and titles. What each person is trying to get out of this meeting.',
     options: [
       { text: 'I have role-by-role priorities and know what a win looks like for each person', score: 3 },
       { text: 'I know the titles and org chart but not individual priorities', score: 2 },
@@ -325,12 +326,12 @@ var QUESTIONS = [
   {
     eyebrow: 'The Bar',
     text: 'What would they need to see to agree to a clear next step after this demo?',
-    sub: 'The specific outcome that moves this deal forward -- not just "they liked it."',
+    sub: 'The specific outcome that moves this deal forward. Not just "they liked it."',
     options: [
       { text: 'We have agreed success criteria or a defined evaluation bar going in', score: 3 },
       { text: 'I have a strong hypothesis based on discovery, but it hasn\'t been confirmed with them', score: 2 },
       { text: 'I\'m planning to read the room and adjust during the demo', score: 1 },
-      { text: 'I don\'t know -- I\'m hoping the demo speaks for itself', score: 0 }
+      { text: 'I don't know. I'm hoping the demo speaks for itself', score: 0 }
     ],
     gap: {
       title: 'You don\'t know what a successful demo looks like to them',
@@ -361,7 +362,7 @@ var QUESTIONS = [
   {
     eyebrow: 'The Next Step',
     text: 'What is the agreed next step if this demo goes well?',
-    sub: 'Not "we\'ll follow up" -- a specific action with an owner and a timeline.',
+    sub: 'Not "we'll follow up." A specific action with an owner and a timeline.',
     options: [
       { text: 'There is a confirmed next step already on the calendar or clearly defined', score: 3 },
       { text: 'We have discussed a likely next step but nothing is confirmed', score: 2 },
@@ -372,7 +373,7 @@ var QUESTIONS = [
       title: 'There\'s no agreed next step after the demo',
       severity: 'moderate',
       action: 'Demos without a next step are expensive dead ends. Before the call, align with your AE:',
-      ask: '"What\'s the next step we\'re asking for at the end of this demo? Who are we asking?" Then at the start of the demo, set the agenda out loud: "Our goal today is X. If it goes well, we\'d love to discuss Y as a next step -- does that work for you?"'
+      ask: '"What\'s the next step we\'re asking for at the end of this demo? Who are we asking?" Then at the start of the demo, set the agenda out loud: "Our goal today is X. If it goes well, we\'d love to discuss Y as a next step. Does that work for you?"'
     },
     strength: 'You have a clear next step defined going in. That\'s how demos become deals.'
   }
@@ -385,13 +386,13 @@ var VERDICTS = {
     heroGlow: 'rgba(34,197,94,0.2)',
     title: 'You\'re ready for this demo.',
     subtitle: 'You know enough to run a targeted, credible demo that can actually move this deal forward. Prep well and execute.',
-    bottomLine: 'You have the fundamentals in place. Your job now is to deliver -- not discover. Keep the demo focused on what they told you matters.'
+    bottomLine: 'You have the fundamentals in place. Your job now is to deliver, not discover. Keep the demo focused on what they told you matters.'
   },
   risk: {
     label: '&#9888; Proceed with Risk',
     cssClass: 'risk',
     heroGlow: 'rgba(245,158,11,0.2)',
-    title: 'You can run this demo -- with gaps.',
+    title: 'You can run this demo, but there are gaps.',
     subtitle: 'You have enough to proceed, but specific things are unknown that could hurt you mid-demo. Fix what you can before you go in.',
     bottomLine: 'You\'re not flying blind, but you\'re not fully prepared either. The gaps below are the things most likely to surface during the demo at the worst possible moment. Address what you can before the call.'
   },
@@ -400,7 +401,7 @@ var VERDICTS = {
     cssClass: 'notready',
     heroGlow: 'rgba(239,68,68,0.2)',
     title: 'This demo isn\'t ready to run.',
-    subtitle: 'Running it in this state is likely to hurt more than help. The gaps below are fundamental -- not cosmetic. Address them first.',
+    subtitle: 'Running it in this state is likely to hurt more than help. The gaps below are fundamental, not cosmetic. Address them first.',
     bottomLine: 'A demo run without this information does discovery on the customer\'s time, positions you as unprepared, and burns credibility you\'ll need later. It\'s better to delay by 24 hours and get the answers than to show up and wing it.'
   }
 };
@@ -501,7 +502,7 @@ function buildResult() {
     }).join('');
   }
 
-  // Gaps -- sort critical first
+  // Gaps: sort critical first
   gaps.sort(function(a, b) {
     var order = { critical: 0, moderate: 1 };
     return order[a.gap.severity] - order[b.gap.severity];
