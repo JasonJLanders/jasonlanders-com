@@ -45,6 +45,15 @@
     .btn-start { background: var(--accent); color: #fff; border: none; border-radius: 100px; padding: 16px 44px; font-family: var(--font); font-size: 17px; font-weight: 700; cursor: pointer; transition: background 0.15s, box-shadow 0.15s; box-shadow: 0 0 24px var(--accent-glow); }
     .btn-start:hover { background: var(--accent-dark); }
     .intro-footer { margin-top: 16px; font-size: 13px; color: var(--muted); }
+    .best-practices { background: var(--surface); border: 1.5px solid var(--border); border-radius: 14px; margin-top: 24px; overflow: hidden; max-width: 540px; text-align: left; }
+    .bp-summary { font-size: 13px; font-weight: 700; color: var(--accent); padding: 14px 18px; cursor: pointer; list-style: none; display: flex; align-items: center; gap: 8px; user-select: none; }
+    .bp-summary::-webkit-details-marker { display: none; }
+    details[open] .bp-summary { border-bottom: 1px solid var(--border); }
+    .bp-body { padding: 18px; display: flex; flex-direction: column; gap: 16px; }
+    .bp-item { padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+    .bp-item:last-child { border-bottom: none; padding-bottom: 0; }
+    .bp-title { font-size: 14px; font-weight: 800; color: #fff; margin-bottom: 6px; line-height: 1.3; }
+    .bp-text { font-size: 13px; color: var(--muted); line-height: 1.7; }
 
     /* ---- QUIZ ---- */
     #quiz { padding: 24px; }
@@ -199,6 +208,32 @@
   </div>
   <button class="btn-start" onclick="startQuiz()">Qualify this demo &#8594;</button>
   <p class="intro-footer">Your answers stay in your browser. Nothing is stored or sent anywhere.</p>
+
+  <details class="best-practices">
+    <summary class="bp-summary">&#9654; Why this tool is built the way it is</summary>
+    <div class="bp-body">
+      <div class="bp-item">
+        <div class="bp-title">The questions ask what you know, not what steps were completed.</div>
+        <div class="bp-text">The original idea for this tool used yes/no process questions. "Did the AE do discovery?" is a useless question because an aggressive AE will always say yes. The only honest test is whether you can produce the actual output of discovery. If you know the problem in the customer's exact words, discovery happened. If you only know the product use case, it didn't.</div>
+      </div>
+      <div class="bp-item">
+        <div class="bp-title">The verdict is not about judging the AE.</div>
+        <div class="bp-text">Not Ready does not mean the AE failed. It means running this demo in this state is likely to hurt more than help. The output is a list of specific questions to ask before the call, not a performance review. The goal is to give the SE language and justification to delay by 24 hours and get the answers.</div>
+      </div>
+      <div class="bp-item">
+        <div class="bp-title">"Proceed with Risk" is the most important verdict.</div>
+        <div class="bp-text">Most demos are not obviously ready or obviously not ready. They are somewhere in between. Proceed with Risk names the specific gaps so the SE can address what they can before the call and prepare for what they cannot. It is more useful than a binary go/no-go because most SE decisions are not binary.</div>
+      </div>
+      <div class="bp-item">
+        <div class="bp-title">The output is actions, not scores.</div>
+        <div class="bp-text">A number without a next step is useless. Every gap in this tool comes with a specific question to ask your AE, phrased so you can actually send it as a Slack message. The tool is designed to be used 10 minutes before a pre-call with the AE, not as a post-mortem.</div>
+      </div>
+      <div class="bp-item">
+        <div class="bp-title">Knowing the next step matters as much as knowing the problem.</div>
+        <div class="bp-text">SEs spend a lot of time thinking about what to show. Very few think explicitly about what happens if the demo goes well. A demo with no agreed next step is a beautiful product tour that produces a polite follow-up email. The question about the next step is in this tool because it is the most commonly skipped and the most correlated with deals that stall after a positive demo.</div>
+      </div>
+    </div>
+  </details>
 </div>
 
 <!-- QUIZ -->

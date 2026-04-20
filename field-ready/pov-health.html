@@ -111,6 +111,15 @@
     .nl-btn { background: #fff; color: var(--accent); border: none; border-radius: 8px; padding: 10px 18px; font-family: var(--font); font-size: 14px; font-weight: 700; cursor: pointer; white-space: nowrap; }
 
     .field-ready-footer { margin-top: 32px; padding-top: 20px; border-top: 1px solid var(--border); text-align: center; }
+    .best-practices { background: var(--surface); border: 1.5px solid var(--border); border-radius: 14px; margin-bottom: 28px; overflow: hidden; }
+    .bp-summary { font-size: 13px; font-weight: 700; color: var(--accent); padding: 14px 18px; cursor: pointer; list-style: none; display: flex; align-items: center; gap: 8px; user-select: none; }
+    .bp-summary::-webkit-details-marker { display: none; }
+    details[open] .bp-summary { border-bottom: 1px solid var(--border); }
+    .bp-body { padding: 18px; display: flex; flex-direction: column; gap: 16px; }
+    .bp-item { padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+    .bp-item:last-child { border-bottom: none; padding-bottom: 0; }
+    .bp-title { font-size: 14px; font-weight: 800; color: #fff; margin-bottom: 6px; line-height: 1.3; }
+    .bp-text { font-size: 13px; color: var(--muted); line-height: 1.7; }
     .field-ready-footer a { font-size: 12px; color: var(--muted); text-decoration: none; }
     .field-ready-footer a:hover { color: var(--accent); }
 
@@ -135,6 +144,31 @@
     <a href="/field-ready/" class="brand-tag" style="text-decoration:none;">&#8592; Field Ready by Jason Landers</a>
     <h1 class="page-title">POV Health Check</h1>
     <p class="page-sub">8 questions about your active evaluation. Get an instant read on what's working, what's at risk, and the one thing worth addressing this week.</p>
+    <details class="best-practices">
+      <summary class="bp-summary">&#9654; Why this tool is built the way it is</summary>
+      <div class="bp-body">
+        <div class="bp-item">
+          <div class="bp-title">Champion is weighted highest because a POV without one is a free trial.</div>
+          <div class="bp-text">The champion question carries the most weight in this assessment because no other factor compensates for its absence. A technically perfect POV with a satisfied engineering team still dies if nobody is fighting for it internally. Before anything else, you need to know who wants you to win and whether they have the influence to make it happen.</div>
+        </div>
+        <div class="bp-item">
+          <div class="bp-title">Co-created criteria are weighted separately from vendor-authored criteria.</div>
+          <div class="bp-text">There is a meaningful difference between criteria the customer helped write and criteria the SE handed them. Customers defend what they helped create. They evaluate what was handed to them. This tool asks whether criteria were co-created because the answer changes the entire dynamic of the POV result conversation.</div>
+        </div>
+        <div class="bp-item">
+          <div class="bp-title">The output gives you actions, not just a score.</div>
+          <div class="bp-text">A score without a next step is decoration. Every risk this tool identifies comes with a specific action to take this week. The framing is deliberately urgent because POV problems compound. A risk addressed in week two is manageable. The same risk in week five is usually terminal.</div>
+        </div>
+        <div class="bp-item">
+          <div class="bp-title">Activity in the last 7 days is a leading indicator, not a lagging one.</div>
+          <div class="bp-text">Most SEs notice a deal going quiet too late. By the time two weeks of silence has passed, the customer has often already made an informal decision. The 7-day contact question is in this tool because silence in week two of a POV is fixable. Silence in week four usually is not.</div>
+        </div>
+        <div class="bp-item">
+          <div class="bp-title">Definition of done is a question, not an assumption.</div>
+          <div class="bp-text">Asking whether both sides agree on what a completed POV looks like surfaces a gap most SEs do not realize exists. "The trial ends" is not a definition of done. A defined review meeting with a named owner and a defined next step is. Without it, the evaluation ends when the customer decides it ends, which is rarely at the moment you want.</div>
+        </div>
+      </div>
+    </details>
   </div>
 
   <!-- PROGRESS -->
