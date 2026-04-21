@@ -873,13 +873,7 @@ async function _buildXLS() {
   footerCell.style = { font: { name: 'Calibri', size: 9, color: { argb: 'FFAAAAAA' }, italic: true }, alignment: { vertical: 'middle' } };
   ws1.mergeCells(footerRow.number, 1, footerRow.number, 4);
 
-  // Logo as hyperlink cell (no fetch needed)
-  if (logoUrl) {
-    var logoCell = ws1.getCell(1, 3);
-    logoCell.value = { text: 'Customer Logo', hyperlink: logoUrl };
-    logoCell.style = { font: { name: 'Calibri', size: 9, color: { argb: 'FF9333EA' }, underline: true }, alignment: { horizontal: 'right', vertical: 'top' } };
-    ws1.mergeCells(1, 3, 1, 4);
-  }
+  // Logo not included in XLS (PDF only)
 
   // ---- TAB 2: SUCCESS CRITERIA ----
   var ws2 = wb.addWorksheet('Success Criteria', { properties: { tabColor: { argb: 'FF' + GREEN } } });
