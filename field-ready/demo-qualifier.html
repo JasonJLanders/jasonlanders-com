@@ -45,7 +45,7 @@
     .btn-start { background: var(--accent); color: #fff; border: none; border-radius: 100px; padding: 16px 44px; font-family: var(--font); font-size: 17px; font-weight: 700; cursor: pointer; transition: background 0.15s, box-shadow 0.15s; box-shadow: 0 0 24px var(--accent-glow); }
     .btn-start:hover { background: var(--accent-dark); }
     .intro-footer { margin-top: 16px; font-size: 13px; color: var(--muted); }
-    .best-practices { background: var(--surface); border: 1.5px solid var(--border); border-radius: 14px; margin-top: 24px; margin-bottom: 8px; overflow: hidden; max-width: 540px; }
+    .best-practices { background: var(--surface); border: 1.5px solid var(--border); border-radius: 14px; margin: 24px auto 8px; overflow: hidden; max-width: 540px; }
     .bp-summary { font-size: 14px; font-weight: 700; color: var(--accent); padding: 16px 20px; cursor: pointer; list-style: none; display: flex; align-items: center; gap: 10px; user-select: none; }
     .bp-summary::-webkit-details-marker { display: none; }
     details[open] .bp-summary { border-bottom: 1px solid var(--border); }
@@ -203,13 +203,6 @@
   <p class="intro-eyebrow">Before you agree to that demo</p>
   <h1 class="intro-title">The <em>Demo</em> Qualifier</h1>
   <p class="intro-sub">6 questions about what you actually know going in. Find out if you have enough to run an effective demo, and exactly what to fix if you don't.</p>
-  <div class="intro-stats">
-    <span class="intro-stat"><strong>6</strong> questions</span>
-    <span class="intro-stat"><strong>~2</strong> minutes</span>
-    <span class="intro-stat"><strong>3</strong> possible verdicts</span>
-  </div>
-  <button class="btn-start" onclick="startQuiz()">Qualify this demo &#8594;</button>
-  <p class="intro-footer">Your answers stay in your browser. Nothing is stored or sent anywhere.</p>
 
   <details class="best-practices">
     <summary class="bp-summary">Why this tool is built the way it is</summary>
@@ -236,6 +229,15 @@
       </div>
     </div>
   </details>
+
+  <div class="intro-stats">
+    <span class="intro-stat"><strong>6</strong> questions</span>
+    <span class="intro-stat"><strong>~2</strong> minutes</span>
+    <span class="intro-stat"><strong>3</strong> possible verdicts</span>
+  </div>
+  <button class="btn-start" onclick="startQuiz()">Qualify this demo &#8594;</button>
+  <p class="intro-footer">Your answers stay in your browser. Nothing is stored or sent anywhere.</p>
+
 </div>
 
 <!-- QUIZ -->
