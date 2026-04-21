@@ -22,13 +22,14 @@
     html { background: var(--bg); }
     body { font-family: var(--font); background: var(--bg); color: var(--text); -webkit-tap-highlight-color: transparent; }
 
-    /* Non-intro screens: fixed fullscreen with internal scroll */
-    .screen { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; overflow-y: auto; background: var(--bg); -webkit-overflow-scrolling: touch; }
-    .screen.active { display: block; }
+    /* All screens hidden by default */
+    .screen, #intro { display: none; }
+
+    /* Quiz + Result: fixed fullscreen with internal scroll */
+    .screen.active { display: block; position: fixed; top: 0; left: 0; right: 0; bottom: 0; overflow-y: auto; background: var(--bg); -webkit-overflow-scrolling: touch; }
 
     /* Intro: normal document flow so page scrolls naturally on mobile */
-    #intro { display: none; }
-    #intro.active { display: flex; flex-direction: column; align-items: center; min-height: 100dvh; padding: 24px; text-align: center; background: var(--bg); }
+    #intro.active { display: flex; flex-direction: column; align-items: center; min-height: 100svh; padding: 24px; text-align: center; background: var(--bg); }
 
     .brand-tag { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--accent); margin-bottom: 12px; text-decoration: none; display: inline-block; }
     .brand-tag:hover { text-decoration: underline; }
@@ -699,8 +700,9 @@ function setMode(m) {
 }
 
 function showScreen(id) {
-  document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active'); s.scrollTop = 0; });
+  document.querySelectorAll('.screen, #intro').forEach(function(s) { s.classList.remove('active'); s.scrollTop = 0; });
   document.getElementById(id).classList.add('active');
+  window.scrollTo(0, 0);
 }
 
 function startQuiz() {
