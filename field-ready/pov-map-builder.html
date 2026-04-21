@@ -9,7 +9,7 @@
   <script defer src="https://umami-tau-drab.vercel.app/script.js" data-website-id="23015384-bcae-4732-9665-a39f261647e1"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -684,9 +684,7 @@ function resetBuilder() {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-function downloadXLS() {
-  var wb = XLSX.utils.book_new();
-
+async function downloadXLS() {
   var account = val('accountName') || 'Account';
   var vendor = val('vendorName') || 'Vendor';
   var start = fmtDate(val('povStart'));
@@ -695,55 +693,226 @@ function downloadXLS() {
   var done = val('definitionOfDone');
   var escalation = val('escalationPath');
   var notes = val('additionalNotes');
+  var logoUrl = val('customerLogoUrl');
 
-  // ---- TAB 1: Overview ----
-  var overviewData = [
-    ['POV MUTUAL ACTION PLAN'],
-    [account + ' x ' + vendor],
-    [],
-    ['POV Period', (start || 'TBD') + (end ? ' through ' + end : '')],
-    ['Generated', new Date().toLocaleDateString('en-US', {month:'long',day:'numeric',year:'numeric'})],
-    [],
-    ['OBJECTIVE'],
-    [objective || ''],
-    [],
-    ['DEFINITION OF DONE'],
-    [done || ''],
-    [],
-    ['ESCALATION PATH'],
-    [escalation || '']
+  var wb = new ExcelJS.Workbook();
+  wb.creator = 'Field Ready by Jason Landers';
+  wb.created = new Date();
+
+  // ---- STYLES ----
+  var PURPLE = '9333EA';
+  var PURPLE_LIGHT = 'F3E8FF';
+  var PURPLE_MID = 'E9D5FF';
+  var GREEN = '16A34A';
+  var GREEN_LIGHT = 'DCFCE7';
+  var AMBER = 'D97706';
+  var AMBER_LIGHT = 'FEF3C7';
+  var GRAY_BG = 'F8F4FF';
+  var DARK = '1C1033';
+  var WHITE = 'FFFFFF';
+
+  function hdrStyle(fgColor, bold) {
+    return {
+      font: { bold: bold !== false, color: { argb: 'FF' + WHITE }, name: 'Calibri', size: 11 },
+      fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF' + fgColor } },
+      alignment: { vertical: 'middle', wrapText: true },
+      border: { bottom: { style: 'thin', color: { argb: 'FF' + fgColor } } }
+    };
+  }
+
+  function sectionHdr(ws, rowNum, text, cols) {
+    var r = ws.getRow(rowNum);
+    r.height = 22;
+    var c = ws.getCell(rowNum, 1);
+    c.value = text;
+    c.style = { font: { bold: true, color: { argb: 'FF' + WHITE }, name: 'Calibri', size: 10 }, fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF' + PURPLE } }, alignment: { vertical: 'middle' } };
+    ws.mergeCells(rowNum, 1, rowNum, cols);
+  }
+
+  function bodyCell(value, opts) {
+    return Object.assign({ value: value, font: { name: 'Calibri', size: 10 }, alignment: { vertical: 'top', wrapText: true } }, opts || {});
+  }
+
+  function labelCell(value) {
+    return { value: value, font: { bold: true, color: { argb: 'FF' + PURPLE }, name: 'Calibri', size: 10 }, alignment: { vertical: 'middle' } };
+  }
+
+  // ---- TAB 1: OVERVIEW ----
+  var ws1 = wb.addWorksheet('Overview', { properties: { tabColor: { argb: 'FF' + PURPLE } } });
+  ws1.columns = [
+    { width: 26 }, { width: 55 }, { width: 20 }, { width: 20 }
   ];
-  if (notes) { overviewData.push([], ['ADDITIONAL NOTES'], [notes]); }
+
+  // Title block
+  var titleRow = ws1.addRow([]);
+  titleRow.height = 36;
+  var titleCell = ws1.getCell(1, 1);
+  titleCell.value = 'MUTUAL ACTION PLAN';
+  titleCell.style = { font: { bold: true, size: 18, color: { argb: 'FF' + DARK }, name: 'Calibri' }, alignment: { vertical: 'middle' } };
+  ws1.mergeCells(1, 1, 1, 4);
+
+  var subtitleRow = ws1.addRow([]);
+  subtitleRow.height = 22;
+  var subtitleCell = ws1.getCell(2, 1);
+  subtitleCell.value = account + '  x  ' + vendor;
+  subtitleCell.style = { font: { bold: true, size: 13, color: { argb: 'FF' + PURPLE }, name: 'Calibri' }, alignment: { vertical: 'middle' } };
+  ws1.mergeCells(2, 1, 2, 4);
+
+  var metaRow = ws1.addRow([]);
+  metaRow.height = 18;
+  var metaCell = ws1.getCell(3, 1);
+  var metaParts = [];
+  if (start || end) metaParts.push((start || 'TBD') + (end ? ' through ' + end : ''));
+  metaParts.push('Generated: ' + new Date().toLocaleDateString('en-US', {month:'long',day:'numeric',year:'numeric'}));
+  metaCell.value = metaParts.join('   |   ');
+  metaCell.style = { font: { size: 10, color: { argb: 'FF888888' }, name: 'Calibri' }, alignment: { vertical: 'middle' } };
+  ws1.mergeCells(3, 1, 3, 4);
+
+  // Separator
+  ws1.addRow([]).height = 8;
+
+  // Objective
+  sectionHdr(ws1, 5, 'POV OBJECTIVE', 4);
+  var objRow = ws1.addRow([]);
+  objRow.height = 60;
+  var objCell = ws1.getCell(6, 1);
+  objCell.value = objective || 'Not specified.';
+  objCell.style = { font: { name: 'Calibri', size: 11, italic: true }, alignment: { vertical: 'top', wrapText: true } };
+  ws1.mergeCells(6, 1, 6, 4);
+
+  ws1.addRow([]).height = 8;
 
   // Contacts
-  overviewData.push([], ['KEY CONTACTS'], ['Role', 'Name', 'Title']);
+  sectionHdr(ws1, 8, 'KEY CONTACTS', 4);
+  var contactHdrRow = ws1.addRow(['Role', 'Name', 'Title', '']);
+  contactHdrRow.height = 18;
+  ['A','B','C'].forEach(function(col) {
+    var c = ws1.getCell('A9').worksheet.getCell(9, ['A','B','C','D'].indexOf(col)+1);
+    c.style = { font: { bold: true, name: 'Calibri', size: 10, color: { argb: 'FF' + PURPLE } }, fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF' + PURPLE_LIGHT } }, alignment: { vertical: 'middle' } };
+  });
   var contacts = [
-    ['SE', val('seName'), val('seRole')],
-    ['AE', val('aeName'), val('aeRole')],
+    ['Sales Engineer', val('seName'), val('seRole')],
+    ['Account Executive', val('aeName'), val('aeRole')],
     ['Customer Champion', val('champName'), val('champRole')],
     ['Customer Technical Contact', val('techName'), val('techRole')]
   ];
-  contacts.forEach(function(c) { if (c[1]) overviewData.push(c); });
+  contacts.forEach(function(c, i) {
+    if (!c[1]) return;
+    var r = ws1.addRow(c);
+    r.height = 18;
+    var bg = i % 2 === 0 ? GRAY_BG : WHITE;
+    for (var col = 1; col <= 3; col++) {
+      r.getCell(col).style = { font: { name: 'Calibri', size: 10 }, fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF' + bg } }, alignment: { vertical: 'middle' } };
+    }
+    r.getCell(1).style.font = { bold: true, name: 'Calibri', size: 10 };
+  });
 
-  var wsOverview = XLSX.utils.aoa_to_sheet(overviewData);
-  wsOverview['!cols'] = [{wch:28},{wch:50}];
-  XLSX.utils.book_append_sheet(wb, wsOverview, 'Overview');
+  ws1.addRow([]).height = 8;
 
-  // ---- TAB 2: Success Criteria ----
-  var criteriaRows = [['Success Criterion', 'Owner', 'Status', 'Notes']];
+  // Definition of done
+  var doneSectionRow = ws1.lastRow.number + 1;
+  sectionHdr(ws1, doneSectionRow, 'DEFINITION OF DONE', 4);
+  var doneRow = ws1.addRow([]);
+  doneRow.height = 72;
+  var doneCell = ws1.getCell(doneSectionRow + 1, 1);
+  doneCell.value = done || 'Not defined.';
+  doneCell.style = { font: { name: 'Calibri', size: 10 }, fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF' + GREEN_LIGHT } }, alignment: { vertical: 'top', wrapText: true } };
+  ws1.mergeCells(doneSectionRow + 1, 1, doneSectionRow + 1, 4);
+
+  ws1.addRow([]).height = 8;
+
+  // Escalation
+  var escSectionRow = ws1.lastRow.number + 1;
+  sectionHdr(ws1, escSectionRow, 'ESCALATION PATH', 4);
+  var escRow = ws1.addRow([]);
+  escRow.height = 72;
+  var escCell = ws1.getCell(escSectionRow + 1, 1);
+  escCell.value = escalation || 'Not defined.';
+  escCell.style = { font: { name: 'Calibri', size: 10 }, fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFF5F5' } }, alignment: { vertical: 'top', wrapText: true } };
+  ws1.mergeCells(escSectionRow + 1, 1, escSectionRow + 1, 4);
+
+  if (notes) {
+    ws1.addRow([]).height = 8;
+    var noteSectionRow = ws1.lastRow.number + 1;
+    sectionHdr(ws1, noteSectionRow, 'ADDITIONAL NOTES', 4);
+    var noteRow = ws1.addRow([]);
+    noteRow.height = 60;
+    var noteCell = ws1.getCell(noteSectionRow + 1, 1);
+    noteCell.value = notes;
+    noteCell.style = { font: { name: 'Calibri', size: 10 }, fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF8F4FF' } }, alignment: { vertical: 'top', wrapText: true } };
+    ws1.mergeCells(noteSectionRow + 1, 1, noteSectionRow + 1, 4);
+  }
+
+  // Footer
+  ws1.addRow([]).height = 12;
+  var footerRow = ws1.addRow([]);
+  var footerCell = ws1.getCell(footerRow.number, 1);
+  footerCell.value = 'Built with Field Ready by Jason Landers  |  jasonlanders.com';
+  footerCell.style = { font: { name: 'Calibri', size: 9, color: { argb: 'FFAAAAAA' }, italic: true }, alignment: { vertical: 'middle' } };
+  ws1.mergeCells(footerRow.number, 1, footerRow.number, 4);
+
+  // Try to embed logo
+  if (logoUrl) {
+    try {
+      var resp = await fetch(logoUrl);
+      var blob = await resp.blob();
+      var b64 = await new Promise(function(resolve) {
+        var reader = new FileReader();
+        reader.onloadend = function() { resolve(reader.result.split(',')[1]); };
+        reader.readAsDataURL(blob);
+      });
+      var ext = logoUrl.split('.').pop().toLowerCase().split('?')[0];
+      var imgType = ext === 'png' ? 'png' : ext === 'jpg' || ext === 'jpeg' ? 'jpeg' : 'png';
+      var imgId = wb.addImage({ base64: b64, extension: imgType });
+      ws1.addImage(imgId, { tl: { col: 2.5, row: 0 }, ext: { width: 120, height: 40 } });
+    } catch(e) { /* Logo fetch failed silently */ }
+  }
+
+  // ---- TAB 2: SUCCESS CRITERIA ----
+  var ws2 = wb.addWorksheet('Success Criteria', { properties: { tabColor: { argb: 'FF' + GREEN } } });
+  ws2.columns = [
+    { width: 55 }, { width: 22 }, { width: 14 }, { width: 35 }
+  ];
+
+  var cHdrRow = ws2.addRow(['Success Criterion', 'Owner', 'Status', 'Notes']);
+  cHdrRow.height = 22;
+  cHdrRow.eachCell(function(cell) {
+    cell.style = { font: { bold: true, color: { argb: 'FF' + WHITE }, name: 'Calibri', size: 11 }, fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF' + PURPLE } }, alignment: { vertical: 'middle', wrapText: true }, border: { bottom: { style: 'medium', color: { argb: 'FF' + PURPLE } } } };
+  });
+
+  var ci = 0;
   document.querySelectorAll('[id^="crit_"][id$="_text"]').forEach(function(el) {
     var base = el.id.replace('_text','');
     var owner = document.getElementById(base + '_owner');
     var text = el.value.trim();
     if (!text) return;
-    criteriaRows.push([text, owner ? owner.value : '', 'Open', '']);
+    ci++;
+    var r = ws2.addRow([text, owner ? owner.value : 'Customer', 'Open', '']);
+    r.height = 36;
+    var bg = ci % 2 === 0 ? PURPLE_LIGHT : WHITE;
+    r.getCell(1).style = { font: { name: 'Calibri', size: 10 }, fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF' + bg } }, alignment: { vertical: 'top', wrapText: true } };
+    r.getCell(2).style = { font: { name: 'Calibri', size: 10 }, fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF' + bg } }, alignment: { vertical: 'middle', horizontal: 'center' } };
+    r.getCell(3).style = { font: { bold: true, name: 'Calibri', size: 10, color: { argb: 'FF' + AMBER } }, fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF' + AMBER_LIGHT } }, alignment: { vertical: 'middle', horizontal: 'center' } };
+    r.getCell(4).style = { font: { name: 'Calibri', size: 10 }, fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF' + bg } }, alignment: { vertical: 'top', wrapText: true } };
   });
-  var wsCriteria = XLSX.utils.aoa_to_sheet(criteriaRows);
-  wsCriteria['!cols'] = [{wch:50},{wch:20},{wch:12},{wch:30}];
-  XLSX.utils.book_append_sheet(wb, wsCriteria, 'Success Criteria');
 
-  // ---- TAB 3: Milestones ----
-  var msRows = [['Date', 'Milestone', 'Status', 'Notes']];
+  if (ci === 0) {
+    var emptyRow = ws2.addRow(['No criteria added.', '', '', '']);
+    emptyRow.getCell(1).style = { font: { italic: true, color: { argb: 'FFAAAAAA' }, name: 'Calibri', size: 10 } };
+  }
+
+  // ---- TAB 3: MILESTONES ----
+  var ws3 = wb.addWorksheet('Milestones', { properties: { tabColor: { argb: 'FF' + PURPLE } } });
+  ws3.columns = [
+    { width: 18 }, { width: 52 }, { width: 14 }, { width: 35 }
+  ];
+
+  var mHdrRow = ws3.addRow(['Date', 'Milestone', 'Status', 'Notes']);
+  mHdrRow.height = 22;
+  mHdrRow.eachCell(function(cell) {
+    cell.style = { font: { bold: true, color: { argb: 'FF' + WHITE }, name: 'Calibri', size: 11 }, fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF' + PURPLE } }, alignment: { vertical: 'middle' }, border: { bottom: { style: 'medium', color: { argb: 'FF' + PURPLE } } } };
+  });
+
   var msItems = [];
   document.querySelectorAll('[id^="ms_"][id$="_name"]').forEach(function(el) {
     var base = el.id.replace('_name','');
@@ -754,15 +923,33 @@ function downloadXLS() {
     msItems.push({ name: name, date: date });
   });
   msItems.sort(function(a,b) { return a.date.localeCompare(b.date); });
-  msItems.forEach(function(ms) {
-    msRows.push([ms.date ? fmtDate(ms.date) : 'TBD', ms.name, 'Pending', '']);
-  });
-  var wsMilestones = XLSX.utils.aoa_to_sheet(msRows);
-  wsMilestones['!cols'] = [{wch:18},{wch:50},{wch:12},{wch:30}];
-  XLSX.utils.book_append_sheet(wb, wsMilestones, 'Milestones');
 
-  var filename = (account + ' x ' + vendor + ' MAP').replace(/[^a-zA-Z0-9 x]/g,'') + '.xlsx';
-  XLSX.writeFile(wb, filename);
+  var mi = 0;
+  msItems.forEach(function(ms) {
+    mi++;
+    var r = ws3.addRow([ms.date ? fmtDate(ms.date) : 'TBD', ms.name, 'Pending', '']);
+    r.height = 28;
+    var bg = mi % 2 === 0 ? PURPLE_LIGHT : WHITE;
+    r.getCell(1).style = { font: { bold: true, name: 'Calibri', size: 10, color: { argb: 'FF' + PURPLE } }, fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF' + bg } }, alignment: { vertical: 'middle' } };
+    r.getCell(2).style = { font: { name: 'Calibri', size: 10 }, fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF' + bg } }, alignment: { vertical: 'middle', wrapText: true } };
+    r.getCell(3).style = { font: { bold: true, name: 'Calibri', size: 10, color: { argb: 'FF' + AMBER } }, fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF' + AMBER_LIGHT } }, alignment: { vertical: 'middle', horizontal: 'center' } };
+    r.getCell(4).style = { font: { name: 'Calibri', size: 10 }, fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF' + bg } }, alignment: { vertical: 'top', wrapText: true } };
+  });
+
+  if (mi === 0) {
+    var emptyMs = ws3.addRow(['TBD', 'No milestones added.', '', '']);
+    emptyMs.getCell(2).style = { font: { italic: true, color: { argb: 'FFAAAAAA' }, name: 'Calibri', size: 10 } };
+  }
+
+  // ---- WRITE FILE ----
+  var buf = await wb.xlsx.writeBuffer();
+  var blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = ((account + ' x ' + vendor + ' MAP').replace(/[^a-zA-Z0-9 x]/g, '').trim() || 'POV MAP') + '.xlsx';
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 // ---- UTILS ----
