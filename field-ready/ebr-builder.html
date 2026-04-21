@@ -723,119 +723,178 @@ function downloadPPTX() {
   var capRel = val('capabilityRelevance');
   var theAsk = val('theAsk');
 
-  var PURPLE = '9333EA';
+  var PURPLE = '7C3AED';
+  var PURPLE_LIGHT = 'EDE9FE';
   var WHITE = 'FFFFFF';
   var DARK = '1C1033';
   var GREEN = '16A34A';
+  var GREEN_LIGHT = 'DCFCE7';
   var RED = 'DC2626';
-  var MUTED = '888888';
+  var RED_LIGHT = 'FEE2E2';
+  var MUTED = '6B7280';
+  var OFFWHITE = 'FAFAF9';
 
   pres.layout = 'LAYOUT_WIDE';
   pres.author = 'Field Ready by Jason Landers';
   pres.subject = customer + ' EBR';
 
-  function addSlide(titleText, accent) {
+  var W = 13.33, H = 7.5, M = 0.6;
+  var CW = W - M * 2;
+  var FY = H - 0.45;
+
+  function addSlide(titleText, ac) {
+    ac = ac || PURPLE;
     var slide = pres.addSlide();
-    slide.background = { color: 'F8F4FF' };
-    // Left accent bar
-    slide.addShape(pres.ShapeType.rect, { x: 0, y: 0, w: 0.08, h: 5.63, fill: { color: accent || PURPLE } });
-    // Title
+    slide.background = { color: OFFWHITE };
+    slide.addShape(pres.ShapeType.rect, { x: 0, y: 0, w: W, h: 0.12, fill: { color: ac } });
     if (titleText) {
-      slide.addText(titleText.toUpperCase(), { x: 0.2, y: 0.12, w: 9.3, h: 0.4, fontSize: 9, bold: true, color: accent || PURPLE, charSpacing: 2 });
-      slide.addShape(pres.ShapeType.line, { x: 0.2, y: 0.55, w: 9.3, h: 0, line: { color: accent || PURPLE, width: 1 } });
+      slide.addText(titleText.toUpperCase(), { x: M, y: 0.22, w: CW, h: 0.42, fontSize: 11, bold: true, color: ac, charSpacing: 3 });
+      slide.addShape(pres.ShapeType.line, { x: M, y: 0.68, w: CW, h: 0, line: { color: ac, width: 1.5 } });
     }
-    // Footer
-    slide.addText(customer + ' EBR  |  ' + (ebrDate || '') + '  |  ' + se, { x: 0.2, y: 5.3, w: 7, h: 0.25, fontSize: 8, color: MUTED });
-    slide.addText('Field Ready by Jason Landers', { x: 7.5, y: 5.3, w: 2, h: 0.25, fontSize: 8, color: MUTED, align: 'right' });
+    slide.addShape(pres.ShapeType.line, { x: M, y: FY - 0.08, w: CW, h: 0, line: { color: 'DDDDDD', width: 0.5 } });
+    slide.addText(customer + '  |  ' + (ebrDate || 'EBR'), { x: M, y: FY, w: 7, h: 0.3, fontSize: 9, color: MUTED });
+    slide.addText('Field Ready by Jason Landers', { x: W - M - 3, y: FY, w: 3, h: 0.3, fontSize: 9, color: MUTED, align: 'right' });
     return slide;
   }
 
-  // SLIDE 1: Title
+  // SLIDE 1: Team contact card
   var s1 = pres.addSlide();
   s1.background = { color: DARK };
-  s1.addShape(pres.ShapeType.rect, { x: 0, y: 0, w: 0.15, h: 5.63, fill: { color: PURPLE } });
-  s1.addText('EXECUTIVE BUSINESS REVIEW', { x: 0.3, y: 1.4, w: 9.1, h: 0.5, fontSize: 11, bold: true, color: PURPLE, charSpacing: 3 });
-  s1.addText(customer, { x: 0.3, y: 2.0, w: 9.1, h: 1.0, fontSize: 40, bold: true, color: WHITE });
-  var meta = [ebrDate, se ? 'SE: ' + se : '', ae ? 'AE: ' + ae : '', audience ? audience : ''].filter(Boolean).join('  |  ');
-  s1.addText(meta, { x: 0.3, y: 3.1, w: 9.1, h: 0.4, fontSize: 11, color: MUTED });
+  s1.addShape(pres.ShapeType.rect, { x: 0, y: 0, w: W, h: 0.25, fill: { color: PURPLE } });
+  s1.addText('EXECUTIVE BUSINESS REVIEW', { x: M, y: 0.5, w: 7, h: 0.45, fontSize: 11, bold: true, color: PURPLE, charSpacing: 3 });
+  s1.addText(customer, { x: M, y: 1.1, w: 7.5, h: 1.8, fontSize: 52, bold: true, color: WHITE, wrap: true });
+  if (ebrDate) s1.addText(ebrDate, { x: M, y: 3.1, w: 4, h: 0.4, fontSize: 14, color: MUTED });
+  s1.addShape(pres.ShapeType.line, { x: 8.7, y: 0.5, w: 0, h: H - 1.1, line: { color: '3D2060', width: 1 } });
+  s1.addText('YOUR ACCOUNT TEAM', { x: 8.9, y: 0.5, w: 4.0, h: 0.35, fontSize: 9, bold: true, color: PURPLE, charSpacing: 2 });
+  var ty = 1.15;
+  if (se) {
+    s1.addText('Sales Engineer', { x: 8.9, y: ty, w: 4.0, h: 0.28, fontSize: 9, color: MUTED });
+    s1.addText(se, { x: 8.9, y: ty + 0.3, w: 4.0, h: 0.55, fontSize: 22, bold: true, color: WHITE });
+    var sr = val('seRole'), sem = val('seEmail');
+    if (sr) s1.addText(sr, { x: 8.9, y: ty + 0.88, w: 4.0, h: 0.3, fontSize: 11, color: MUTED });
+    if (sem) s1.addText(sem, { x: 8.9, y: ty + 1.2, w: 4.0, h: 0.3, fontSize: 11, color: PURPLE });
+    ty += 1.85;
+  }
+  if (ae) {
+    s1.addShape(pres.ShapeType.line, { x: 8.9, y: ty, w: 4.0, h: 0, line: { color: '3D2060', width: 0.5 } });
+    ty += 0.2;
+    s1.addText('Account Executive', { x: 8.9, y: ty, w: 4.0, h: 0.28, fontSize: 9, color: MUTED });
+    s1.addText(ae, { x: 8.9, y: ty + 0.3, w: 4.0, h: 0.55, fontSize: 22, bold: true, color: WHITE });
+    var ar = val('aeRole'), aem = val('aeEmail');
+    if (ar) s1.addText(ar, { x: 8.9, y: ty + 0.88, w: 4.0, h: 0.3, fontSize: 11, color: MUTED });
+    if (aem) s1.addText(aem, { x: 8.9, y: ty + 1.2, w: 4.0, h: 0.3, fontSize: 11, color: PURPLE });
+  }
+  s1.addShape(pres.ShapeType.line, { x: M, y: H - 0.55, w: CW, h: 0, line: { color: '3D2060', width: 0.5 } });
+  s1.addText('Field Ready by Jason Landers', { x: M, y: H - 0.45, w: CW, h: 0.3, fontSize: 9, color: MUTED });
+  s1.addNotes('Welcome the customer and introduce yourself and ' + (ae || 'your AE') + '. State what you will cover and why it connects to their priorities.');
 
-  // SLIDE 2: Opening
-  var s2 = addSlide('Opening');
-  s2.addText(objective, { x: 0.2, y: 0.7, w: 9.3, h: 4.4, fontSize: 16, color: DARK, italic: true, valign: 'middle', wrap: true });
-  s2.addText('Speaker note: Personalize this to the specific priorities the executive team raised in the last meeting.', { x: 0.2, y: 5.0, w: 9.3, h: 0.25, fontSize: 8, color: MUTED, italic: true });
+  // SLIDE 2: Agenda / Overview
+  var s2 = addSlide('Overview');
+  var p1v = val('priority1'), p2v = val('priority2'), p3v = val('priority3');
+  var priors = [p1v, p2v, p3v].filter(Boolean);
+  s2.addText('Today I will cover:', { x: M, y: 0.85, w: CW, h: 0.5, fontSize: 18, bold: true, color: DARK });
+  var agenda = ['Technical health and maturity status'];
+  if (val('risk')) agenda.push('One risk I want to flag proactively');
+  if (val('expansionWhat')) agenda.push('Where I see the strongest opportunity ahead');
+  if (val('capabilityName')) agenda.push('A product update relevant to your priorities');
+  agenda.push('A specific ask');
+  var ay = 1.5;
+  agenda.forEach(function(item) {
+    s2.addShape(pres.ShapeType.rect, { x: M, y: ay + 0.07, w: 0.12, h: 0.26, fill: { color: PURPLE } });
+    s2.addText(item, { x: M + 0.25, y: ay, w: CW - 0.3, h: 0.4, fontSize: 15, color: DARK });
+    ay += 0.55;
+  });
+  if (priors.length > 0) {
+    s2.addText('Anchored to your priorities:', { x: M, y: ay + 0.3, w: CW, h: 0.38, fontSize: 13, bold: true, color: PURPLE });
+    priors.forEach(function(p, i) {
+      s2.addText((i + 1) + '.  ' + p, { x: M + 0.25, y: ay + 0.75 + i * 0.42, w: CW - 0.3, h: 0.38, fontSize: 13, color: DARK });
+    });
+  }
+  s2.addNotes(objective || 'Open by acknowledging what you heard in previous meetings and connect your section directly to their stated goals.');
 
   // SLIDE 3: Technical Health
   if (matLevel > 0) {
-    var matIcons = ['','🟣','⚙️','🚀','⚡'];
+    var matEmojis = ['', '\uD83D\uDFE3', '\u2699\uFE0F', '\uD83D\uDE80', '\u26A1'];
     var s3 = addSlide('Technical Health');
-    s3.addText(matIcons[matLevel] + '  ' + matLabels[matLevel], { x: 0.2, y: 0.7, w: 9.3, h: 0.7, fontSize: 28, bold: true, color: PURPLE });
-    var barW = [0, 2.3, 4.6, 6.9, 9.2][matLevel];
-    s3.addShape(pres.ShapeType.rect, { x: 0.2, y: 1.55, w: 9.3, h: 0.18, fill: { color: 'E9D5FF' } });
-    s3.addShape(pres.ShapeType.rect, { x: 0.2, y: 1.55, w: barW, h: 0.18, fill: { color: PURPLE } });
-    var matContext = val('maturityContext');
-    if (matContext) s3.addText(matContext, { x: 0.2, y: 2.0, w: 9.3, h: 3.0, fontSize: 13, color: DARK, wrap: true });
+    s3.addText(matEmojis[matLevel] + '  ' + matLabels[matLevel], { x: M, y: 0.85, w: 9, h: 1.1, fontSize: 42, bold: true, color: PURPLE });
+    var bt = CW;
+    var bf = bt * (matLevel / 4);
+    s3.addShape(pres.ShapeType.rect, { x: M, y: 2.15, w: bt, h: 0.35, fill: { color: PURPLE_LIGHT } });
+    s3.addShape(pres.ShapeType.rect, { x: M, y: 2.15, w: bf, h: 0.35, fill: { color: PURPLE } });
+    ['Getting Started', 'Core Deployed', 'Expanding', 'Fully Mature'].forEach(function(s, i) {
+      s3.addText(s, { x: M + (bt / 4) * i, y: 2.58, w: bt / 4, h: 0.3, fontSize: 9, color: MUTED });
+    });
+    var mc = val('maturityContext');
+    if (mc) {
+      s3.addShape(pres.ShapeType.rect, { x: M, y: 3.05, w: CW, h: 3.1, fill: { color: PURPLE_LIGHT }, line: { color: PURPLE, width: 0.5 } });
+      s3.addText(mc, { x: M + 0.25, y: 3.2, w: CW - 0.5, h: 2.8, fontSize: 14, color: DARK, wrap: true, valign: 'top' });
+    }
+    s3.addNotes('Be specific about which teams are ahead and which are behind. Name the teams, not just the stages.');
   }
 
   // SLIDE 4: Value Delivered
   var wins = [];
   document.querySelectorAll('[id^="win_"][id$="_headline"]').forEach(function(el) {
     var base = el.id.replace('_headline','');
-    var detail = document.getElementById(base + '_detail');
-    if (el.value.trim()) wins.push({ headline: el.value.trim(), detail: detail ? detail.value.trim() : '' });
+    var det = document.getElementById(base + '_detail');
+    if (el.value.trim()) wins.push({ headline: el.value.trim(), detail: det ? det.value.trim() : '' });
   });
   if (wins.length > 0) {
     var s4 = addSlide('Value Delivered');
-    var yPos = 0.7;
-    wins.forEach(function(w) {
-      s4.addShape(pres.ShapeType.rect, { x: 0.2, y: yPos, w: 0.08, h: 0.22, fill: { color: GREEN } });
-      s4.addText(w.headline, { x: 0.42, y: yPos, w: 9.1, h: 0.26, fontSize: 14, bold: true, color: DARK });
-      yPos += 0.3;
-      if (w.detail) {
-        s4.addText(w.detail, { x: 0.42, y: yPos, w: 9.1, h: 0.4, fontSize: 11, color: MUTED, wrap: true });
-        yPos += 0.5;
-      }
-      yPos += 0.15;
+    var cw2 = wins.length > 1 ? (CW - 0.3) / 2 : CW;
+    var cardH = wins.length > 2 ? 2.9 : 5.6;
+    wins.forEach(function(w, i) {
+      var cx = M + (i % 2) * (cw2 + 0.3);
+      var cy = i > 1 ? 3.8 : 0.85;
+      s4.addShape(pres.ShapeType.rect, { x: cx, y: cy, w: cw2, h: cardH, fill: { color: GREEN_LIGHT }, line: { color: GREEN, width: 1 } });
+      s4.addShape(pres.ShapeType.rect, { x: cx, y: cy, w: cw2, h: 0.14, fill: { color: GREEN } });
+      s4.addText(w.headline, { x: cx + 0.2, y: cy + 0.25, w: cw2 - 0.4, h: 1.1, fontSize: 17, bold: true, color: DARK, wrap: true });
+      if (w.detail) s4.addText(w.detail, { x: cx + 0.2, y: cy + 1.45, w: cw2 - 0.4, h: cardH - 1.65, fontSize: 12, color: MUTED, wrap: true, valign: 'top' });
     });
-    s4.addNotes('Speaker note: Lead with the business outcome for each win. Avoid product feature language.');
+    s4.addNotes('Lead with the outcome, not the product. The executives in this room want to know what changed for their business.');
   }
 
   // SLIDE 5: Risk
   if (risk) {
     var s5 = addSlide('Risk to Flag', RED);
-    s5.addShape(pres.ShapeType.rect, { x: 0.2, y: 0.7, w: 9.3, h: 1.6, fill: { color: 'FEF2F2' }, line: { color: RED, width: 1 } });
-    s5.addText('Known Risk', { x: 0.35, y: 0.75, w: 2, h: 0.3, fontSize: 9, bold: true, color: RED, charSpacing: 1.5 });
-    s5.addText(risk, { x: 0.35, y: 1.05, w: 9.0, h: 1.1, fontSize: 12, color: DARK, wrap: true });
+    s5.addShape(pres.ShapeType.rect, { x: M, y: 0.85, w: CW, h: 2.9, fill: { color: RED_LIGHT }, line: { color: RED, width: 1.5 } });
+    s5.addText('KNOWN RISK', { x: M + 0.2, y: 0.98, w: 4, h: 0.35, fontSize: 9, bold: true, color: RED, charSpacing: 2 });
+    s5.addText(risk, { x: M + 0.2, y: 1.4, w: CW - 0.4, h: 2.15, fontSize: 14, color: DARK, wrap: true, valign: 'top' });
     if (mitigation) {
-      s5.addShape(pres.ShapeType.rect, { x: 0.2, y: 2.45, w: 9.3, h: 1.6, fill: { color: 'F0FDF4' }, line: { color: GREEN, width: 1 } });
-      s5.addText('Recommendation', { x: 0.35, y: 2.5, w: 3, h: 0.3, fontSize: 9, bold: true, color: GREEN, charSpacing: 1.5 });
-      s5.addText(mitigation, { x: 0.35, y: 2.8, w: 9.0, h: 1.1, fontSize: 12, color: DARK, wrap: true });
+      s5.addShape(pres.ShapeType.rect, { x: M, y: 3.95, w: CW, h: 2.6, fill: { color: GREEN_LIGHT }, line: { color: GREEN, width: 1.5 } });
+      s5.addText('OUR RECOMMENDATION', { x: M + 0.2, y: 4.08, w: 5, h: 0.35, fontSize: 9, bold: true, color: GREEN, charSpacing: 2 });
+      s5.addText(mitigation, { x: M + 0.2, y: 4.5, w: CW - 0.4, h: 1.9, fontSize: 14, color: DARK, wrap: true, valign: 'top' });
     }
-    s5.addNotes('Speaker note: Name this proactively before being asked. Frame the mitigation as already in motion where possible.');
+    s5.addNotes('Name this proactively. Executives respect people who surface real problems with a plan already forming. Frame the recommendation as already in motion where possible.');
   }
 
   // SLIDE 6: What's Next
   if (expWhat || expWhy) {
     var s6 = addSlide("What's Next");
-    s6.addText((expWhat || '') + (expWhy ? ' ' + expWhy : ''), { x: 0.2, y: 0.7, w: 9.3, h: 4.0, fontSize: 14, color: DARK, wrap: true });
-    s6.addNotes('Speaker note: Frame this entirely around their stated business priorities, not contract expansion.');
+    var expText = (expWhat || '') + (expWhy ? '\n\n' + expWhy : '');
+    s6.addShape(pres.ShapeType.rect, { x: M, y: 0.85, w: CW, h: 5.7, fill: { color: 'F5F3FF' }, line: { color: PURPLE, width: 1 } });
+    s6.addShape(pres.ShapeType.rect, { x: M, y: 0.85, w: CW, h: 0.14, fill: { color: PURPLE } });
+    s6.addText(expText, { x: M + 0.25, y: 1.2, w: CW - 0.5, h: 5.1, fontSize: 15, color: DARK, wrap: true, valign: 'top' });
+    s6.addNotes("Frame this entirely around their stated business priorities. This is a technical recommendation grounded in what they told you matters, not a sales pitch.");
   }
 
   // SLIDE 7: Product Update
   if (capName) {
     var s7 = addSlide('Relevant Product Update');
-    s7.addText(capName, { x: 0.2, y: 0.7, w: 7, h: 0.5, fontSize: 22, bold: true, color: PURPLE });
-    s7.addText(capStatus, { x: 7.3, y: 0.75, w: 2.2, h: 0.4, fontSize: 10, bold: true, color: WHITE, align: 'center',
-      fill: { color: PURPLE }, rectRadius: 0.05 });
-    if (capRel) s7.addText(capRel, { x: 0.2, y: 1.4, w: 9.3, h: 3.5, fontSize: 13, color: DARK, wrap: true });
-    s7.addNotes('Speaker note: Connect this explicitly to something they said in a previous meeting.');
+    s7.addShape(pres.ShapeType.rect, { x: M, y: 0.85, w: CW, h: 1.2, fill: { color: PURPLE } });
+    s7.addText(capName, { x: M + 0.25, y: 0.95, w: CW - 2.8, h: 1.0, fontSize: 26, bold: true, color: WHITE });
+    s7.addText(capStatus, { x: W - M - 2.5, y: 1.05, w: 2.2, h: 0.6, fontSize: 12, bold: true, color: PURPLE, align: 'center', fill: { color: WHITE } });
+    if (capRel) s7.addText(capRel, { x: M + 0.25, y: 2.25, w: CW - 0.5, h: 4.3, fontSize: 14, color: DARK, wrap: true, valign: 'top' });
+    s7.addNotes("Connect this to something the customer said in a previous meeting. Present it as something you have been thinking about specifically for them.");
   }
 
   // SLIDE 8: The Ask
   if (theAsk) {
     var s8 = addSlide('The Ask');
-    s8.addShape(pres.ShapeType.rect, { x: 0.2, y: 0.7, w: 9.3, h: 3.5, fill: { color: 'F3E8FF' }, line: { color: PURPLE, width: 1.5 } });
-    s8.addText(theAsk, { x: 0.4, y: 0.9, w: 9.0, h: 3.1, fontSize: 18, bold: true, color: DARK, valign: 'middle', wrap: true });
-    s8.addNotes('Speaker note: State this clearly and confidently at the end of your section. Name the meeting, the attendees, and the timeframe.');
+    s8.addShape(pres.ShapeType.rect, { x: M, y: 0.85, w: CW, h: 5.7, fill: { color: 'F5F3FF' }, line: { color: PURPLE, width: 2 } });
+    s8.addShape(pres.ShapeType.rect, { x: M, y: 0.85, w: CW, h: 0.18, fill: { color: PURPLE } });
+    s8.addText(theAsk, { x: M + 0.3, y: 1.3, w: CW - 0.6, h: 5.1, fontSize: 22, bold: true, color: DARK, valign: 'middle', wrap: true });
+    s8.addNotes("State this clearly. Name the meeting, the attendees, and the timeframe. Ask for a yes in the room before the EBR ends.");
   }
 
   var filename = (customer + ' EBR').replace(/[^a-zA-Z0-9 ]/g,'').trim() + '.pptx';
