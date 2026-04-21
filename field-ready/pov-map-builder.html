@@ -60,6 +60,7 @@
     .field-label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); }
     .field-hint { font-size: 12px; color: var(--muted); font-style: italic; margin-top: 2px; }
 
+    input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); opacity: 0.6; cursor: pointer; }
     input[type="text"], input[type="date"], textarea, select {
       background: var(--surface); border: 1.5px solid var(--border); border-radius: 10px;
       padding: 12px 14px; color: var(--text); font-family: var(--font); font-size: 14px;
@@ -422,9 +423,13 @@
     <div class="output-topbar">
       <div class="output-title">Your Mutual Action Plan</div>
       <div class="output-actions">
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--muted);cursor:pointer;">
+          <input type="color" id="xlsAccentColor" value="#9333ea" style="width:28px;height:28px;border:none;border-radius:6px;cursor:pointer;background:transparent;padding:0;" title="Excel accent color" />
+          <span>Excel theme</span>
+        </label>
         <button class="btn-action primary" id="btnCopy" onclick="copyMAP()">Copy as text</button>
         <button class="btn-action secondary" onclick="window.print()">&#8595; Download PDF</button>
-        <button class="btn-action secondary" onclick="downloadXLS()">&#8595; Download as Excel</button>
+        <button class="btn-action secondary" onclick="downloadXLS()">&#8595; Download Excel</button>
         <button class="btn-action ghost" onclick="resetBuilder()">Start over</button>
       </div>
     </div>
@@ -700,9 +705,13 @@ async function downloadXLS() {
   wb.created = new Date();
 
   // ---- STYLES ----
-  var PURPLE = '9333EA';
-  var PURPLE_LIGHT = 'F3E8FF';
-  var PURPLE_MID = 'E9D5FF';
+  // Get accent color from picker, strip # and ensure 6-char hex
+  var pickerVal = (document.getElementById('xlsAccentColor').value || '#9333ea').replace('#','');
+  var PURPLE = pickerVal.toUpperCase();
+  // Derive a light tint (blend with white at 90%)
+  var r = parseInt(pickerVal.substring(0,2),16), g = parseInt(pickerVal.substring(2,4),16), b = parseInt(pickerVal.substring(4,6),16);
+  var PURPLE_LIGHT = [Math.round(r*0.12+255*0.88),Math.round(g*0.12+255*0.88),Math.round(b*0.12+255*0.88)].map(function(x){return x.toString(16).padStart(2,'0');}).join('').toUpperCase();
+  var PURPLE_MID = [Math.round(r*0.2+255*0.8),Math.round(g*0.2+255*0.8),Math.round(b*0.2+255*0.8)].map(function(x){return x.toString(16).padStart(2,'0');}).join('').toUpperCase();
   var GREEN = '16A34A';
   var GREEN_LIGHT = 'DCFCE7';
   var AMBER = 'D97706';
@@ -851,21 +860,23 @@ async function downloadXLS() {
   footerCell.style = { font: { name: 'Calibri', size: 9, color: { argb: 'FFAAAAAA' }, italic: true }, alignment: { vertical: 'middle' } };
   ws1.mergeCells(footerRow.number, 1, footerRow.number, 4);
 
-  // Try to embed logo
+  // Embed logo via CORS-friendly proxy
   if (logoUrl) {
     try {
-      var resp = await fetch(logoUrl);
+      var proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(logoUrl);
+      var resp = await fetch(proxyUrl);
       var blob = await resp.blob();
-      var b64 = await new Promise(function(resolve) {
+      var b64 = await new Promise(function(resolve, reject) {
         var reader = new FileReader();
         reader.onloadend = function() { resolve(reader.result.split(',')[1]); };
+        reader.onerror = reject;
         reader.readAsDataURL(blob);
       });
       var ext = logoUrl.split('.').pop().toLowerCase().split('?')[0];
-      var imgType = ext === 'png' ? 'png' : ext === 'jpg' || ext === 'jpeg' ? 'jpeg' : 'png';
+      var imgType = ['png','jpeg','jpg','gif','bmp'].includes(ext) ? (ext === 'jpg' ? 'jpeg' : ext) : 'png';
       var imgId = wb.addImage({ base64: b64, extension: imgType });
       ws1.addImage(imgId, { tl: { col: 2.5, row: 0 }, ext: { width: 120, height: 40 } });
-    } catch(e) { /* Logo fetch failed silently */ }
+    } catch(e) { /* Logo fetch failed - CORS or invalid URL */ }
   }
 
   // ---- TAB 2: SUCCESS CRITERIA ----
@@ -892,7 +903,9 @@ async function downloadXLS() {
     var bg = ci % 2 === 0 ? PURPLE_LIGHT : WHITE;
     r.getCell(1).style = { font: { name: 'Calibri', size: 10 }, fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF' + bg } }, alignment: { vertical: 'top', wrapText: true } };
     r.getCell(2).style = { font: { name: 'Calibri', size: 10 }, fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF' + bg } }, alignment: { vertical: 'middle', horizontal: 'center' } };
+    r.getCell(2).dataValidation = { type: 'list', allowBlank: false, formulae: ['"Customer,SE,AE,AE / SE (Both),All Parties"'] };
     r.getCell(3).style = { font: { bold: true, name: 'Calibri', size: 10, color: { argb: 'FF' + AMBER } }, fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF' + AMBER_LIGHT } }, alignment: { vertical: 'middle', horizontal: 'center' } };
+    r.getCell(3).dataValidation = { type: 'list', allowBlank: false, formulae: ['"Open,In Progress,Complete,Blocked"'] };
     r.getCell(4).style = { font: { name: 'Calibri', size: 10 }, fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF' + bg } }, alignment: { vertical: 'top', wrapText: true } };
   });
 
@@ -933,6 +946,7 @@ async function downloadXLS() {
     r.getCell(1).style = { font: { bold: true, name: 'Calibri', size: 10, color: { argb: 'FF' + PURPLE } }, fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF' + bg } }, alignment: { vertical: 'middle' } };
     r.getCell(2).style = { font: { name: 'Calibri', size: 10 }, fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF' + bg } }, alignment: { vertical: 'middle', wrapText: true } };
     r.getCell(3).style = { font: { bold: true, name: 'Calibri', size: 10, color: { argb: 'FF' + AMBER } }, fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF' + AMBER_LIGHT } }, alignment: { vertical: 'middle', horizontal: 'center' } };
+    r.getCell(3).dataValidation = { type: 'list', allowBlank: false, formulae: ['"Pending,In Progress,Complete,Blocked"'] };
     r.getCell(4).style = { font: { name: 'Calibri', size: 10 }, fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF' + bg } }, alignment: { vertical: 'top', wrapText: true } };
   });
 
