@@ -196,7 +196,7 @@
 <body>
 
 <!-- INTRO -->
-<div id="intro" class="screen active">
+<div id="intro" class="active">
   <a href="/field-ready/" class="brand-tag">&#8592; Field Ready by Jason Landers</a>
   <p class="intro-eyebrow">Before you agree to that demo</p>
   <h1 class="intro-title">The <em>Demo</em> Qualifier</h1>
@@ -615,7 +615,7 @@ function updateReportDetails() {
 }
 
 function showScreen(id) {
-  document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active'); s.scrollTop = 0; });
+  document.querySelectorAll('.screen, #intro').forEach(function(s) { s.classList.remove('active'); s.scrollTop = 0; });
   document.getElementById(id).classList.add('active');
 }
 </script>
