@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <title>EBR Builder | Field Ready</title>
+  <meta name="description" content="Build your SE contribution for an Executive Business Review. Structure your technical narrative, value delivered, risks, and expansion story in minutes.">
+  <script defer src="https://umami-tau-drab.vercel.app/script.js" data-website-id="23015384-bcae-4732-9665-a39f261647e1"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #130d1c; --surface: #1e1530; --surface2: #271c3d;
+      --border: #2e2249; --text: #ede8f5; --muted: #8b7fa8;
+      --accent: #d946ef; --accent-dark: #b91fd4;
+      --accent-light: rgba(217,70,239,0.12); --accent-glow: rgba(217,70,239,0.25);
+      --green: #22c55e; --yellow: #f59e0b; --red: #ef4444; --blue: #60a5fa;
+      --font: 'Inter', system-ui, sans-serif;
+    }
+
+    html, body { min-height: 100%; font-family: var(--font); background: var(--bg); color: var(--text); -webkit-tap-highlight-color: transparent; }
+
+    .brand-tag { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--accent); text-decoration: none; display: inline-block; margin-bottom: 20px; transition: opacity 0.15s; }
+    .brand-tag:hover { opacity: 0.75; }
+
+    /* ---- BUILDER ---- */
+    .page { max-width: 720px; margin: 0 auto; padding: 40px 24px 80px; }
+
+    .page-eyebrow { font-size: 13px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); border: 1.5px solid var(--border); border-radius: 100px; padding: 6px 16px; display: inline-block; margin-bottom: 16px; }
+    .page-title { font-size: clamp(36px, 7vw, 56px); font-weight: 900; letter-spacing: -2px; color: #fff; line-height: 1.0; margin-bottom: 14px; }
+    .page-title em { font-style: normal; background: linear-gradient(135deg, var(--accent), #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .page-sub { font-size: 16px; color: var(--muted); line-height: 1.65; max-width: 560px; margin-bottom: 32px; }
+
+    /* Best practices */
+    .best-practices { background: var(--surface); border: 1.5px solid var(--border); border-radius: 14px; margin-bottom: 36px; overflow: hidden; }
+    .bp-summary { font-size: 13px; font-weight: 700; color: var(--accent); padding: 14px 18px; cursor: pointer; list-style: none; display: flex; align-items: center; gap: 8px; user-select: none; }
+    .bp-summary::-webkit-details-marker { display: none; }
+    details[open] .bp-summary { border-bottom: 1px solid var(--border); }
+    .bp-body { padding: 18px; display: flex; flex-direction: column; gap: 16px; }
+    .bp-item { padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+    .bp-item:last-child { border-bottom: none; padding-bottom: 0; }
+    .bp-title { font-size: 14px; font-weight: 800; color: #fff; margin-bottom: 6px; line-height: 1.3; }
+    .bp-text { font-size: 13px; color: var(--muted); line-height: 1.7; }
+
+    /* Form sections */
+    .section { margin-bottom: 32px; }
+    .section-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+    .section-num { background: var(--accent-light); color: var(--accent); border-radius: 8px; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; flex-shrink: 0; }
+    .section-title { font-size: 16px; font-weight: 800; color: #fff; }
+
+    .field-group { display: flex; flex-direction: column; gap: 12px; }
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    .field-label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); }
+    .field-hint { font-size: 12px; color: var(--muted); font-style: italic; }
+
+    input[type="text"], input[type="date"], textarea, select {
+      background: var(--surface); border: 1.5px solid var(--border); border-radius: 10px;
+      padding: 12px 14px; color: var(--text); font-family: var(--font); font-size: 14px;
+      line-height: 1.6; outline: none; transition: border-color 0.15s; width: 100%;
+    }
+    input[type="text"]:focus, input[type="date"]:focus, textarea:focus, select:focus { border-color: var(--accent); }
+    input::placeholder, textarea::placeholder { color: var(--muted); }
+    textarea { resize: vertical; min-height: 72px; }
+    select { cursor: pointer; }
+    select option { background: var(--surface2); }
+
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media (max-width: 520px) { .two-col { grid-template-columns: 1fr; } }
+
+    /* Win rows */
+    .win-list { display: flex; flex-direction: column; gap: 10px; }
+    .win-row { background: var(--surface); border: 1.5px solid var(--border); border-radius: 12px; padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; position: relative; }
+    .win-row-num { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--accent); margin-bottom: 2px; }
+    .win-row input, .win-row textarea { background: var(--surface2); border-color: transparent; }
+    .win-row input:focus, .win-row textarea:focus { border-color: var(--accent); }
+    .btn-remove-win { position: absolute; top: 12px; right: 12px; background: transparent; border: none; color: var(--muted); cursor: pointer; font-size: 16px; padding: 2px 6px; border-radius: 4px; transition: color 0.15s; }
+    .btn-remove-win:hover { color: var(--red); }
+
+    .btn-add { background: transparent; border: 1.5px dashed var(--border); border-radius: 10px; padding: 10px; width: 100%; font-family: var(--font); font-size: 14px; color: var(--muted); cursor: pointer; transition: all 0.15s; margin-top: 4px; }
+    .btn-add:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* Maturity selector */
+    .maturity-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    @media (min-width: 480px) { .maturity-grid { grid-template-columns: repeat(4, 1fr); } }
+    .maturity-btn { background: var(--surface); border: 2px solid var(--border); border-radius: 10px; padding: 14px 10px; text-align: center; cursor: pointer; transition: all 0.15s; }
+    .maturity-btn:hover { border-color: var(--accent); }
+    .maturity-btn.selected { border-color: var(--accent); background: var(--accent-light); }
+    .maturity-icon { font-size: 22px; margin-bottom: 6px; }
+    .maturity-label { font-size: 12px; font-weight: 700; color: var(--text); line-height: 1.3; }
+    .maturity-sub { font-size: 11px; color: var(--muted); margin-top: 3px; }
+
+    /* Generate */
+    .generate-wrap { position: sticky; bottom: 0; background: linear-gradient(to top, var(--bg) 70%, transparent); padding: 24px 0 0; margin-top: 16px; }
+    .btn-generate { width: 100%; background: var(--accent); color: #fff; border: none; border-radius: 12px; padding: 17px; font-family: var(--font); font-size: 17px; font-weight: 800; cursor: pointer; transition: background 0.15s, box-shadow 0.15s; box-shadow: 0 0 28px var(--accent-glow); letter-spacing: -0.3px; }
+    .btn-generate:hover { background: var(--accent-dark); }
+
+    /* ---- OUTPUT ---- */
+    #output { display: none; }
+    #output.show { display: block; }
+
+    .output-topbar { display: flex; justify-content: space-between; align-items: center; padding: 20px 0; border-bottom: 1px solid var(--border); margin-bottom: 28px; flex-wrap: wrap; gap: 12px; }
+    .output-title { font-size: 14px; font-weight: 700; color: #fff; }
+    .output-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .btn-action { border: none; border-radius: 8px; padding: 9px 18px; font-family: var(--font); font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.15s; }
+    .btn-action.primary { background: var(--accent); color: #fff; }
+    .btn-action.primary:hover { background: var(--accent-dark); }
+    .btn-action.primary.copied { background: #16a34a; }
+    .btn-action.secondary { background: var(--surface2); color: var(--text); border: 1.5px solid var(--border); }
+    .btn-action.secondary:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-action.ghost { background: transparent; color: var(--muted); border: 1.5px solid var(--border); }
+    .btn-action.ghost:hover { border-color: var(--text); color: var(--text); }
+
+    /* EBR document */
+    .ebr-doc { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
+
+    .ebr-header { background: linear-gradient(135deg, #1e0a2e, #2d1650); padding: 28px 32px; border-bottom: 1px solid var(--border); }
+    .ebr-doc-label { font-size: 10px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--accent); margin-bottom: 6px; }
+    .ebr-doc-title { font-size: clamp(20px, 4vw, 28px); font-weight: 900; color: #fff; letter-spacing: -0.5px; line-height: 1.2; margin-bottom: 12px; }
+    .ebr-header-meta { display: flex; gap: 20px; flex-wrap: wrap; }
+    .ebr-meta-item { font-size: 13px; color: var(--muted); }
+    .ebr-meta-item strong { color: var(--text); }
+
+    .ebr-section { padding: 24px 32px; border-bottom: 1px solid var(--border); }
+    .ebr-section:last-child { border-bottom: none; }
+    .ebr-section-title { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--accent); margin-bottom: 16px; }
+
+    /* Opening framing */
+    .ebr-opening { font-size: 15px; color: var(--text); line-height: 1.75; font-style: italic; border-left: 3px solid var(--accent); padding-left: 16px; }
+
+    /* Maturity scorecard */
+    .maturity-scorecard { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+    .maturity-track { flex: 1; min-width: 200px; }
+    .maturity-track-label { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-bottom: 6px; }
+    .maturity-bar-bg { background: var(--surface2); border-radius: 100px; height: 10px; overflow: hidden; }
+    .maturity-bar-fill { height: 100%; border-radius: 100px; transition: width 0.8s ease; }
+    .maturity-bar-fill.level-1 { width: 25%; background: linear-gradient(90deg, #6366f1, #8b5cf6); }
+    .maturity-bar-fill.level-2 { width: 50%; background: linear-gradient(90deg, #8b5cf6, var(--accent)); }
+    .maturity-bar-fill.level-3 { width: 75%; background: linear-gradient(90deg, var(--accent), #f59e0b); }
+    .maturity-bar-fill.level-4 { width: 100%; background: linear-gradient(90deg, #f59e0b, var(--green)); }
+    .maturity-badge { display: flex; flex-direction: column; align-items: center; text-align: center; }
+    .maturity-badge-icon { font-size: 32px; margin-bottom: 4px; }
+    .maturity-badge-label { font-size: 13px; font-weight: 800; color: #fff; }
+    .maturity-badge-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+    /* Value wins */
+    .win-item { display: flex; gap: 14px; align-items: flex-start; margin-bottom: 14px; }
+    .win-item:last-child { margin-bottom: 0; }
+    .win-bullet { width: 8px; height: 8px; border-radius: 50%; background: var(--green); flex-shrink: 0; margin-top: 6px; }
+    .win-content { flex: 1; }
+    .win-headline { font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 4px; line-height: 1.4; }
+    .win-detail { font-size: 13px; color: var(--muted); line-height: 1.6; }
+
+    /* Risk */
+    .risk-box { background: rgba(239,68,68,0.06); border: 1px solid rgba(239,68,68,0.2); border-radius: 10px; padding: 18px 20px; }
+    .risk-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--red); margin-bottom: 8px; }
+    .risk-text { font-size: 14px; color: var(--text); line-height: 1.65; margin-bottom: 12px; }
+    .mitigation-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--green); margin-bottom: 6px; }
+    .mitigation-text { font-size: 14px; color: var(--muted); line-height: 1.65; }
+
+    /* Expansion */
+    .expansion-box { background: rgba(96,165,250,0.06); border: 1px solid rgba(96,165,250,0.2); border-radius: 10px; padding: 18px 20px; }
+    .expansion-text { font-size: 14px; color: var(--text); line-height: 1.7; }
+
+    /* Product capability */
+    .capability-chip { display: inline-flex; align-items: center; gap: 8px; background: var(--accent-light); border: 1.5px solid rgba(217,70,239,0.3); border-radius: 8px; padding: 10px 16px; margin-bottom: 10px; }
+    .capability-chip-label { font-size: 13px; font-weight: 700; color: var(--accent); }
+    .capability-relevance { font-size: 14px; color: var(--muted); line-height: 1.65; }
+
+    /* The ask */
+    .ask-box { background: linear-gradient(135deg, rgba(217,70,239,0.12), rgba(167,139,250,0.08)); border: 1.5px solid rgba(217,70,239,0.3); border-radius: 12px; padding: 20px 24px; }
+    .ask-text { font-size: 16px; font-weight: 700; color: #fff; line-height: 1.5; }
+
+    /* Footer */
+    .ebr-footer { padding: 18px 32px; display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--muted); flex-wrap: wrap; gap: 8px; border-top: 1px solid var(--border); }
+
+    /* ---- PRINT ---- */
+    @media print {
+      html, body { background: #fff; color: #111; }
+      .page { padding: 0; max-width: 100%; }
+      .page-eyebrow, .page-title, .page-sub, .section, .generate-wrap, .output-topbar, .best-practices { display: none !important; }
+      #output { display: block !important; }
+      .ebr-doc { border: none; border-radius: 0; }
+      .ebr-header { background: #f8f4ff !important; border-bottom: 2px solid #9333ea; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .ebr-doc-label { color: #9333ea; }
+      .ebr-doc-title { color: #111; }
+      .ebr-meta-item { color: #555; }
+      .ebr-meta-item strong { color: #111; }
+      .ebr-section-title { color: #9333ea; }
+      .ebr-opening { border-left-color: #9333ea; color: #111; }
+      .maturity-bar-fill { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .maturity-badge-label { color: #111; }
+      .maturity-badge-sub, .maturity-track-label { color: #555; }
+      .maturity-bar-bg { background: #eee; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .win-bullet { background: #16a34a; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .win-headline { color: #111; }
+      .win-detail { color: #555; }
+      .risk-box { background: #fff5f5; border-color: #fca5a5; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .risk-label { color: #dc2626; }
+      .risk-text { color: #111; }
+      .mitigation-label { color: #16a34a; }
+      .mitigation-text { color: #555; }
+      .expansion-box { background: #eff6ff; border-color: #bfdbfe; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .expansion-text { color: #111; }
+      .capability-chip { background: #f3e8ff; border-color: #d8b4fe; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .capability-chip-label { color: #9333ea; }
+      .capability-relevance { color: #555; }
+      .ask-box { background: #f3e8ff; border-color: #d8b4fe; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .ask-text { color: #111; }
+      .ebr-footer { color: #888; border-top: 1px solid #ddd; }
+      .ebr-section { border-bottom: 1px solid #eee; break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+  <a href="/field-ready/" class="brand-tag">&#8592; Field Ready by Jason Landers</a>
+
+  <p class="page-eyebrow">Executive Business Review</p>
+  <h1 class="page-title"><em>EBR</em> Builder</h1>
+  <p class="page-sub">Structure your SE contribution for an Executive Business Review. Technical health, value delivered, risks, expansion narrative, and the ask. Ready to share with your AE in minutes.</p>
+
+  <details class="best-practices">
+    <summary class="bp-summary">&#9654; Why SE contributions to EBRs usually miss the mark</summary>
+    <div class="bp-body">
+      <div class="bp-item">
+        <div class="bp-title">SEs show up with a technical recap when executives want a business story.</div>
+        <div class="bp-text">The most common SE EBR mistake is leading with what was deployed. Executives do not care what was deployed. They care what changed as a result. "We onboarded three production clusters" means nothing to a VP. "Mean time to resolution on P1 incidents dropped 68% since deployment" changes the conversation. Every technical fact in an EBR needs a business outcome attached to it.</div>
+      </div>
+      <div class="bp-item">
+        <div class="bp-title">One honest risk is more credible than zero risks.</div>
+        <div class="bp-text">EBR contributors who claim everything is perfect are not trusted. Executives know things are not perfect. An SE who names one real risk and comes with a mitigation plan builds more credibility in that moment than any technical win. It signals that you see the full picture, not just the highlight reel.</div>
+      </div>
+      <div class="bp-item">
+        <div class="bp-title">The expansion narrative belongs to the SE, not the AE.</div>
+        <div class="bp-text">AEs frame expansion in terms of contract value. SEs can frame it in terms of technical readiness and customer outcomes. "You have 80% coverage in Payments but zero in Infrastructure, and based on what you told me about your Q3 reliability goals, that is the gap worth closing" is an SE insight an AE cannot replicate. Use it.</div>
+      </div>
+      <div class="bp-item">
+        <div class="bp-title">The ask should be specific and small.</div>
+        <div class="bp-text">EBRs produce the most momentum when they end with one concrete next step, not a vague commitment to continue working together. Name the meeting, the date range, and the attendees. "A 45-minute technical roadmap session with your infrastructure lead before the end of the quarter" is infinitely more actionable than "let us know if you want to explore further."</div>
+      </div>
+      <div class="bp-item">
+        <div class="bp-title">Send this document to the AE the day before, not the morning of.</div>
+        <div class="bp-text">The AE needs time to align your technical narrative with the business conversation they are preparing. Surprises in an EBR hurt both sides. A shared document the day before gives the AE a chance to flag anything that conflicts with their messaging and gives you a chance to refine.</div>
+      </div>
+    </div>
+  </details>
+
+  <!-- SECTION 1: Basics -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">1</div>
+      <div class="section-title">Meeting Basics</div>
+    </div>
+    <div class="field-group">
+      <div class="two-col">
+        <div class="field">
+          <label class="field-label">Customer Name</label>
+          <input type="text" id="customerName" placeholder="Acme Corp" />
+        </div>
+        <div class="field">
+          <label class="field-label">EBR Date</label>
+          <input type="date" id="ebrDate" />
+        </div>
+      </div>
+      <div class="two-col">
+        <div class="field">
+          <label class="field-label">Your Name (SE)</label>
+          <input type="text" id="seName" placeholder="Your name" />
+        </div>
+        <div class="field">
+          <label class="field-label">Account Executive</label>
+          <input type="text" id="aeName" placeholder="AE name" />
+        </div>
+      </div>
+      <div class="field">
+        <label class="field-label">Executive Audience</label>
+        <p class="field-hint">Who is in the room? This shapes how technical your framing should be.</p>
+        <input type="text" id="audience" placeholder="e.g. CTO, VP Engineering, Director of Platform Engineering" />
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 2: Business priorities -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">2</div>
+      <div class="section-title">Their Business Priorities</div>
+    </div>
+    <div class="field-group">
+      <p style="font-size:13px;color:var(--muted);margin-bottom:4px;">What are this customer's top stated business goals right now? These anchor your entire technical narrative.</p>
+      <div class="field">
+        <label class="field-label">Priority 1</label>
+        <input type="text" id="priority1" placeholder="e.g. Reduce infrastructure incident response time across all teams" />
+      </div>
+      <div class="field">
+        <label class="field-label">Priority 2</label>
+        <input type="text" id="priority2" placeholder="e.g. Standardize observability tooling before Q3 platform migration" />
+      </div>
+      <div class="field">
+        <label class="field-label">Priority 3 (optional)</label>
+        <input type="text" id="priority3" placeholder="e.g. Reduce on-call burnout on the SRE team" />
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 3: Technical maturity -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">3</div>
+      <div class="section-title">Technical Maturity</div>
+    </div>
+    <div class="field-group">
+      <p style="font-size:13px;color:var(--muted);margin-bottom:12px;">Where is this customer in their implementation journey?</p>
+      <div class="maturity-grid">
+        <button class="maturity-btn" data-level="1" onclick="selectMaturity(1)">
+          <div class="maturity-icon">&#127331;</div>
+          <div class="maturity-label">Getting Started</div>
+          <div class="maturity-sub">Initial deployment, early adoption</div>
+        </button>
+        <button class="maturity-btn" data-level="2" onclick="selectMaturity(2)">
+          <div class="maturity-icon">&#9881;&#65039;</div>
+          <div class="maturity-label">Core Deployed</div>
+          <div class="maturity-sub">Primary use cases live, teams using it</div>
+        </button>
+        <button class="maturity-btn" data-level="3" onclick="selectMaturity(3)">
+          <div class="maturity-icon">&#128640;</div>
+          <div class="maturity-label">Expanding</div>
+          <div class="maturity-sub">Growing usage, new teams or use cases</div>
+        </button>
+        <button class="maturity-btn" data-level="4" onclick="selectMaturity(4)">
+          <div class="maturity-icon">&#9889;</div>
+          <div class="maturity-label">Fully Mature</div>
+          <div class="maturity-sub">Platform-wide, optimizing and innovating</div>
+        </button>
+      </div>
+      <input type="hidden" id="maturityLevel" value="" />
+      <div class="field" style="margin-top:12px;">
+        <label class="field-label">Technical context (optional)</label>
+        <p class="field-hint">Any nuance about where they are. Which teams are further along? Where are the gaps?</p>
+        <textarea id="maturityContext" placeholder="e.g. Payments team is fully deployed and mature. Infrastructure team is early adoption. Security has not started yet."></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 4: Value wins -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">4</div>
+      <div class="section-title">Value Delivered Since Last EBR</div>
+    </div>
+    <div class="field-group">
+      <p style="font-size:13px;color:var(--muted);margin-bottom:8px;">2 to 3 specific wins. Lead with the business outcome, not the technical action. Include a metric wherever possible.</p>
+      <div class="win-list" id="winList"></div>
+      <button class="btn-add" onclick="addWin()">+ Add a win</button>
+    </div>
+  </div>
+
+  <!-- SECTION 5: Risk -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">5</div>
+      <div class="section-title">Biggest Technical Risk</div>
+    </div>
+    <div class="field-group">
+      <p style="font-size:13px;color:var(--muted);margin-bottom:8px;">One honest risk you are aware of. Naming it proactively is a credibility move, not a liability.</p>
+      <div class="field">
+        <label class="field-label">The risk</label>
+        <textarea id="risk" placeholder="e.g. The Security team's integration is still on a legacy agent version that will reach end-of-life in Q3. If not updated, they will lose coverage exactly when the compliance audit begins."></textarea>
+      </div>
+      <div class="field">
+        <label class="field-label">Your mitigation recommendation</label>
+        <textarea id="mitigation" placeholder="e.g. We have an upgrade path ready and have offered to run a guided migration session with their security architect. We are proposing to schedule that before the end of next month."></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 6: Expansion -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">6</div>
+      <div class="section-title">Expansion Opportunity</div>
+    </div>
+    <div class="field-group">
+      <p style="font-size:13px;color:var(--muted);margin-bottom:8px;">The technical case for what they should do next, framed around their business priorities, not your quota.</p>
+      <div class="field">
+        <label class="field-label">What the expansion is</label>
+        <textarea id="expansionWhat" placeholder="e.g. Extending observability coverage to the Infrastructure team, which currently has no visibility into their Kubernetes layer."></textarea>
+      </div>
+      <div class="field">
+        <label class="field-label">Why it maps to their priorities</label>
+        <textarea id="expansionWhy" placeholder="e.g. This directly addresses their stated Q3 reliability goals. The Infrastructure team owns the platform the Payments team runs on. A gap there is a risk to the outcomes they just celebrated."></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 7: Product capability -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">7</div>
+      <div class="section-title">Relevant Product Update</div>
+    </div>
+    <div class="field-group">
+      <p style="font-size:13px;color:var(--muted);margin-bottom:8px;">One upcoming or recent capability that is directly relevant to this customer's stated priorities. Not a changelog bullet. A specific thing that matters to them.</p>
+      <div class="two-col">
+        <div class="field">
+          <label class="field-label">Capability name</label>
+          <input type="text" id="capabilityName" placeholder="e.g. AI-powered anomaly detection" />
+        </div>
+        <div class="field">
+          <label class="field-label">Available (GA / Preview / Roadmap)</label>
+          <select id="capabilityStatus">
+            <option value="Generally Available">Generally Available</option>
+            <option value="Now in Preview">Now in Preview</option>
+            <option value="On the Roadmap">On the Roadmap</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label class="field-label">Why it matters to this customer specifically</label>
+        <textarea id="capabilityRelevance" placeholder="e.g. This directly addresses the on-call burnout issue their SRE lead mentioned. Instead of manual threshold tuning, the system will surface anomalies before they page. We should plan a short demo for their SRE team before the end of Q2."></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 8: The ask -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">8</div>
+      <div class="section-title">The Ask</div>
+    </div>
+    <div class="field-group">
+      <p style="font-size:13px;color:var(--muted);margin-bottom:8px;">One specific next step. Name the meeting type, the participants, and the timeframe. Not "let us know if you want to explore further."</p>
+      <div class="field">
+        <textarea id="theAsk" placeholder="e.g. A 45-minute technical roadmap session with your Infrastructure lead and our SE team before the end of Q2. We would cover the Kubernetes coverage gap and walk through the AI anomaly detection preview together."></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="generate-wrap">
+    <button class="btn-generate" onclick="generateEBR()">Build my EBR contribution &#8594;</button>
+  </div>
+
+  <!-- OUTPUT -->
+  <div id="output">
+    <div class="output-topbar">
+      <div class="output-title">Your EBR Contribution</div>
+      <div class="output-actions">
+        <button class="btn-action primary" id="btnCopy" onclick="copyEBR()">Copy as text</button>
+        <button class="btn-action secondary" onclick="window.print()">&#8595; Download PDF</button>
+        <button class="btn-action ghost" onclick="resetBuilder()">Start over</button>
+      </div>
+    </div>
+
+    <div class="ebr-doc" id="ebrDoc">
+      <div class="ebr-header">
+        <div class="ebr-doc-label">SE Contribution — Executive Business Review</div>
+        <div class="ebr-doc-title" id="ebrTitle"></div>
+        <div class="ebr-header-meta" id="ebrMeta"></div>
+      </div>
+
+      <div class="ebr-section">
+        <div class="ebr-section-title">Opening Framing</div>
+        <div class="ebr-opening" id="ebrOpening"></div>
+      </div>
+
+      <div class="ebr-section">
+        <div class="ebr-section-title">Technical Health</div>
+        <div class="maturity-scorecard">
+          <div class="maturity-badge" id="ebrMaturityBadge"></div>
+          <div class="maturity-track">
+            <div class="maturity-track-label"><span>Getting Started</span><span>Fully Mature</span></div>
+            <div class="maturity-bar-bg"><div class="maturity-bar-fill" id="ebrMaturityBar"></div></div>
+            <div id="ebrMaturityContext" style="font-size:13px;color:var(--muted);margin-top:10px;line-height:1.6;"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="ebr-section">
+        <div class="ebr-section-title">Value Delivered</div>
+        <div id="ebrWins"></div>
+      </div>
+
+      <div class="ebr-section">
+        <div class="ebr-section-title">Risk to Flag</div>
+        <div class="risk-box">
+          <div class="risk-label">&#9888; Known Risk</div>
+          <div class="risk-text" id="ebrRisk"></div>
+          <div class="mitigation-label">&#10003; Our Recommendation</div>
+          <div class="mitigation-text" id="ebrMitigation"></div>
+        </div>
+      </div>
+
+      <div class="ebr-section">
+        <div class="ebr-section-title">What's Next</div>
+        <div class="expansion-box">
+          <div class="expansion-text" id="ebrExpansion"></div>
+        </div>
+      </div>
+
+      <div class="ebr-section" id="ebrCapabilitySection">
+        <div class="ebr-section-title">Relevant Product Update</div>
+        <div class="capability-chip"><span class="capability-chip-label" id="ebrCapName"></span><span style="font-size:11px;color:var(--muted);" id="ebrCapStatus"></span></div>
+        <div class="capability-relevance" id="ebrCapRelevance"></div>
+      </div>
+
+      <div class="ebr-section">
+        <div class="ebr-section-title">The Ask</div>
+        <div class="ask-box"><div class="ask-text" id="ebrAsk"></div></div>
+      </div>
+
+      <div class="ebr-footer">
+        <span id="ebrFooterLeft"></span>
+        <span>Built with Field Ready by Jason Landers &nbsp;&middot;&nbsp; jasonlanders.com</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+var selectedMaturity = 0;
+
+var MATURITY_DATA = {
+  1: { icon: '\uD83C\uDFD3', label: 'Getting Started', sub: 'Early deployment phase', cssClass: 'level-1' },
+  2: { icon: '\u2699\uFE0F', label: 'Core Deployed', sub: 'Primary use cases live', cssClass: 'level-2' },
+  3: { icon: '\uD83D\uDE80', label: 'Expanding', sub: 'Growing usage and coverage', cssClass: 'level-3' },
+  4: { icon: '\u26A1', label: 'Fully Mature', sub: 'Platform-wide adoption', cssClass: 'level-4' }
+};
+
+function selectMaturity(level) {
+  selectedMaturity = level;
+  document.querySelectorAll('.maturity-btn').forEach(function(b) {
+    b.classList.toggle('selected', parseInt(b.dataset.level) === level);
+  });
+  document.getElementById('maturityLevel').value = level;
+}
+
+// ---- WINS ----
+var winCount = 0;
+function addWin() {
+  winCount++;
+  var id = 'win_' + winCount;
+  var row = document.createElement('div');
+  row.className = 'win-row';
+  row.id = 'wrow_' + id;
+  row.innerHTML =
+    '<button class="btn-remove-win" onclick="removeWin(\'' + id + '\')">&#10005;</button>' +
+    '<div class="win-row-num">Win ' + winCount + '</div>' +
+    '<input type="text" id="' + id + '_headline" placeholder="Business outcome headline (e.g. P1 incident response time reduced by 68%)" />' +
+    '<textarea id="' + id + '_detail" placeholder="Supporting context. What changed, for which team, and what does it mean for the business?" style="min-height:60px;"></textarea>';
+  document.getElementById('winList').appendChild(row);
+}
+
+function removeWin(id) {
+  var row = document.getElementById('wrow_' + id);
+  if (row) row.remove();
+}
+
+// ---- GENERATE ----
+function generateEBR() {
+  var customer = val('customerName') || 'Customer';
+  var ebrDate = fmtDate(val('ebrDate'));
+  var se = val('seName') || 'SE';
+  var ae = val('aeName');
+  var audience = val('audience');
+  var p1 = val('priority1');
+  var p2 = val('priority2');
+  var p3 = val('priority3');
+  var matLevel = parseInt(val('maturityLevel')) || 0;
+  var matContext = val('maturityContext');
+  var risk = val('risk') || 'No specific risk noted.';
+  var mitigation = val('mitigation') || 'To be determined.';
+  var expWhat = val('expansionWhat');
+  var expWhy = val('expansionWhy');
+  var capName = val('capabilityName');
+  var capStatus = val('capabilityStatus');
+  var capRelevance = val('capabilityRelevance');
+  var theAsk = val('theAsk') || 'To be defined.';
+
+  // Title + meta
+  document.getElementById('ebrTitle').textContent = customer + ' Executive Business Review';
+  var meta = [];
+  if (ebrDate) meta.push('<strong>' + ebrDate + '</strong>');
+  if (se) meta.push('SE: <strong>' + esc(se) + '</strong>');
+  if (ae) meta.push('AE: <strong>' + esc(ae) + '</strong>');
+  if (audience) meta.push('Audience: <strong>' + esc(audience) + '</strong>');
+  document.getElementById('ebrMeta').innerHTML = meta.map(function(m) { return '<span class="ebr-meta-item">' + m + '</span>'; }).join('');
+
+  // Opening framing
+  var priorities = [p1, p2, p3].filter(Boolean);
+  var priorityText = priorities.length > 0
+    ? 'My role today is to give you a clear picture of where you are technically, what has changed since we last met, and what I believe the most important next step is given your priorities around ' + priorities.join(', ') + '.'
+    : 'My role today is to give you a clear picture of where you are technically, what has changed since we last met, and what I believe the most important next step is.';
+  document.getElementById('ebrOpening').textContent = 'I am ' + se + ', the Sales Engineer supporting your account at ' + (ae ? ae + "'s" : 'our') + ' team. ' + priorityText;
+
+  // Maturity
+  if (matLevel > 0) {
+    var mat = MATURITY_DATA[matLevel];
+    document.getElementById('ebrMaturityBadge').innerHTML =
+      '<div class="maturity-badge-icon">' + mat.icon + '</div>' +
+      '<div class="maturity-badge-label">' + mat.label + '</div>' +
+      '<div class="maturity-badge-sub">' + mat.sub + '</div>';
+    document.getElementById('ebrMaturityBar').className = 'maturity-bar-fill ' + mat.cssClass;
+  } else {
+    document.getElementById('ebrMaturityBadge').innerHTML = '<div class="maturity-badge-sub" style="color:var(--muted)">Not specified</div>';
+  }
+  document.getElementById('ebrMaturityContext').textContent = matContext || '';
+
+  // Wins
+  var winsHTML = '';
+  document.querySelectorAll('[id^="win_"][id$="_headline"]').forEach(function(el) {
+    var base = el.id.replace('_headline', '');
+    var detail = document.getElementById(base + '_detail');
+    var headline = el.value.trim();
+    var detailText = detail ? detail.value.trim() : '';
+    if (!headline) return;
+    winsHTML += '<div class="win-item"><div class="win-bullet"></div><div class="win-content"><div class="win-headline">' + esc(headline) + '</div>' + (detailText ? '<div class="win-detail">' + esc(detailText) + '</div>' : '') + '</div></div>';
+  });
+  document.getElementById('ebrWins').innerHTML = winsHTML || '<div style="color:var(--muted);font-style:italic;font-size:14px;">No wins added.</div>';
+
+  // Risk
+  document.getElementById('ebrRisk').textContent = risk;
+  document.getElementById('ebrMitigation').textContent = mitigation;
+
+  // Expansion
+  var expansionText = '';
+  if (expWhat && expWhy) { expansionText = expWhat + ' ' + expWhy; }
+  else if (expWhat) { expansionText = expWhat; }
+  else { expansionText = 'Expansion opportunity to be defined.'; }
+  document.getElementById('ebrExpansion').textContent = expansionText;
+
+  // Capability
+  var capSection = document.getElementById('ebrCapabilitySection');
+  if (capName) {
+    document.getElementById('ebrCapName').textContent = capName;
+    document.getElementById('ebrCapStatus').textContent = ' — ' + capStatus;
+    document.getElementById('ebrCapRelevance').textContent = capRelevance || '';
+    capSection.style.display = '';
+  } else {
+    capSection.style.display = 'none';
+  }
+
+  // Ask
+  document.getElementById('ebrAsk').textContent = theAsk;
+
+  // Footer
+  document.getElementById('ebrFooterLeft').textContent = 'Prepared ' + new Date().toLocaleDateString('en-US', {month:'long', day:'numeric', year:'numeric'});
+
+  // Build copy text
+  buildCopyText(customer, ebrDate, se, ae, priorities, risk, mitigation, expansionText, capName, capStatus, capRelevance, theAsk);
+
+  var out = document.getElementById('output');
+  out.classList.add('show');
+  setTimeout(function() { out.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 100);
+  document.title = customer + ' EBR | Field Ready';
+}
+
+function buildCopyText(customer, date, se, ae, priorities, risk, mitigation, expansion, capName, capStatus, capRelevance, ask) {
+  var lines = [];
+  lines.push('SE CONTRIBUTION: ' + customer + ' Executive Business Review');
+  if (date) lines.push('Date: ' + date);
+  if (se) lines.push('SE: ' + se);
+  if (ae) lines.push('AE: ' + ae);
+  lines.push('');
+  if (priorities.length) { lines.push('ANCHORED TO PRIORITIES'); priorities.forEach(function(p) { lines.push('- ' + p); }); lines.push(''); }
+  lines.push('VALUE DELIVERED');
+  document.querySelectorAll('[id^="win_"][id$="_headline"]').forEach(function(el) {
+    var h = el.value.trim(); if (h) lines.push('- ' + h);
+  });
+  lines.push('');
+  lines.push('RISK TO FLAG');
+  lines.push(risk);
+  lines.push('Recommendation: ' + mitigation);
+  lines.push('');
+  lines.push("WHAT'S NEXT");
+  lines.push(expansion);
+  if (capName) { lines.push(''); lines.push('PRODUCT UPDATE: ' + capName + ' (' + capStatus + ')'); if (capRelevance) lines.push(capRelevance); }
+  lines.push('');
+  lines.push('THE ASK');
+  lines.push(ask);
+  lines.push('');
+  lines.push('Built with Field Ready by Jason Landers: jasonlanders.com/field-ready');
+  document.getElementById('btnCopy').dataset.text = lines.join('\n');
+}
+
+function copyEBR() {
+  var text = document.getElementById('btnCopy').dataset.text || '';
+  navigator.clipboard.writeText(text).then(function() {
+    var btn = document.getElementById('btnCopy');
+    btn.textContent = '\u2713 Copied!';
+    btn.classList.add('copied');
+    setTimeout(function() { btn.textContent = 'Copy as text'; btn.classList.remove('copied'); }, 2500);
+  });
+}
+
+function resetBuilder() {
+  document.getElementById('output').classList.remove('show');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  document.title = 'EBR Builder | Field Ready';
+}
+
+function val(id) { var el = document.getElementById(id); return el ? el.value.trim() : ''; }
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function fmtDate(d) {
+  if (!d) return '';
+  var p = d.split('-');
+  if (p.length !== 3) return d;
+  var m = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return m[parseInt(p[1])-1] + ' ' + parseInt(p[2]) + ', ' + p[0];
+}
+
+// Init default wins
+document.addEventListener('DOMContentLoaded', function() {
+  addWin(); addWin();
+});
+</script>
+</body>
+</html>
