@@ -342,23 +342,31 @@
           <label class="field-label">SE (you)</label>
           <input type="text" id="seName" placeholder="Your name" />
           <input type="text" id="seRole" placeholder="Role (e.g. Senior SE)" style="margin-top:8px;" />
+          <input type="text" id="seEmail" placeholder="Email" style="margin-top:8px;" />
+          <input type="text" id="sePhone" placeholder="Phone (optional)" style="margin-top:8px;" />
         </div>
         <div class="field">
           <label class="field-label">AE</label>
           <input type="text" id="aeName" placeholder="AE name" />
           <input type="text" id="aeRole" placeholder="Role (e.g. Account Executive)" style="margin-top:8px;" />
+          <input type="text" id="aeEmail" placeholder="Email" style="margin-top:8px;" />
+          <input type="text" id="aePhone" placeholder="Phone (optional)" style="margin-top:8px;" />
         </div>
       </div>
       <div class="two-col">
         <div class="field">
-          <label class="field-label">Customer Champion</label>
-          <input type="text" id="champName" placeholder="Champion name" />
+          <label class="field-label">Primary Customer Contact</label>
+          <input type="text" id="champName" placeholder="Name" />
           <input type="text" id="champRole" placeholder="Title" style="margin-top:8px;" />
+          <input type="text" id="champEmail" placeholder="Email" style="margin-top:8px;" />
+          <input type="text" id="champPhone" placeholder="Phone (optional)" style="margin-top:8px;" />
         </div>
         <div class="field">
           <label class="field-label">Customer Technical Contact</label>
-          <input type="text" id="techName" placeholder="Technical contact name" />
+          <input type="text" id="techName" placeholder="Name" />
           <input type="text" id="techRole" placeholder="Title" style="margin-top:8px;" />
+          <input type="text" id="techEmail" placeholder="Email" style="margin-top:8px;" />
+          <input type="text" id="techPhone" placeholder="Phone (optional)" style="margin-top:8px;" />
         </div>
       </div>
     </div>
@@ -608,13 +616,17 @@ function generateMAP() {
 
   // Contacts
   var contacts = [
-    { side: 'vendor', label: 'SE', name: val('seName'), role: val('seRole') },
-    { side: 'vendor', label: 'AE', name: val('aeName'), role: val('aeRole') },
-    { side: 'customer', label: 'Champion', name: val('champName'), role: val('champRole') },
-    { side: 'customer', label: 'Technical Contact', name: val('techName'), role: val('techRole') }
+    { side: 'vendor', label: 'SE', name: val('seName'), role: val('seRole'), email: val('seEmail'), phone: val('sePhone') },
+    { side: 'vendor', label: 'AE', name: val('aeName'), role: val('aeRole'), email: val('aeEmail'), phone: val('aePhone') },
+    { side: 'customer', label: 'Primary Contact', name: val('champName'), role: val('champRole'), email: val('champEmail'), phone: val('champPhone') },
+    { side: 'customer', label: 'Technical Contact', name: val('techName'), role: val('techRole'), email: val('techEmail'), phone: val('techPhone') }
   ];
   var contactsHTML = contacts.filter(function(c) { return c.name; }).map(function(c) {
-    return '<div class="contact-card"><div class="contact-side ' + c.side + '">' + esc(c.label) + '</div><div class="contact-name">' + esc(c.name) + '</div><div class="contact-role">' + esc(c.role||'') + '</div></div>';
+    var details = '';
+    if (c.role) details += '<div class="contact-role">' + esc(c.role) + '</div>';
+    if (c.email) details += '<div class="contact-role"><a href="mailto:' + esc(c.email) + '" style="color:var(--accent);text-decoration:none;">' + esc(c.email) + '</a></div>';
+    if (c.phone) details += '<div class="contact-role">' + esc(c.phone) + '</div>';
+    return '<div class="contact-card"><div class="contact-side ' + c.side + '">' + esc(c.label) + '</div><div class="contact-name">' + esc(c.name) + '</div>' + details + '</div>';
   }).join('');
   document.getElementById('mapContacts').innerHTML = contactsHTML || '<div style="color:var(--muted);font-style:italic;font-size:14px;grid-column:1/-1;">No contacts added</div>';
 
@@ -806,27 +818,28 @@ async function _buildXLS() {
 
   // Contacts
   sectionHdr(ws1, 8, 'KEY CONTACTS', 4);
-  var contactHdrRow = ws1.addRow(['Role', 'Name', 'Title', '']);
+  ws1.columns = [{ width: 26 }, { width: 30 }, { width: 20 }, { width: 30 }];
+  var contactHdrRow = ws1.addRow(['Role', 'Name / Title', 'Email', 'Phone']);
   contactHdrRow.height = 18;
-  ['A','B','C'].forEach(function(col) {
-    var c = ws1.getCell('A9').worksheet.getCell(9, ['A','B','C','D'].indexOf(col)+1);
-    c.style = { font: { bold: true, name: 'Calibri', size: 10, color: { argb: 'FF' + PURPLE } }, fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF' + PURPLE_LIGHT } }, alignment: { vertical: 'middle' } };
-  });
+  for (var ch = 1; ch <= 4; ch++) {
+    contactHdrRow.getCell(ch).style = { font: { bold: true, name: 'Calibri', size: 10, color: { argb: 'FF' + WHITE } }, fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF' + PURPLE } }, alignment: { vertical: 'middle' } };
+  }
   var contacts = [
-    ['Sales Engineer', val('seName'), val('seRole')],
-    ['Account Executive', val('aeName'), val('aeRole')],
-    ['Customer Champion', val('champName'), val('champRole')],
-    ['Customer Technical Contact', val('techName'), val('techRole')]
+    ['Sales Engineer', val('seName') + (val('seRole') ? '\n' + val('seRole') : ''), val('seEmail'), val('sePhone')],
+    ['Account Executive', val('aeName') + (val('aeRole') ? '\n' + val('aeRole') : ''), val('aeEmail'), val('aePhone')],
+    ['Primary Contact', val('champName') + (val('champRole') ? '\n' + val('champRole') : ''), val('champEmail'), val('champPhone')],
+    ['Technical Contact', val('techName') + (val('techRole') ? '\n' + val('techRole') : ''), val('techEmail'), val('techPhone')]
   ];
   contacts.forEach(function(c, i) {
-    if (!c[1]) return;
+    if (!c[1] || c[1].trim() === '') return;
     var r = ws1.addRow(c);
-    r.height = 18;
+    r.height = 30;
     var bg = i % 2 === 0 ? GRAY_BG : WHITE;
-    for (var col = 1; col <= 3; col++) {
-      r.getCell(col).style = { font: { name: 'Calibri', size: 10 }, fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF' + bg } }, alignment: { vertical: 'middle' } };
-    }
-    r.getCell(1).style.font = { bold: true, name: 'Calibri', size: 10 };
+    r.getCell(1).style = { font: { bold: true, name: 'Calibri', size: 10 }, fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF' + bg } }, alignment: { vertical: 'middle' } };
+    r.getCell(2).style = { font: { name: 'Calibri', size: 10 }, fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF' + bg } }, alignment: { vertical: 'middle', wrapText: true } };
+    r.getCell(3).style = { font: { name: 'Calibri', size: 10, color: { argb: 'FF' + PURPLE }, underline: true }, fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF' + bg } }, alignment: { vertical: 'middle' } };
+    if (c[2]) { r.getCell(3).value = { text: c[2], hyperlink: 'mailto:' + c[2] }; }
+    r.getCell(4).style = { font: { name: 'Calibri', size: 10 }, fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF' + bg } }, alignment: { vertical: 'middle' } };
   });
 
   ws1.addRow([]).height = 8;
