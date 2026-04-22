@@ -35,6 +35,63 @@
     <priority>0.7</priority>
   </url>
 
+  <!-- New articles -->
+  <url>
+    <loc>https://jasonlanders.com/articles/the-nine-month-problem</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://jasonlanders.com/articles/discovery-that-actually-works</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://jasonlanders.com/articles/how-to-run-a-great-demo</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://jasonlanders.com/articles/building-technical-champions</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://jasonlanders.com/articles/handling-technical-objections</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://jasonlanders.com/articles/competitive-deals-for-ses</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://jasonlanders.com/articles/the-ae-se-partnership</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://jasonlanders.com/articles/se-comp-and-career</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://jasonlanders.com/articles/se-metrics-that-matter</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://jasonlanders.com/articles/se-manager-first-90-days</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://jasonlanders.com/articles/ai-tools-for-ses-right-now</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
   <!-- Field Ready tools: Assessment & Planning -->
   <url>
     <loc>https://jasonlanders.com/field-ready/ai-readiness</loc>
