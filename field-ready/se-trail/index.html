@@ -1,0 +1,1455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta property="og:title" content="The SE Trail | Field Ready" />
+  <meta property="og:description" content="Navigate your first enterprise deal over 90 days. A browser game for Sales Engineers and anyone curious about the role." />
+  <meta property="og:url" content="https://jasonlanders.com/field-ready/se-trail" />
+  <meta property="og:type" content="website" />
+  <script defer src="https://umami-tau-drab.vercel.app/script.js" data-website-id="23015384-bcae-4732-9665-a39f261647e1"></script>
+  <title>The SE Trail</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { width: 100%; height: 100%; background: #0a0612; overflow: hidden; }
+    #game-container { width: 100%; height: 100%; }
+    canvas { display: block; }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
+</head>
+<body>
+<div id="game-container"></div>
+<script>
+// ============================================================
+// THE SE TRAIL
+// A Sales Engineering deal simulation game
+// ============================================================
+
+const W = window.innerWidth;
+const H = window.innerHeight;
+
+// ---- GLOBAL GAME STATE ----
+const STATE = {
+  dealHealth: 60,
+  energy: 8,
+  championStrength: 35,
+  day: 1,
+  act: 1,
+  actName: 'Discovery',
+  completed: [],        // scenario IDs completed this run
+  feedbackQueue: [],    // pending feedback messages
+  lastChoice: null,
+  streak: 0,
+};
+
+function resetState() {
+  STATE.dealHealth = 60;
+  STATE.energy = 8;
+  STATE.championStrength = 35;
+  STATE.day = 1;
+  STATE.act = 1;
+  STATE.actName = 'Discovery';
+  STATE.completed = [];
+  STATE.feedbackQueue = [];
+  STATE.lastChoice = null;
+  STATE.streak = 0;
+}
+
+// ---- SCENARIOS ----
+const SCENARIOS = [
+  // ACT 1: DISCOVERY
+  {
+    id: 'disc_1',
+    location: 'Axiom Systems',
+    act: 1,
+    type: 'decision',
+    title: 'First Discovery Call',
+    context: 'Priya just described a major P1 incident last quarter. Three engineers were paged at 2am. You\'re sitting in a glass conference room.',
+    speaker: { name: 'Priya Sharma', role: 'Senior Engineer, Axiom', emoji: '🧑‍💻', color: '#60a5fa' },
+    quote: '"Our problem honestly isn\'t the tools. Nobody owns the alert taxonomy. Everyone sets their own thresholds. When a real incident hits, we\'re drowning in noise."',
+    choices: [
+      { text: '"Tell me more , what does a real incident actually look like for your team when that hits?"', tags: ['discovery', 'open'], deal: 14, champion: 12, energy: -1, feedback: 'Great open question. Priya opens up , she mentions two engineers left last year. You\'ve hit something real.' },
+      { text: '"We have an alert management module that handles exactly that. Let me show you."', tags: ['pitch', 'product'], deal: -12, champion: -5, energy: -1, feedback: 'Priya goes quiet. You pitched before you understood. Marcus checks his phone.' },
+      { text: '"What would it look like for your team if the noise was gone by next quarter?"', tags: ['future', 'vision'], deal: 10, champion: 8, energy: -1, feedback: 'Good vision question. Priya smiles slightly. Marcus leans in.' },
+      { text: '"How many alerts per day are you seeing across all tools?"', tags: ['quantify', 'discovery'], deal: 7, champion: 5, energy: -1, feedback: 'Solid quantifying move. Priya gives you a number: 400/day. You now have data.' },
+    ]
+  },
+  {
+    id: 'disc_2',
+    location: 'Axiom Systems',
+    act: 1,
+    type: 'decision',
+    title: 'The Retention Admission',
+    context: 'Priya let slip that two engineers left last year. Marcus, the VP, is watching to see how you handle it.',
+    speaker: { name: 'Priya Sharma', role: 'Senior Engineer, Axiom', emoji: '🧑‍💻', color: '#60a5fa' },
+    quote: '"I probably shouldn\'t say this, but on-call was part of why they left. My team is tired."',
+    choices: [
+      { text: '"That\'s significant. What happens to the remaining team when someone leaves mid-deal , how does that ripple?"', tags: ['impact', 'discovery'], deal: 15, champion: 14, energy: -1, feedback: 'You stayed in discovery mode. Priya is now your ally , she just told you the real cost.' },
+      { text: '"We help retention , our customers report 30% reduction in on-call incidents."', tags: ['stat', 'pitch'], deal: -8, champion: -4, energy: -1, feedback: 'Stat too soon. The moment needed empathy, not a slide.' },
+      { text: '"I appreciate you sharing that. Has Marcus seen the full picture of what on-call is costing the team?"', tags: ['champion', 'executive'], deal: 12, champion: 16, energy: -1, feedback: 'Excellent. You helped Priya think about building the business case upward. She\'s now actively thinking about this.' },
+      { text: '"That makes sense. A lot of teams struggle with this."', tags: ['empathy', 'neutral'], deal: 4, champion: 3, energy: -1, feedback: 'Too generic. You had a live wire and you let it cool.' },
+    ]
+  },
+  {
+    id: 'coffee_1',
+    location: 'The Corner',
+    act: 1,
+    type: 'decision',
+    title: 'Coffee with Your Champion',
+    context: 'Priya suggested grabbing coffee after the meeting. This is off the record. She\'s deciding whether she trusts you.',
+    speaker: { name: 'Priya Sharma', role: 'Senior Engineer, Axiom', emoji: '🧑‍💻', color: '#60a5fa' },
+    quote: '"Between us , Marcus is under a lot of pressure from the board on infrastructure cost. I don\'t know if he\'ll spend unless the number is really obvious."',
+    choices: [
+      { text: '"What would \'really obvious\' look like to him? What\'s his frame for a good investment?"', tags: ['executive', 'champion'], deal: 14, champion: 18, energy: -1, feedback: 'Perfect. You\'re helping Priya coach Marcus. She starts sketching out what the business case could look like.' },
+      { text: '"That\'s useful , I\'ll make sure we have clear ROI numbers in the proposal."', tags: ['proposal', 'roi'], deal: 6, champion: 6, energy: -1, feedback: 'Okay response. But you missed the chance to make Priya your internal champion instead of a messenger.' },
+      { text: '"Don\'t worry , we have a strong pricing team. We\'ll make the number work."', tags: ['price', 'discount'], deal: -6, champion: -8, energy: -1, feedback: 'You implied you can discount before you\'ve even built value. Priya looks uncertain.' },
+      { text: '"I appreciate the intel. I\'ll handle Marcus directly."', tags: ['executive', 'bypass'], deal: -10, champion: -15, energy: -1, feedback: 'Mistake. Priya is your champion. You just told her she\'s not needed for the close. She pulls back.' },
+    ]
+  },
+  // ACT 2: DEMO
+  {
+    id: 'demo_1',
+    location: 'Axiom Systems',
+    act: 2,
+    type: 'decision',
+    title: 'The Technical Demo',
+    context: 'You\'re in the big conference room. Priya brought two engineers. Marcus is dialed in remotely.',
+    speaker: { name: 'Dev , Backend Engineer', role: 'Backend Infra, Axiom', emoji: '🧑‍🔬', color: '#a78bfa' },
+    quote: '"What does the API integration look like? We\'re Kubernetes-native. We\'ve been burned by tools that say they support K8s and then it\'s just a Helm chart wrapper."',
+    choices: [
+      { text: '"Tell me about your current K8s setup , what version, what operators are you running? I want to make sure I show you exactly what\'s relevant."', tags: ['technical', 'discovery'], deal: 16, champion: 10, energy: -1, feedback: 'Dev nods. You asked before you answered. The next 20 minutes are laser-focused on their stack.' },
+      { text: '"We have native K8s support , Operators, CRDs, full lifecycle management. Here let me show the Helm chart."', tags: ['feature', 'demo'], deal: 5, champion: 3, energy: -1, feedback: 'You showed the thing they explicitly said they\'re tired of. Dev is already skeptical.' },
+      { text: '"That\'s fair skepticism. What would \'genuinely K8s-native\' need to look like for your team to believe it?"', tags: ['objection', 'discovery'], deal: 13, champion: 12, energy: -1, feedback: 'Smart reframe. Dev defines the success criteria. Now you\'re showing against his rubric, not yours.' },
+      { text: '"Our platform engineers can walk your team through the integration post-sale."', tags: ['defer', 'future'], deal: -5, champion: -6, energy: -1, feedback: 'You deferred on a live technical question in the room. Dev\'s body language closes off.' },
+    ]
+  },
+  {
+    id: 'demo_2',
+    location: 'Axiom Systems',
+    act: 2,
+    type: 'decision',
+    title: 'The Competitor Question',
+    context: 'Marcus joined the call late. He\'s direct. He pulls up a competitor\'s slide deck on his screen.',
+    speaker: { name: 'Marcus Reid', role: 'VP Engineering, Axiom', emoji: '🧑‍💼', color: '#f59e0b' },
+    quote: '"Vertex Solutions told us they can do everything you just showed , and they said it\'s 40% cheaper. Why should I pay more?"',
+    choices: [
+      { text: '"What did Vertex actually show you? I want to understand what you\'re comparing before I respond."', tags: ['discovery', 'competitive'], deal: 14, champion: 8, energy: -1, feedback: 'Marcus respects the composure. He describes what Vertex showed. You spot three gaps immediately.' },
+      { text: '"Vertex is a point solution. We\'re a platform. You\'ll pay Vertex plus integration plus maintenance , here\'s a TCO breakdown."', tags: ['tco', 'competitive'], deal: 8, champion: 4, energy: -1, feedback: 'Decent response. Priya nods. Marcus scribbles something. Not perfect but you defended well.' },
+      { text: '"If price is the main driver, we can look at packaging options."', tags: ['discount', 'price'], deal: -10, champion: -5, energy: -1, feedback: 'You dropped to price before value was established. Marcus now anchors every future conversation on cost.' },
+      { text: '"Vertex doesn\'t have what you need. They\'re known for overselling K8s support specifically."', tags: ['competitive', 'attack'], deal: -8, champion: -3, energy: -1, feedback: 'Attacking a competitor directly backfired. Marcus likes Vertex\'s rep. Now he\'s defensive.' },
+    ]
+  },
+  {
+    id: 'hq_1',
+    location: 'Your HQ',
+    act: 2,
+    type: 'decision',
+    title: 'Manager Check-In',
+    context: 'Sarah, your manager, is asking for a deal update. Board review is next week.',
+    speaker: { name: 'Sarah Chen', role: 'Your Manager', emoji: '👩‍💼', color: '#d946ef' },
+    quote: '"Where does this deal actually stand? I need the honest version, not the CRM version."',
+    choices: [
+      { text: '"Honestly? Champion is strong, technical win is looking good, but Marcus is price-sensitive and we don\'t have executive sponsorship above him yet."', tags: ['honest', 'internal'], deal: 10, champion: 5, energy: 2, feedback: 'Sarah appreciates the honesty. She connects you with their CFO contact from a previous deal. Your energy recovers.' },
+      { text: '"We\'re in great shape , technical eval went well and the champion loves us."', tags: ['spin', 'optimistic'], deal: -4, champion: 0, energy: 1, feedback: 'Sarah has done this long enough to read between the lines. She\'s now less confident in your judgment.' },
+      { text: '"I\'m worried about Vertex. They came in 40% cheaper and Marcus mentioned it twice."', tags: ['competitive', 'worried'], deal: 3, champion: 0, energy: 1, feedback: 'Honest on the threat but you led with fear. Sarah reframes: \'What\'s your plan?\'' },
+      { text: '"Can we get an executive sponsor involved , maybe someone above Marcus?"', tags: ['executive', 'ask'], deal: 8, champion: 6, energy: 2, feedback: 'Good ask. Sarah makes a call. You now have a path to their CTO. Energy recovers from the break.' },
+    ]
+  },
+  // ACT 3: CLOSE
+  {
+    id: 'close_1',
+    location: 'Axiom Systems',
+    act: 3,
+    type: 'decision',
+    title: 'The Objection',
+    context: 'The proposal is in. It\'s been four days. Marcus calls out of nowhere.',
+    speaker: { name: 'Marcus Reid', role: 'VP Engineering, Axiom', emoji: '🧑‍💼', color: '#f59e0b' },
+    quote: '"We love the tech. But I need to go back to the board with a tighter number. I\'m looking at roughly 30% off."',
+    choices: [
+      { text: '"Help me understand , is budget the constraint, or is this about demonstrating value to the board? Those are different problems."', tags: ['discovery', 'close'], deal: 14, champion: 8, energy: -1, feedback: 'Marcus pauses. It\'s actually about the board optics. You start talking about phasing the contract instead of discounting.' },
+      { text: '"30% is outside my authority, but let me see what I can do."', tags: ['discount', 'authority'], deal: -8, champion: -5, energy: -1, feedback: 'You implied you might get there. Marcus now anchors on 30% as the floor.' },
+      { text: '"If we can structure this as a phased rollout , start with on-call and expand after Q1 , we can hit a lower initial number without reducing the value."', tags: ['structure', 'creative'], deal: 12, champion: 10, energy: -1, feedback: 'Great creative close. Priya later texts you: \'Marcus liked that framing.\'' },
+      { text: '"Let me check with my pricing team and I\'ll get back to you."', tags: ['defer', 'delay'], deal: -5, champion: -3, energy: -1, feedback: 'Momentum dies. Vertex uses the silence to push harder.' },
+    ]
+  },
+  {
+    id: 'close_2',
+    location: 'The Corner',
+    act: 3,
+    type: 'decision',
+    title: 'Last Coffee Before the Board Vote',
+    context: 'Priya texted you. She wants to meet before the internal vote. She sounds nervous.',
+    speaker: { name: 'Priya Sharma', role: 'Senior Engineer, Axiom', emoji: '🧑‍💻', color: '#60a5fa' },
+    quote: '"Marcus is going to present both vendors tomorrow. I\'ve told him I prefer you. But he\'s going to ask me about the integration risk. I don\'t know what to say."',
+    choices: [
+      { text: '"Let me help you prepare for that question right now. What does Marcus worry about most with integrations?"', tags: ['champion', 'coach'], deal: 16, champion: 20, energy: -1, feedback: 'You spent 30 minutes coaching Priya. She walks into that board room armed. You turned a nervous ally into a confident advocate.' },
+      { text: '"Tell him our integration team will handle everything. We do this all the time."', tags: ['reassure', 'vague'], deal: 4, champion: 2, energy: -1, feedback: 'Too vague. Priya can\'t repeat that in a boardroom without sounding like she\'s just taking your word for it.' },
+      { text: '"Can I join the board meeting to present directly?"', tags: ['executive', 'direct'], deal: 6, champion: -5, energy: -1, feedback: 'Priya shifts uncomfortably. You just asked to bypass her internally. She feels sidelined.' },
+      { text: '"Just tell him the technical team already validated it , that\'s true."', tags: ['fact', 'brief'], deal: 8, champion: 6, energy: -1, feedback: 'Not bad. Priya uses it. But it\'s a thin line in the boardroom.' },
+    ]
+  },
+];
+
+// Scramble questions
+const SCRAMBLE_QS = [
+  {
+    context: 'You\'re in the first 10 minutes of a discovery call. The prospect mentions they\'ve "tried a few tools already."',
+    speaker: { name: 'Priya Sharma', role: 'Senior Engineer', emoji: '🧑‍💻', color: '#60a5fa' },
+    quote: '"We\'ve tried two other platforms in the last 18 months. Neither stuck."',
+    options: [
+      { text: '"What happened with those tools , what made them not stick?"', best: true, label: 'Dig into failure mode' },
+      { text: '"Our platform is different , here\'s what sets us apart."', best: false, label: 'Differentiate immediately' },
+      { text: '"What are you using now as a stopgap?"', best: false, label: 'Current state question' },
+    ],
+    bestWhy: 'You learn the real failure mode , not features, but adoption. That shapes your whole pitch.'
+  },
+  {
+    context: 'Mid-demo. A technical stakeholder suddenly asks a question you weren\'t expecting.',
+    speaker: { name: 'Dev , Backend Engineer', role: 'Infra Lead, Axiom', emoji: '🧑‍🔬', color: '#a78bfa' },
+    quote: '"Does this work with our internal secrets manager? It\'s not Vault , it\'s something we built in-house."',
+    options: [
+      { text: '"Tell me more about how it works , then I\'ll give you an honest answer."', best: true, label: 'Clarify before committing' },
+      { text: '"Yes, we have flexible integration support , we\'ll make it work."', best: false, label: 'Over-commit' },
+      { text: '"Let me check with our engineering team and follow up."', best: false, label: 'Defer and follow up' },
+    ],
+    bestWhy: 'You get the details and give an honest answer. "We\'ll make it work" breaks trust if you can\'t.'
+  },
+  {
+    context: 'The VP asks about ROI during a business review. The deal is two weeks from close.',
+    speaker: { name: 'Marcus Reid', role: 'VP Engineering', emoji: '🧑‍💼', color: '#f59e0b' },
+    quote: '"What\'s the expected ROI here? My CFO is going to ask."',
+    options: [
+      { text: '"What\'s the CFO\'s frame , cost reduction, engineer time, or avoiding incidents? That shapes the number."', best: true, label: 'Understand their CFO\'s lens first' },
+      { text: '"Customers typically see 3x ROI in 12 months. I can send a case study."', best: false, label: 'Generic ROI claim' },
+      { text: '"Let me build out a custom ROI model for you this week."', best: false, label: 'Promise a model' },
+    ],
+    bestWhy: 'You learn what the CFO values, then build ROI in their language , not yours.'
+  },
+  {
+    context: 'A deal has been quiet for two weeks. The champion isn\'t returning calls.',
+    speaker: { name: 'Alex Torres', role: 'Your AE', emoji: '🧑‍💻', color: '#22c55e' },
+    quote: '"Should we just send a \'just checking in\' email? I\'m worried we\'re losing it."',
+    options: [
+      { text: '"No , let\'s lead with something useful. What problem are they trying to solve right now internally?"', best: true, label: 'Lead with value not check-in' },
+      { text: '"Yes, just touch base. Keep it light."', best: false, label: 'Generic follow-up' },
+      { text: '"Let\'s cc the VP to get attention."', best: false, label: 'Escalate over champion' },
+    ],
+    bestWhy: 'A check-in email signals you have nothing to offer. Bring value or insight to re-open.'
+  },
+  {
+    context: 'End of a discovery call. The prospect seemed engaged but said nothing definitive.',
+    speaker: { name: 'Marcus Reid', role: 'VP Engineering', emoji: '🧑‍💼', color: '#f59e0b' },
+    quote: '"Alright, well , this was helpful. We\'ll be in touch."',
+    options: [
+      { text: '"Before we close , what would need to be true for you to want a follow-up session in the next two weeks?"', best: true, label: 'Qualify the next step' },
+      { text: '"Great! I\'ll send over some materials and we\'ll go from there."', best: false, label: 'Passive follow-through' },
+      { text: '"Can we schedule a demo for next week?"', best: false, label: 'Push for demo' },
+    ],
+    bestWhy: 'You\'re qualifying whether there\'s a real next step before you invest more time.'
+  },
+];
+
+// ============================================================
+// SCENE: TITLE
+// ============================================================
+class TitleScene extends Phaser.Scene {
+  constructor() { super({ key: 'TitleScene' }); }
+
+  create() {
+    resetState();
+    const cx = W / 2;
+    const g = this.add.graphics();
+
+    // Background
+    g.fillStyle(0x0a0612);
+    g.fillRect(0, 0, W, H);
+
+    
+    // Back link to Field Ready
+    this.add.text(20, 20, '\u2190 Field Ready by Jason Landers', {
+      fontSize: '11px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold',
+      color: '#d946ef', letterSpacing: 1
+    }).setInteractive({ cursor: 'pointer' })
+      .on('pointerdown', () => { window.location.href = '/field-ready/'; })
+      .on('pointerover', function() { this.setAlpha(0.7); })
+      .on('pointerout', function() { this.setAlpha(1); });
+    // Starfield
+    for (let i = 0; i < 120; i++) {
+      const sx = Math.random() * W, sy = Math.random() * H;
+      const br = Math.random() * 0.6 + 0.1;
+      g.fillStyle(0xffffff, br);
+      g.fillCircle(sx, sy, Math.random() * 1.2 + 0.3);
+    }
+
+    // Glow orb behind title
+    g.fillStyle(0xd946ef, 0.04);
+    g.fillCircle(cx, H * 0.38, 300);
+    g.fillStyle(0xd946ef, 0.06);
+    g.fillCircle(cx, H * 0.38, 180);
+
+    // City silhouette strip
+    const skyY = H * 0.72;
+    g.fillStyle(0x0d0618);
+    g.fillRect(0, skyY, W, H - skyY);
+
+    // Draw city silhouette buildings
+    const buildings = [
+      [0, 40, skyY - 40], [60, 30, skyY - 30], [110, 60, skyY - 60],
+      [190, 45, skyY - 45], [255, 80, skyY - 80], [355, 35, skyY - 35],
+      [410, 55, skyY - 55], [485, 90, skyY - 90], [595, 40, skyY - 40],
+      [655, 65, skyY - 65], [740, 50, skyY - 50], [810, 70, skyY - 70],
+      [900, 45, skyY - 45], [960, 85, skyY - 85], [W-80, 55, skyY - 55],
+      [W-10, 40, skyY - 40],
+    ];
+    buildings.forEach(([x, w, y]) => {
+      g.fillStyle(0x100a1c);
+      g.fillRect(x, y, w, H - y);
+      // Lit windows
+      for (let wy = y + 8; wy < skyY - 4; wy += 12) {
+        for (let wx = x + 5; wx < x + w - 8; wx += 10) {
+          if (Math.random() > 0.55) {
+            g.fillStyle(Math.random() > 0.5 ? 0xd946ef : 0x60a5fa, 0.3 + Math.random() * 0.3);
+            g.fillRect(wx, wy, 5, 6);
+          }
+        }
+      }
+    });
+
+    // Road line at bottom of silhouette
+    g.fillStyle(0x2e2448);
+    g.fillRect(0, skyY, W, 3);
+
+    // Title
+    const titleY = H * 0.22;
+    this.add.text(cx, titleY - 18, 'THE', {
+      fontSize: clamp(10, 14, W / 80) + 'px',
+      fontFamily: 'Inter, Georgia, sans-serif',
+      fontStyle: 'bold',
+      color: '#8b7fa8',
+      letterSpacing: 8
+    }).setOrigin(0.5);
+
+    this.add.text(cx, titleY + 20, 'SE Trail', {
+      fontSize: clamp(42, 72, W / 18) + 'px',
+      fontFamily: 'Georgia, serif',
+      fontStyle: 'italic',
+      color: '#ede8f5',
+    }).setOrigin(0.5);
+
+    // Tagline
+    this.add.text(cx, titleY + 80, 'A sales engineering deal simulation', {
+      fontSize: clamp(11, 14, W / 80) + 'px',
+      fontFamily: 'Inter, sans-serif',
+      color: '#8b7fa8',
+      letterSpacing: 1
+    }).setOrigin(0.5);
+
+    // Divider
+    g.lineStyle(1, 0xd946ef, 0.4);
+    g.lineBetween(cx - 60, titleY + 100, cx + 60, titleY + 100);
+
+    // Info block
+    const infoY = titleY + 126;
+    const infos = [
+      '🎯  Navigate a live B2B software deal from discovery to close',
+      '💬  Every response shapes deal health, energy & champion trust',
+      '⚡  Scramble mini-games test your discovery instincts under pressure',
+    ];
+    infos.forEach((txt, i) => {
+      this.add.text(cx, infoY + i * 26, txt, {
+        fontSize: clamp(10, 13, W / 90) + 'px',
+        fontFamily: 'Inter, sans-serif',
+        color: '#a895c0',
+        letterSpacing: 0.5
+      }).setOrigin(0.5);
+    });
+
+    // Start button
+    const btnY = infoY + 100;
+    const btnW = 220, btnH = 50;
+    const btn = this.add.graphics();
+    const drawBtn = (hover) => {
+      btn.clear();
+      btn.fillStyle(hover ? 0xd946ef : 0x1e1530);
+      btn.fillRoundedRect(cx - btnW / 2, btnY, btnW, btnH, 10);
+      btn.lineStyle(2, 0xd946ef);
+      btn.strokeRoundedRect(cx - btnW / 2, btnY, btnW, btnH, 10);
+    };
+    drawBtn(false);
+    const btnTxt = this.add.text(cx, btnY + btnH / 2, 'Start Your Deal', {
+      fontSize: '16px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold',
+      color: '#ede8f5'
+    }).setOrigin(0.5);
+
+    const btnZone = this.add.zone(cx - btnW / 2, btnY, btnW, btnH).setOrigin(0).setInteractive({ cursor: 'pointer' });
+    btnZone.on('pointerover', () => { drawBtn(true); btnTxt.setColor('#ffffff'); });
+    btnZone.on('pointerout', () => { drawBtn(false); btnTxt.setColor('#ede8f5'); });
+    btnZone.on('pointerdown', () => {
+      this.cameras.main.flash(400, 13, 6, 24);
+      this.time.delayedCall(500, () => this.scene.start('CityScene'));
+    });
+
+    // Pulse the start button
+    this.tweens.add({
+      targets: btn,
+      alpha: 0.7,
+      duration: 1200,
+      ease: 'Sine.easeInOut',
+      yoyo: true,
+      repeat: -1
+    });
+
+    // Version tag
+    this.add.text(W - 12, H - 12, 'v1.0', {
+      fontSize: '9px', fontFamily: 'Inter, sans-serif', color: '#2e2249'
+    }).setOrigin(1);
+  }
+}
+
+// ============================================================
+// SCENE: CITY MAP
+// ============================================================
+class CityScene extends Phaser.Scene {
+  constructor() { super({ key: 'CityScene' }); }
+
+  create() {
+    this.cameras.main.setBackgroundColor('#1a3a2a');
+
+    this.drawGround();
+    this.drawRoads();
+    this.drawBuildings();
+    this.drawTrees();
+    this.createCar();
+    this.createHUD();
+    this.createClickTargets();
+    this.createNotification();
+    this.createDayNightOverlay();
+
+    // Show feedback from last decision if any
+    if (STATE.feedbackQueue.length > 0) {
+      this.time.delayedCall(600, () => {
+        this.showFeedback(STATE.feedbackQueue.shift());
+      });
+    }
+
+    // Check win/lose
+    if (STATE.dealHealth <= 0) {
+      this.time.delayedCall(800, () => this.scene.start('OutcomeScene', { won: false }));
+      return;
+    }
+    if (STATE.completed.length >= SCENARIOS.length) {
+      this.time.delayedCall(800, () => this.scene.start('OutcomeScene', { won: STATE.dealHealth >= 50 }));
+      return;
+    }
+
+    // Advance act based on progress
+    const done = STATE.completed.length;
+    if (done >= 6) { STATE.act = 3; STATE.actName = 'Close'; }
+    else if (done >= 3) { STATE.act = 2; STATE.actName = 'Demo'; }
+    else { STATE.act = 1; STATE.actName = 'Discovery'; }
+
+    // Randomly show inbox notifications
+    this.time.addEvent({ delay: 7000, callback: this.showInboxNotif, callbackScope: this, loop: true });
+    // Occasional scramble popup
+    this.time.addEvent({ delay: 18000, callback: this.triggerScramble, callbackScope: this, loop: false });
+  }
+
+  drawGround() {
+    const g = this.add.graphics();
+    g.fillStyle(0x2d5a3a);
+    g.fillRect(0, 0, W, H);
+    g.fillStyle(0x3a3248, 0.5);
+    g.fillRect(0, H * 0.52 - 24, W, 48);
+    g.fillRect(0, H * 0.75 - 20, W, 40);
+    g.fillRect(W * 0.38 - 24, 0, 48, H);
+    g.fillRect(W * 0.72 - 22, 0, 44, H);
+    g.fillStyle(0x2a2040, 0.4);
+    g.fillRect(40, 80, 200, 160);
+    g.fillRect(W - 260, 60, 230, 200);
+    g.fillRect(W * 0.42, H * 0.58, 160, 120);
+    g.fillRect(W * 0.55, H * 0.72, 150, 105);
+  }
+
+  drawRoads() {
+    const g = this.add.graphics();
+    g.fillStyle(0x2e2448);
+    g.fillRect(0, H * 0.52 - 20, W, 40);
+    g.fillRect(0, H * 0.75 - 16, W, 32);
+    g.fillRect(W * 0.38 - 20, 0, 40, H);
+    g.fillRect(W * 0.72 - 18, 0, 36, H);
+    // Center dashes
+    for (let x = 0; x < W; x += 40) {
+      g.fillStyle(0xf59e0b, 0.3);
+      g.fillRect(x, H * 0.52 - 1, 24, 2);
+    }
+    for (let y = 0; y < H; y += 40) {
+      g.fillStyle(0xf59e0b, 0.3);
+      g.fillRect(W * 0.38 - 1, y, 2, 24);
+      g.fillRect(W * 0.72 - 1, y, 2, 24);
+    }
+  }
+
+  drawBuildings() {
+    const g = this.add.graphics();
+
+    // YOUR HQ
+    const [hx, hy, hw, hh] = [60, 90, 180, 130];
+    g.fillStyle(0x000000, 0.3); g.fillRect(hx + 6, hy + 6, hw, hh);
+    g.fillStyle(0x1e1535); g.fillRect(hx, hy, hw, hh);
+    g.lineStyle(2, 0xd946ef); g.strokeRect(hx, hy, hw, hh);
+    g.fillStyle(0xd946ef); g.fillRect(hx, hy, hw, 6);
+    for (let row = 0; row < 4; row++) for (let col = 0; col < 5; col++) {
+      const lit = Math.random() > 0.4;
+      g.fillStyle(lit ? 0xd946ef : 0x271c3d, lit ? 0.4 : 1);
+      g.fillRect(hx + 16 + col * 30, hy + 20 + row * 24, 18, 14);
+    }
+    this.add.text(hx + hw / 2, hy - 18, 'YOUR HQ', { fontSize: '10px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold', color: '#d946ef', letterSpacing: 2 }).setOrigin(0.5);
+
+    // AXIOM SYSTEMS
+    const [ax, ay, aw, ah] = [W - 275, 62, 215, 165];
+    g.fillStyle(0x000000, 0.3); g.fillRect(ax + 8, ay + 8, aw, ah);
+    g.fillStyle(0x0d1f35); g.fillRect(ax, ay, aw, ah);
+    g.lineStyle(2, 0x60a5fa); g.strokeRect(ax, ay, aw, ah);
+    g.fillStyle(0x60a5fa); g.fillRect(ax, ay, aw, 6);
+    for (let row = 0; row < 5; row++) for (let col = 0; col < 6; col++) {
+      const lit = Math.random() > 0.35;
+      g.fillStyle(lit ? 0x60a5fa : 0x0d1f35, lit ? 0.4 : 1);
+      g.fillRect(ax + 14 + col * 32, ay + 20 + row * 26, 20, 16);
+    }
+    this.add.text(ax + aw / 2, ay - 18, 'AXIOM SYSTEMS', { fontSize: '10px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold', color: '#60a5fa', letterSpacing: 2 }).setOrigin(0.5);
+
+    // THE CORNER (coffee shop)
+    const [cx, cy, cw, ch] = [W * 0.44, H * 0.60, 120, 90];
+    g.fillStyle(0x000000, 0.25); g.fillRect(cx + 4, cy + 4, cw, ch);
+    g.fillStyle(0x2d1a0a); g.fillRect(cx, cy, cw, ch);
+    g.lineStyle(2, 0xf59e0b); g.strokeRect(cx, cy, cw, ch);
+    g.fillStyle(0xf59e0b); g.fillRect(cx, cy, cw, 5);
+    g.fillStyle(0xf59e0b, 0.3);
+    for (let i = 0; i < 5; i++) g.fillRect(cx + i * 26, cy + 5, 13, 18);
+    this.add.text(cx + cw / 2, cy - 18, 'THE CORNER', { fontSize: '10px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold', color: '#f59e0b', letterSpacing: 1 }).setOrigin(0.5);
+    this.add.text(cx + cw / 2, cy + ch / 2 + 6, '☕', { fontSize: '22px' }).setOrigin(0.5);
+
+    // VERTEX SOLUTIONS (competitor)
+    const [vx, vy, vw, vh] = [W * 0.57, H * 0.73, 140, 100];
+    g.fillStyle(0x000000, 0.25); g.fillRect(vx + 5, vy + 5, vw, vh);
+    g.fillStyle(0x2d0d0d); g.fillRect(vx, vy, vw, vh);
+    g.lineStyle(2, 0xef4444, 0.6); g.strokeRect(vx, vy, vw, vh);
+    g.fillStyle(0xef4444); g.fillRect(vx, vy, vw, 5);
+    for (let row = 0; row < 3; row++) for (let col = 0; col < 4; col++) {
+      g.fillStyle(0xef4444, 0.18);
+      g.fillRect(vx + 12 + col * 30, vy + 18 + row * 24, 18, 14);
+    }
+    this.add.text(vx + vw / 2, vy - 18, 'VERTEX SOLUTIONS', { fontSize: '9px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold', color: '#ef4444', letterSpacing: 1, alpha: 0.7 }).setOrigin(0.5);
+    this.add.text(vx + vw / 2, vy + vh / 2, '⚠ COMPETITOR', { fontSize: '9px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold', color: '#ef4444', alpha: 0.4 }).setOrigin(0.5);
+  }
+
+  drawTrees() {
+    const g = this.add.graphics();
+    const pts = [
+      [220, 160], [240, 340], [360, 120], [360, 340],
+      [W - 320, 300], [W - 95, 300], [W - 95, 425],
+      [W * 0.38 + 40, H * 0.30], [W * 0.38 - 60, H * 0.35],
+      [140, H * 0.65], [200, H * 0.70],
+    ];
+    pts.forEach(([x, y]) => {
+      g.fillStyle(0x000000, 0.2); g.fillEllipse(x + 3, y + 3, 26, 16);
+      g.fillStyle(0x22c55e); g.fillCircle(x, y, 14);
+      g.fillStyle(0x16a34a); g.fillCircle(x - 4, y - 3, 10);
+      g.fillStyle(0x4ade80, 0.35); g.fillCircle(x + 3, y - 5, 7);
+    });
+  }
+
+  createCar() {
+    this.carG = this.add.graphics();
+    this.carX = 280;
+    this.carY = H * 0.52;
+    this.carPathIdx = 0;
+    this.carPath = [
+      { x: 60, y: H * 0.52 }, { x: W * 0.38 - 20, y: H * 0.52 },
+      { x: W * 0.38 - 20, y: 240 }, { x: W - 170, y: 240 },
+      { x: W - 170, y: H * 0.52 }, { x: W * 0.72 - 18, y: H * 0.52 },
+      { x: W * 0.72 - 18, y: H * 0.62 }, { x: W * 0.46, y: H * 0.62 },
+      { x: W * 0.46, y: H * 0.52 }, { x: 280, y: H * 0.52 },
+    ];
+    this.drawCarAt(this.carX, this.carY);
+    this.moveCar();
+  }
+
+  drawCarAt(x, y) {
+    this.carG.clear();
+    this.carG.fillStyle(0x000000, 0.25);
+    this.carG.fillEllipse(x + 2, y + 8, 38, 12);
+    this.carG.fillStyle(0xd946ef);
+    this.carG.fillRoundedRect(x - 18, y - 8, 36, 16, 4);
+    this.carG.fillStyle(0xffffff, 0.25);
+    this.carG.fillRoundedRect(x - 8, y - 6, 16, 8, 2);
+    this.carG.fillStyle(0x1a1020);
+    this.carG.fillCircle(x - 12, y + 7, 5);
+    this.carG.fillCircle(x + 12, y + 7, 5);
+  }
+
+  moveCar() {
+    const next = this.carPath[this.carPathIdx % this.carPath.length];
+    this.tweens.add({
+      targets: this,
+      carX: next.x, carY: next.y,
+      duration: 2800,
+      ease: 'Linear',
+      onUpdate: () => this.drawCarAt(this.carX, this.carY),
+      onComplete: () => {
+        this.carPathIdx++;
+        this.time.addEvent({ delay: 300, callback: this.moveCar, callbackScope: this });
+      }
+    });
+  }
+
+  createHUD() {
+    const hudH = 100;
+    const hudY = H - hudH;
+    const g = this.add.graphics().setDepth(5);
+
+    g.fillStyle(0x0d0618, 0.97);
+    g.fillRect(0, hudY, W, hudH);
+    g.lineStyle(2, 0xd946ef, 0.5);
+    g.lineBetween(0, hudY, W, hudY);
+
+    // Day / Act
+    this.add.text(20, hudY + 12, 'DAY ' + STATE.day, {
+      fontSize: '17px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold', color: '#d946ef'
+    }).setDepth(6);
+    this.add.text(20, hudY + 36, 'ACT ' + STATE.act + ': ' + STATE.actName.toUpperCase(), {
+      fontSize: '9px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold', color: '#8b7fa8', letterSpacing: 1
+    }).setDepth(6);
+    const prog = STATE.completed.length;
+    this.add.text(20, hudY + 54, 'Scenarios: ' + prog + ' / ' + SCENARIOS.length, {
+      fontSize: '9px', fontFamily: 'Inter, sans-serif', color: '#4a3860'
+    }).setDepth(6);
+
+    // Meters
+    const mx = 170;
+    this.drawHUDMeter(g, mx, hudY + 14, 210, 'DEAL HEALTH', STATE.dealHealth, 0xd946ef, 0xa78bfa);
+    this.drawHUDMeter(g, mx, hudY + 40, 210, 'ENERGY', (STATE.energy / 10) * 100, 0xf59e0b, 0xfde68a);
+    this.drawHUDMeter(g, mx, hudY + 66, 210, 'CHAMPION', STATE.championStrength, 0x22c55e, 0x86efac);
+
+    // Account info box
+    const infoX = mx + 246;
+    g.fillStyle(0x1e1530);
+    g.fillRoundedRect(infoX, hudY + 10, 175, 74, 8);
+    g.lineStyle(1, 0x2e2249);
+    g.strokeRoundedRect(infoX, hudY + 10, 175, 74, 8);
+    this.add.text(infoX + 10, hudY + 19, 'ACTIVE ACCOUNT', {
+      fontSize: '9px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold', color: '#8b7fa8', letterSpacing: 1
+    }).setDepth(6);
+    this.add.text(infoX + 10, hudY + 36, 'Axiom Systems', {
+      fontSize: '13px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold', color: '#ede8f5'
+    }).setDepth(6);
+    this.add.text(infoX + 10, hudY + 55, 'Champion: Priya Sharma', {
+      fontSize: '10px', fontFamily: 'Inter, sans-serif', color: '#60a5fa'
+    }).setDepth(6);
+    this.add.text(infoX + 10, hudY + 70, 'Competitor: Vertex Solutions', {
+      fontSize: '9px', fontFamily: 'Inter, sans-serif', color: '#ef4444', alpha: 0.7
+    }).setDepth(6);
+
+    // Hint
+    const hint = this.nextScenario();
+    const hintTxt = hint
+      ? 'Click ' + hint.location + ' to continue your deal'
+      : 'All scenarios complete , deal concluding...';
+    this.add.text(20, hudY - 20, hintTxt, {
+      fontSize: '11px', fontFamily: 'Inter, sans-serif', color: '#4a3860'
+    }).setDepth(6);
+  }
+
+  drawHUDMeter(g, x, y, width, label, pct, c1, c2) {
+    this.add.text(x, y, label, {
+      fontSize: '9px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold',
+      color: '#8b7fa8', letterSpacing: 1
+    }).setDepth(6);
+    g.fillStyle(0x1e1530);
+    g.fillRoundedRect(x, y + 14, width, 8, 4);
+    const fillW = Math.max(0, Math.min(1, pct / 100)) * width;
+    if (fillW > 0) {
+      g.fillGradientStyle(c1, c2, c1, c2, 1);
+      g.fillRoundedRect(x, y + 14, fillW, 8, 4);
+    }
+    this.add.text(x + width + 8, y + 12, Math.round(pct).toString(), {
+      fontSize: '11px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold', color: '#ede8f5'
+    }).setDepth(6);
+  }
+
+  nextScenario() {
+    return SCENARIOS.find(s => !STATE.completed.includes(s.id) && s.act === STATE.act)
+      || SCENARIOS.find(s => !STATE.completed.includes(s.id));
+  }
+
+  createClickTargets() {
+    const targets = [
+      { x: 60,         y: 90,        w: 180, h: 130, label: 'Axiom Systems', matchKey: 'Axiom Systems', color: 0x60a5fa },
+      { x: W - 275,    y: 62,        w: 215, h: 165, label: 'Axiom Systems', matchKey: 'Axiom Systems', color: 0x60a5fa },
+      { x: 60,         y: 90,        w: 180, h: 130, label: 'Your HQ',       matchKey: 'Your HQ',       color: 0xd946ef },
+      { x: W * 0.44,   y: H * 0.60,  w: 120, h: 90,  label: 'The Corner',   matchKey: 'The Corner',    color: 0xf59e0b },
+    ];
+
+    // Remap: HQ is the left building, Axiom is the right
+    const buildings = [
+      { x: 60,       y: 90,       w: 180, h: 130, key: 'Your HQ',       color: 0xd946ef },
+      { x: W - 275,  y: 62,       w: 215, h: 165, key: 'Axiom Systems', color: 0x60a5fa },
+      { x: W * 0.44, y: H * 0.60, w: 120, h: 90,  key: 'The Corner',    color: 0xf59e0b },
+    ];
+
+    buildings.forEach(b => {
+      const zone = this.add.zone(b.x, b.y, b.w, b.h).setOrigin(0).setInteractive({ cursor: 'pointer' }).setDepth(4);
+      const hl = this.add.graphics().setDepth(3);
+      zone.on('pointerover', () => {
+        hl.clear();
+        hl.lineStyle(2, b.color, 0.9);
+        hl.strokeRect(b.x, b.y, b.w, b.h);
+        hl.fillStyle(b.color, 0.09);
+        hl.fillRect(b.x, b.y, b.w, b.h);
+      });
+      zone.on('pointerout', () => hl.clear());
+      zone.on('pointerdown', () => {
+        const scenario = SCENARIOS.find(s => !STATE.completed.includes(s.id) && s.location === b.key)
+          || SCENARIOS.find(s => !STATE.completed.includes(s.id));
+        if (!scenario) {
+          this.scene.start('OutcomeScene', { won: STATE.dealHealth >= 50 });
+          return;
+        }
+        if (scenario.location !== b.key) {
+          this.showToast('Head to ' + scenario.location + ' next');
+          return;
+        }
+        STATE.day += 2;
+        this.cameras.main.flash(300, 13, 6, 24);
+        this.time.delayedCall(400, () => {
+          if (scenario.type === 'scramble') {
+            this.scene.start('ScrambleScene', { scenarioId: scenario.id });
+          } else {
+            this.scene.start('DecisionScene', { scenarioId: scenario.id });
+          }
+        });
+      });
+    });
+  }
+
+  createDayNightOverlay() {
+    const g = this.add.graphics().setDepth(9);
+    g.fillStyle(0x000033, 0.06);
+    g.fillRect(0, 0, W, H);
+  }
+
+  createNotification() {
+    this.notifG = this.add.graphics().setDepth(20);
+    this.notifT = this.add.text(0, 0, '', { fontSize: '9px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold', color: '#d946ef', letterSpacing: 1 }).setDepth(21);
+    this.notifB = this.add.text(0, 0, '', { fontSize: '11px', fontFamily: 'Inter, sans-serif', color: '#ede8f5', wordWrap: { width: 230 } }).setDepth(21);
+  }
+
+  showInboxNotif() {
+    const msgs = [
+      { from: 'Priya', text: 'Quick question on the API auth flow , can we chat?' },
+      { from: 'Alex (AE)', text: 'Heads up: Vertex is sniffing around Axiom. Heard it from their CTO\'s EA.' },
+      { from: 'Marcus', text: 'Looking forward to next week. Bring something concrete on ROI.' },
+      { from: 'Sarah', text: 'Board review is Thursday. How does the Axiom deal look?' },
+      { from: 'Dev (Axiom)', text: 'Do you support OTel natively or is it a plugin?' },
+    ];
+    const msg = msgs[Math.floor(Math.random() * msgs.length)];
+    const nx = W - 280, ny = 22, nw = 265, nh = 66;
+    this.notifG.clear();
+    this.notifG.fillStyle(0xd946ef, 0.08);
+    this.notifG.fillRoundedRect(nx, ny, nw, nh, 10);
+    this.notifG.lineStyle(1, 0xd946ef, 0.35);
+    this.notifG.strokeRoundedRect(nx, ny, nw, nh, 10);
+    this.notifT.setText('📬 ' + msg.from.toUpperCase()).setPosition(nx + 12, ny + 10);
+    this.notifB.setText(msg.text).setPosition(nx + 12, ny + 28);
+    [this.notifG, this.notifT, this.notifB].forEach(o => o.setAlpha(0));
+    this.tweens.add({
+      targets: [this.notifG, this.notifT, this.notifB],
+      alpha: 1, duration: 300,
+      onComplete: () => {
+        this.time.delayedCall(3800, () => {
+          this.tweens.add({ targets: [this.notifG, this.notifT, this.notifB], alpha: 0, duration: 400 });
+        });
+      }
+    });
+  }
+
+  triggerScramble() {
+    // Only trigger if still in scene
+    this.showToast('⚡ Scramble available , click Axiom to play');
+  }
+
+  showFeedback(msg) {
+    if (!msg) return;
+    const fw = Math.min(500, W - 80);
+    const fx = (W - fw) / 2, fy = 20;
+    const g = this.add.graphics().setDepth(30);
+    const t = this.add.text(fx + 16, fy + 14, msg, {
+      fontSize: '12px', fontFamily: 'Inter, sans-serif',
+      color: '#ede8f5', wordWrap: { width: fw - 32 }, lineSpacing: 3
+    }).setDepth(31);
+    const fh = t.height + 32;
+    g.fillStyle(0x1e1530, 0.97);
+    g.fillRoundedRect(fx, fy, fw, fh, 10);
+    g.lineStyle(2, 0xd946ef, 0.6);
+    g.strokeRoundedRect(fx, fy, fw, fh, 10);
+    g.fillStyle(0xd946ef);
+    g.fillRect(fx, fy, fw, 3);
+    t.setY(fy + 14);
+    // Dismiss on tap or after 4s
+    const dismiss = () => { g.destroy(); t.destroy(); };
+    const zone = this.add.zone(fx, fy, fw, fh).setOrigin(0).setInteractive({ cursor: 'pointer' }).setDepth(32);
+    zone.on('pointerdown', dismiss);
+    this.time.delayedCall(4500, dismiss);
+  }
+
+  showToast(msg) {
+    const tw = Math.min(380, W - 40);
+    const tx = (W - tw) / 2, ty = H * 0.45;
+    const g = this.add.graphics().setDepth(30);
+    g.fillStyle(0x1e1530, 0.95);
+    g.fillRoundedRect(tx, ty, tw, 44, 8);
+    g.lineStyle(1, 0xf59e0b, 0.5);
+    g.strokeRoundedRect(tx, ty, tw, 44, 8);
+    const t = this.add.text(tx + tw / 2, ty + 22, msg, {
+      fontSize: '12px', fontFamily: 'Inter, sans-serif', color: '#f59e0b'
+    }).setOrigin(0.5).setDepth(31);
+    this.time.delayedCall(2500, () => { g.destroy(); t.destroy(); });
+  }
+}
+
+// ============================================================
+// SCENE: DECISION
+// ============================================================
+class DecisionScene extends Phaser.Scene {
+  constructor() { super({ key: 'DecisionScene' }); }
+
+  init(data) {
+    this.scenario = SCENARIOS.find(s => s.id === data.scenarioId) || SCENARIOS[0];
+  }
+
+  create() {
+    const sc = this.scenario;
+    this.cameras.main.setBackgroundColor('#130d1c');
+    const g = this.add.graphics();
+
+    // Background grid
+    g.fillStyle(0x130d1c); g.fillRect(0, 0, W, H);
+    g.lineStyle(1, 0x1a1228);
+    for (let x = 0; x < W; x += 44) g.lineBetween(x, 0, x, H);
+    for (let y = 0; y < H; y += 44) g.lineBetween(0, y, W, y);
+
+    // Top bar
+    g.fillStyle(0x1e1530); g.fillRect(0, 0, W, 60);
+    g.lineStyle(1, 0x2e2249); g.lineBetween(0, 60, W, 60);
+    g.fillStyle(0xd946ef); g.fillRect(0, 0, W, 3);
+
+    this.add.text(20, 16, sc.location.toUpperCase() + ' , ' + sc.title.toUpperCase(), {
+      fontSize: '10px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold', color: '#d946ef', letterSpacing: 2
+    });
+    this.add.text(20, 38, 'Day ' + STATE.day + '  ·  Act ' + STATE.act + ': ' + STATE.actName + '  ·  Energy: ' + STATE.energy + '/10', {
+      fontSize: '10px', fontFamily: 'Inter, sans-serif', color: '#8b7fa8'
+    });
+
+    // Top-right meters
+    this.drawBarMini(g, W - 210, 14, 190, 'DEAL', STATE.dealHealth, 0xd946ef, 0xa78bfa);
+    this.drawBarMini(g, W - 210, 36, 190, 'CHAMPION', STATE.championStrength, 0x22c55e, 0x86efac);
+
+    const cx = W / 2;
+    let curY = 80;
+
+    // Context strip
+    if (sc.context) {
+      g.fillStyle(0x271c3d);
+      g.fillRoundedRect(cx - clamp(300, 400, W * 0.45), curY, clamp(600, 800, W * 0.9), 50, 8);
+      g.lineStyle(1, 0xd946ef, 0.35);
+      g.strokeRoundedRect(cx - clamp(300, 400, W * 0.45), curY, clamp(600, 800, W * 0.9), 50, 8);
+      g.fillStyle(0xd946ef, 1); g.fillRect(cx - clamp(300, 400, W * 0.45), curY, 4, 50);
+      this.add.text(cx - clamp(300, 400, W * 0.45) + 16, curY + 10, sc.context, {
+        fontSize: '11px', fontFamily: 'Inter, sans-serif', fontStyle: 'italic',
+        color: '#8b7fa8', wordWrap: { width: clamp(560, 760, W * 0.86) }
+      });
+      curY += 62;
+    }
+
+    // Speaker + quote
+    const spk = sc.speaker;
+    const avX = cx - clamp(300, 380, W * 0.43);
+    const avY = curY + 30;
+    g.fillStyle(0x1a3a5c); g.fillCircle(avX, avY, 26);
+    g.lineStyle(2, parseInt(spk.color.replace('#', '0x'))); g.strokeCircle(avX, avY, 26);
+    this.add.text(avX, avY, spk.emoji, { fontSize: '20px' }).setOrigin(0.5);
+
+    const spkNameX = avX + 36;
+    this.add.text(spkNameX, curY, spk.name.toUpperCase(), {
+      fontSize: '9px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold',
+      color: spk.color, letterSpacing: 1
+    });
+    this.add.text(spkNameX, curY + 14, spk.role, {
+      fontSize: '9px', fontFamily: 'Inter, sans-serif', color: '#8b7fa8'
+    });
+
+    const bubW = clamp(400, 560, W * 0.65);
+    const bubX = spkNameX;
+    const bubY = curY + 28;
+    g.fillStyle(0x271c3d);
+    g.fillRoundedRect(bubX, bubY, bubW, 80, 10);
+    g.lineStyle(1, 0x2e2249);
+    g.strokeRoundedRect(bubX, bubY, bubW, 80, 10);
+    this.add.text(bubX + 16, bubY + 14, sc.quote, {
+      fontSize: '13px', fontFamily: 'Inter, sans-serif',
+      color: '#ede8f5', wordWrap: { width: bubW - 32 }, lineSpacing: 4
+    });
+    curY += 100;
+
+    // Choices header
+    this.add.text(cx - clamp(300, 400, W * 0.45), curY + 12, 'HOW DO YOU RESPOND?', {
+      fontSize: '10px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold',
+      color: '#8b7fa8', letterSpacing: 2
+    });
+    curY += 34;
+
+    const choiceW = clamp(600, 800, W * 0.9);
+    const choiceX = cx - choiceW / 2;
+    const letters = ['A', 'B', 'C', 'D'];
+
+    sc.choices.forEach((choice, i) => {
+      const cy2 = curY + i * 58;
+      const ch2 = 50;
+
+      g.fillStyle(0x1e1530);
+      g.fillRoundedRect(choiceX, cy2, choiceW, ch2, 8);
+      g.lineStyle(2, 0x2e2249);
+      g.strokeRoundedRect(choiceX, cy2, choiceW, ch2, 8);
+
+      // Letter badge
+      g.fillStyle(0x271c3d);
+      g.fillRoundedRect(choiceX + 10, cy2 + 12, 26, 26, 5);
+      this.add.text(choiceX + 23, cy2 + 25, letters[i], {
+        fontSize: '11px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold', color: '#d946ef'
+      }).setOrigin(0.5);
+
+      this.add.text(choiceX + 46, cy2 + 11, choice.text, {
+        fontSize: '12px', fontFamily: 'Inter, sans-serif',
+        color: '#ede8f5', wordWrap: { width: choiceW - 60 }
+      });
+
+      const zone = this.add.zone(choiceX, cy2, choiceW, ch2).setOrigin(0).setInteractive({ cursor: 'pointer' });
+      const hl = this.add.graphics();
+      zone.on('pointerover', () => {
+        hl.clear();
+        hl.lineStyle(2, 0xd946ef);
+        hl.strokeRoundedRect(choiceX, cy2, choiceW, ch2, 8);
+        hl.fillStyle(0xd946ef, 0.06);
+        hl.fillRoundedRect(choiceX, cy2, choiceW, ch2, 8);
+      });
+      zone.on('pointerout', () => hl.clear());
+      zone.on('pointerdown', () => this.handleChoice(choice));
+    });
+
+    // Back link
+    this.add.text(W - 20, H - 18, '← Back to map', {
+      fontSize: '11px', fontFamily: 'Inter, sans-serif', color: '#8b7fa8'
+    }).setOrigin(1).setInteractive({ cursor: 'pointer' })
+      .on('pointerdown', () => this.scene.start('CityScene'))
+      .on('pointerover', function() { this.setColor('#d946ef'); })
+      .on('pointerout', function() { this.setColor('#8b7fa8'); });
+  }
+
+  handleChoice(choice) {
+    STATE.dealHealth = clamp(0, 100, STATE.dealHealth + choice.deal);
+    STATE.championStrength = clamp(0, 100, STATE.championStrength + choice.champion);
+    STATE.energy = clamp(0, 10, STATE.energy + choice.energy);
+    STATE.completed.push(this.scenario.id);
+    STATE.lastChoice = choice;
+    STATE.feedbackQueue.push(choice.feedback);
+    this.cameras.main.flash(300, 13, 6, 24);
+    this.time.delayedCall(400, () => {
+      if (STATE.dealHealth <= 0) {
+        this.scene.start('OutcomeScene', { won: false });
+      } else {
+        this.scene.start('CityScene');
+      }
+    });
+  }
+
+  drawBarMini(g, x, y, width, label, pct, c1, c2) {
+    this.add.text(x, y, label, {
+      fontSize: '9px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold', color: '#8b7fa8', letterSpacing: 1
+    });
+    const barX = x + 80;
+    const barW = width - 80;
+    g.fillStyle(0x1e1530);
+    g.fillRoundedRect(barX, y + 1, barW, 7, 3);
+    const fillW = Math.max(0, Math.min(1, pct / 100)) * barW;
+    if (fillW > 0) {
+      g.fillGradientStyle(c1, c2, c1, c2, 1);
+      g.fillRoundedRect(barX, y + 1, fillW, 7, 3);
+    }
+    this.add.text(x + width + 4, y - 1, Math.round(pct).toString(), {
+      fontSize: '10px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold', color: '#ede8f5'
+    });
+  }
+}
+
+// ============================================================
+// SCENE: SCRAMBLE MINI-GAME
+// ============================================================
+class ScrambleScene extends Phaser.Scene {
+  constructor() { super({ key: 'ScrambleScene' }); }
+
+  init(data) {
+    this.qIndex = data.qIndex || 0;
+    this.correct = 0;
+    this.total = SCRAMBLE_QS.length;
+    this.done = false;
+  }
+
+  create() {
+    this.cameras.main.setBackgroundColor('#0d0618');
+    this.renderQ(this.qIndex);
+  }
+
+  renderQ(idx) {
+    // Clear previous
+    this.children.removeAll(true);
+    const q = SCRAMBLE_QS[idx % SCRAMBLE_QS.length];
+    const g = this.add.graphics();
+
+    // Header
+    g.fillStyle(0x1e1530); g.fillRect(0, 0, W, 54);
+    g.lineStyle(1, 0x2e2249); g.lineBetween(0, 54, W, 54);
+    g.fillStyle(0xd946ef); g.fillRect(0, 0, W, 3);
+
+    this.add.text(20, 16, '⚡  DISCOVERY SCRAMBLE', {
+      fontSize: '13px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold', color: '#d946ef', letterSpacing: 2
+    });
+    this.add.text(20, 38, 'Question ' + (idx + 1) + ' of ' + this.total + '  ·  What\'s the best response?', {
+      fontSize: '10px', fontFamily: 'Inter, sans-serif', color: '#8b7fa8'
+    });
+
+    // Progress dots
+    for (let i = 0; i < this.total; i++) {
+      const dx = W - 30 - (this.total - 1 - i) * 22;
+      const filled = i < this.correct;
+      const current = i === idx;
+      g.fillStyle(filled ? 0xd946ef : current ? 0xa78bfa : 0x2e2249);
+      g.fillCircle(dx, 27, 7);
+      if (current) {
+        g.fillStyle(0xd946ef, 0.2);
+        g.fillCircle(dx, 27, 12);
+      }
+    }
+
+    const splitX = W * 0.44;
+    // Left panel , customer
+    g.fillStyle(0x130d1c); g.fillRect(0, 54, splitX, H - 54);
+
+    const spk = q.speaker;
+    const avY = H * 0.28;
+    g.fillStyle(0x1a3a5c); g.fillCircle(splitX * 0.5, avY, 44);
+    g.lineStyle(3, parseInt(spk.color.replace('#', '0x'))); g.strokeCircle(splitX * 0.5, avY, 44);
+    this.add.text(splitX * 0.5, avY, spk.emoji, { fontSize: '32px' }).setOrigin(0.5);
+    this.add.text(splitX * 0.5, avY + 58, spk.name.toUpperCase(), {
+      fontSize: '11px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold', color: spk.color, letterSpacing: 1
+    }).setOrigin(0.5);
+    this.add.text(splitX * 0.5, avY + 76, spk.role, {
+      fontSize: '10px', fontFamily: 'Inter, sans-serif', color: '#8b7fa8'
+    }).setOrigin(0.5);
+
+    // Context
+    if (q.context) {
+      this.add.text(splitX * 0.5, avY - 58, q.context, {
+        fontSize: '10px', fontFamily: 'Inter, sans-serif', fontStyle: 'italic',
+        color: '#4a3860', wordWrap: { width: splitX - 36 }, align: 'center'
+      }).setOrigin(0.5);
+    }
+
+    // Speech bubble
+    const bubY = avY + 100;
+    const bubW = splitX - 50;
+    const bubX = 25;
+    g.fillStyle(0x1e1530); g.fillRoundedRect(bubX, bubY, bubW, 110, 12);
+    g.lineStyle(1.5, 0x2e2249); g.strokeRoundedRect(bubX, bubY, bubW, 110, 12);
+    // Tail
+    const tailX = bubX + bubW * 0.5;
+    g.fillStyle(0x1e1530);
+    g.fillTriangle(tailX - 8, bubY + 110, tailX + 8, bubY + 110, tailX, bubY + 124);
+    this.add.text(bubX + 14, bubY + 14, q.quote, {
+      fontSize: '13px', fontFamily: 'Inter, sans-serif',
+      color: '#ede8f5', lineSpacing: 5, wordWrap: { width: bubW - 28 }
+    });
+
+    // Divider
+    g.lineStyle(1, 0x2e2249); g.lineBetween(splitX, 54, splitX, H);
+
+    // Right panel , options
+    g.fillStyle(0x0d0618); g.fillRect(splitX, 54, W - splitX, H - 54);
+
+    this.add.text(splitX + 24, 80, 'CHOOSE YOUR RESPONSE', {
+      fontSize: '10px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold', color: '#8b7fa8', letterSpacing: 2
+    });
+
+    // Timer
+    const timerX = W - 60, timerY = 96;
+    const totalSecs = 8;
+    g.lineStyle(4, 0x2e2249); g.strokeCircle(timerX, timerY, 26);
+    this.timerArc = this.add.graphics();
+    this.timerVal = totalSecs;
+    this.timerTxt = this.add.text(timerX, timerY, totalSecs + 's', {
+      fontSize: '12px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold', color: '#d946ef'
+    }).setOrigin(0.5);
+    this.drawTimerArc(1, timerX, timerY);
+
+    this.timerEvent = this.time.addEvent({
+      delay: 1000,
+      repeat: totalSecs - 1,
+      callback: () => {
+        if (this.done) return;
+        this.timerVal--;
+        const pct = Math.max(0, this.timerVal / totalSecs);
+        this.timerTxt.setText(this.timerVal + 's');
+        this.drawTimerArc(pct, timerX, timerY);
+        if (this.timerVal <= 0) {
+          this.done = true;
+          this.showResult(false, q, null);
+        }
+      }
+    });
+
+    // Options
+    const optStartY = 138;
+    const optW = W - splitX - 48;
+    const optX = splitX + 24;
+
+    q.options.forEach((opt, i) => {
+      const oy = optStartY + i * 96;
+      const oh = 82;
+      g.fillStyle(0x1e1530);
+      g.fillRoundedRect(optX, oy, optW, oh, 10);
+      g.lineStyle(2, 0x2e2249);
+      g.strokeRoundedRect(optX, oy, optW, oh, 10);
+
+      this.add.text(optX + 14, oy + 10, opt.label.toUpperCase(), {
+        fontSize: '9px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold',
+        color: '#8b7fa8', letterSpacing: 1
+      });
+      this.add.text(optX + 14, oy + 26, opt.text, {
+        fontSize: '12px', fontFamily: 'Inter, sans-serif',
+        color: '#ede8f5', wordWrap: { width: optW - 28 }, lineSpacing: 3
+      });
+
+      const zone = this.add.zone(optX, oy, optW, oh).setOrigin(0).setInteractive({ cursor: 'pointer' });
+      const hl = this.add.graphics();
+      zone.on('pointerover', () => {
+        hl.clear();
+        hl.lineStyle(2, 0xa78bfa);
+        hl.strokeRoundedRect(optX, oy, optW, oh, 10);
+        hl.fillStyle(0xa78bfa, 0.05);
+        hl.fillRoundedRect(optX, oy, optW, oh, 10);
+      });
+      zone.on('pointerout', () => hl.clear());
+      zone.on('pointerdown', () => {
+        if (this.done) return;
+        this.done = true;
+        this.timerEvent.remove();
+        this.showResult(opt.best, q, i);
+      });
+    });
+
+    // Back
+    this.add.text(W - 20, H - 18, '← Skip to map', {
+      fontSize: '11px', fontFamily: 'Inter, sans-serif', color: '#4a3860'
+    }).setOrigin(1).setInteractive({ cursor: 'pointer' })
+      .on('pointerdown', () => this.scene.start('CityScene'))
+      .on('pointerover', function() { this.setColor('#8b7fa8'); })
+      .on('pointerout', function() { this.setColor('#4a3860'); });
+  }
+
+  drawTimerArc(pct, tx, ty) {
+    this.timerArc.clear();
+    const color = pct > 0.4 ? 0xd946ef : 0xef4444;
+    this.timerArc.lineStyle(4, color);
+    this.timerArc.beginPath();
+    this.timerArc.arc(tx, ty, 26, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * pct, false);
+    this.timerArc.strokePath();
+  }
+
+  showResult(correct, q, chosenIdx) {
+    const overlay = this.add.graphics().setDepth(40);
+    overlay.fillStyle(0x0d0618, 0.92);
+    overlay.fillRect(0, 0, W, H);
+
+    const cx = W / 2;
+    const g = this.add.graphics().setDepth(41);
+
+    const boxW = Math.min(560, W - 60);
+    const boxX = cx - boxW / 2;
+    const boxY = H * 0.15;
+
+    const accentColor = correct ? 0x22c55e : 0xef4444;
+    const accentHex = correct ? '#22c55e' : '#ef4444';
+    const icon = correct ? '✓' : '✗';
+    const title = correct ? 'Strong Move' : (chosenIdx === null ? 'Time\'s Up' : 'Missed It');
+
+    g.fillStyle(0x1e1530);
+    g.fillRoundedRect(boxX, boxY, boxW, H * 0.68, 14);
+    g.lineStyle(2, accentColor);
+    g.strokeRoundedRect(boxX, boxY, boxW, H * 0.68, 14);
+    g.fillStyle(accentColor);
+    g.fillRect(boxX, boxY, boxW, 4);
+
+    // Icon
+    this.add.text(cx, boxY + 42, icon, {
+      fontSize: '36px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold', color: accentHex
+    }).setOrigin(0.5).setDepth(42);
+
+    this.add.text(cx, boxY + 86, title, {
+      fontSize: '18px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold', color: '#ede8f5'
+    }).setOrigin(0.5).setDepth(42);
+
+    if (!correct) {
+      this.add.text(cx, boxY + 115, 'Best answer was:', {
+        fontSize: '10px', fontFamily: 'Inter, sans-serif', color: '#8b7fa8', letterSpacing: 1
+      }).setOrigin(0.5).setDepth(42);
+
+      const bestOpt = q.options.find(o => o.best);
+      g.fillStyle(0x0a2010);
+      g.fillRoundedRect(boxX + 20, boxY + 132, boxW - 40, 68, 8);
+      g.lineStyle(2, 0x22c55e);
+      g.strokeRoundedRect(boxX + 20, boxY + 132, boxW - 40, 68, 8);
+      this.add.text(boxX + 34, boxY + 144, bestOpt.label.toUpperCase(), {
+        fontSize: '9px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold', color: '#22c55e', letterSpacing: 1
+      }).setDepth(42);
+      this.add.text(boxX + 34, boxY + 160, bestOpt.text, {
+        fontSize: '12px', fontFamily: 'Inter, sans-serif', color: '#86efac',
+        wordWrap: { width: boxW - 68 }, lineSpacing: 3
+      }).setDepth(42);
+    }
+
+    const whyY = correct ? boxY + 130 : boxY + 214;
+    this.add.text(cx, whyY + 8, 'WHY THIS MATTERS', {
+      fontSize: '9px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold', color: '#8b7fa8', letterSpacing: 2
+    }).setOrigin(0.5).setDepth(42);
+    this.add.text(cx, whyY + 28, q.bestWhy, {
+      fontSize: '12px', fontFamily: 'Inter, sans-serif', fontStyle: 'italic',
+      color: '#a895c0', wordWrap: { width: boxW - 40 }, align: 'center', lineSpacing: 3
+    }).setOrigin(0.5).setDepth(42);
+
+    // State change
+    if (correct) {
+      STATE.dealHealth = clamp(0, 100, STATE.dealHealth + 8);
+      STATE.championStrength = clamp(0, 100, STATE.championStrength + 6);
+      STATE.streak++;
+      if (STATE.streak >= 3) {
+        STATE.energy = clamp(0, 10, STATE.energy + 1);
+      }
+    } else {
+      STATE.dealHealth = clamp(0, 100, STATE.dealHealth - 4);
+    }
+
+    // Next button
+    const btnY = boxY + H * 0.68 - 62;
+    const btnW2 = 200, btnH2 = 44;
+    const btnX = cx - btnW2 / 2;
+    const isLast = this.qIndex >= this.total - 1;
+    const btnTxt2 = isLast ? 'Back to Map' : 'Next Question';
+
+    const btnG = this.add.graphics().setDepth(42);
+    const drawBtn = (hover) => {
+      btnG.clear();
+      btnG.fillStyle(hover ? accentColor : 0x1e1530);
+      btnG.fillRoundedRect(btnX, btnY, btnW2, btnH2, 8);
+      btnG.lineStyle(2, accentColor);
+      btnG.strokeRoundedRect(btnX, btnY, btnW2, btnH2, 8);
+    };
+    drawBtn(false);
+    const btnT = this.add.text(cx, btnY + btnH2 / 2, btnTxt2, {
+      fontSize: '14px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold', color: '#ede8f5'
+    }).setOrigin(0.5).setDepth(43);
+
+    const btnZone = this.add.zone(btnX, btnY, btnW2, btnH2).setOrigin(0).setInteractive({ cursor: 'pointer' }).setDepth(44);
+    btnZone.on('pointerover', () => { drawBtn(true); });
+    btnZone.on('pointerout', () => { drawBtn(false); });
+    btnZone.on('pointerdown', () => {
+      this.cameras.main.flash(200, 13, 6, 24);
+      this.time.delayedCall(300, () => {
+        if (isLast) {
+          this.scene.start('CityScene');
+        } else {
+          this.done = false;
+          this.qIndex++;
+          this.renderQ(this.qIndex);
+        }
+      });
+    });
+  }
+}
+
+// ============================================================
+// SCENE: OUTCOME
+// ============================================================
+class OutcomeScene extends Phaser.Scene {
+  constructor() { super({ key: 'OutcomeScene' }); }
+
+  init(data) { this.won = data.won; }
+
+  create() {
+    const won = this.won;
+    this.cameras.main.setBackgroundColor('#0a0612');
+    const g = this.add.graphics();
+
+    // Stars
+    g.fillStyle(0x0a0612); g.fillRect(0, 0, W, H);
+    for (let i = 0; i < 100; i++) {
+      g.fillStyle(0xffffff, Math.random() * 0.5 + 0.05);
+      g.fillCircle(Math.random() * W, Math.random() * H, Math.random() + 0.5);
+    }
+
+    const cx = W / 2;
+    const boxW = Math.min(640, W - 60);
+    const boxH = Math.min(520, H - 80);
+    const boxX = cx - boxW / 2;
+    const boxY = (H - boxH) / 2;
+
+    const accentC = won ? 0xd946ef : 0xef4444;
+    const accentH = won ? '#d946ef' : '#ef4444';
+
+    // Glow
+    g.fillStyle(accentC, 0.04);
+    g.fillCircle(cx, H / 2, 340);
+    g.fillStyle(accentC, 0.06);
+    g.fillCircle(cx, H / 2, 200);
+
+    g.fillStyle(0x1e1530);
+    g.fillRoundedRect(boxX, boxY, boxW, boxH, 14);
+    g.lineStyle(2, accentC, 0.8);
+    g.strokeRoundedRect(boxX, boxY, boxW, boxH, 14);
+    g.fillStyle(accentC);
+    g.fillRect(boxX, boxY, boxW, 4);
+
+    const headline = won ? '🏆  Deal Closed!' : '💀  Deal Lost';
+    const sub = won
+      ? 'Axiom Systems signed. You navigated the deal from discovery to close.'
+      : 'Deal health hit zero. Axiom went with Vertex Solutions.';
+
+    this.add.text(cx, boxY + 50, headline, {
+      fontSize: clamp(22, 32, W / 28) + 'px',
+      fontFamily: 'Georgia, serif', fontStyle: 'italic', color: '#ede8f5'
+    }).setOrigin(0.5);
+
+    this.add.text(cx, boxY + 96, sub, {
+      fontSize: '13px', fontFamily: 'Inter, sans-serif',
+      color: '#8b7fa8', wordWrap: { width: boxW - 60 }, align: 'center'
+    }).setOrigin(0.5);
+
+    g.lineStyle(1, 0x2e2249); g.lineBetween(boxX + 30, boxY + 120, boxX + boxW - 30, boxY + 120);
+
+    // Stats
+    const statsY = boxY + 140;
+    const stats = [
+      { label: 'Deal Health',       val: STATE.dealHealth,      max: 100, c1: 0xd946ef, c2: 0xa78bfa },
+      { label: 'Champion Strength', val: STATE.championStrength, max: 100, c1: 0x22c55e,  c2: 0x86efac },
+      { label: 'Energy Remaining',  val: STATE.energy,          max: 10,  c1: 0xf59e0b,  c2: 0xfde68a },
+    ];
+    const statW = (boxW - 80) / stats.length;
+    stats.forEach((s, i) => {
+      const sx = boxX + 40 + i * statW;
+      const pct = s.val / s.max;
+
+      g.fillStyle(0x130d1c);
+      g.fillRoundedRect(sx, statsY, statW - 16, 110, 10);
+      g.lineStyle(1, 0x2e2249);
+      g.strokeRoundedRect(sx, statsY, statW - 16, 110, 10);
+
+      const displayVal = s.max === 10 ? s.val + '/10' : Math.round(s.val) + '%';
+      this.add.text(sx + (statW - 16) / 2, statsY + 24, displayVal, {
+        fontSize: '22px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold', color: '#' + s.c1.toString(16).padStart(6, '0')
+      }).setOrigin(0.5);
+      this.add.text(sx + (statW - 16) / 2, statsY + 52, s.label, {
+        fontSize: '10px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold',
+        color: '#8b7fa8', letterSpacing: 0.5, align: 'center', wordWrap: { width: statW - 24 }
+      }).setOrigin(0.5);
+
+      // Mini bar
+      const bx = sx + 14, by = statsY + 82, bw = statW - 44;
+      g.fillStyle(0x1e1530); g.fillRoundedRect(bx, by, bw, 8, 4);
+      if (pct > 0) {
+        g.fillGradientStyle(s.c1, s.c2, s.c1, s.c2, 1);
+        g.fillRoundedRect(bx, by, bw * pct, 8, 4);
+      }
+    });
+
+    // Scenarios recap
+    const recapY = statsY + 128;
+    this.add.text(cx, recapY, 'Scenarios Completed: ' + STATE.completed.length + ' / ' + SCENARIOS.length, {
+      fontSize: '11px', fontFamily: 'Inter, sans-serif', color: '#4a3860', letterSpacing: 1
+    }).setOrigin(0.5);
+
+    // Debrief
+    const debriefY = recapY + 22;
+    const debriefMsg = won
+      ? (STATE.championStrength >= 70
+        ? 'Your champion Priya was a strong internal advocate , that made the close possible.'
+        : 'You closed, but champion strength was average. Consider investing more in your internal allies.')
+      : (STATE.completed.length < 4
+        ? 'You didn\'t get enough discovery in. Deal died before you could build real value.'
+        : 'Value was built late. Vertex\'s lower price won the battle you didn\'t show up to fight.');
+    this.add.text(cx, debriefY + 10, debriefMsg, {
+      fontSize: '12px', fontFamily: 'Inter, sans-serif', fontStyle: 'italic',
+      color: '#8b7fa8', wordWrap: { width: boxW - 60 }, align: 'center', lineSpacing: 3
+    }).setOrigin(0.5);
+
+    // Buttons
+    const btnRowY = boxY + boxH - 68;
+    const buttons = [
+      { text: 'Play Again',        x: cx - 120, w: 160, h: 44, cb: () => { this.cameras.main.flash(400, 13, 6, 24); this.time.delayedCall(500, () => this.scene.start('TitleScene')); } },
+      { text: 'Try Scramble Mode', x: cx + 20,  w: 160, h: 44, cb: () => { resetState(); this.cameras.main.flash(300, 13, 6, 24); this.time.delayedCall(400, () => this.scene.start('ScrambleScene', { qIndex: 0 })); } },
+    ];
+    buttons.forEach(btn => {
+      const bg = this.add.graphics();
+      const draw = (hover) => {
+        bg.clear();
+        bg.fillStyle(hover ? accentC : 0x1e1530);
+        bg.fillRoundedRect(btn.x, btnRowY, btn.w, btn.h, 8);
+        bg.lineStyle(2, accentC);
+        bg.strokeRoundedRect(btn.x, btnRowY, btn.w, btn.h, 8);
+      };
+      draw(false);
+      const t = this.add.text(btn.x + btn.w / 2, btnRowY + btn.h / 2, btn.text, {
+        fontSize: '13px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold', color: '#ede8f5'
+      }).setOrigin(0.5);
+      const z = this.add.zone(btn.x, btnRowY, btn.w, btn.h).setOrigin(0).setInteractive({ cursor: 'pointer' });
+      z.on('pointerover', () => draw(true));
+      z.on('pointerout', () => draw(false));
+      z.on('pointerdown', btn.cb);
+    });
+  }
+}
+
+// ============================================================
+// HELPERS
+// ============================================================
+function clamp(min, max, val) {
+  return Math.max(min, Math.min(max, val));
+}
+
+// ============================================================
+// LAUNCH
+// ============================================================
+const config = {
+  type: Phaser.AUTO,
+  width: W,
+  height: H,
+  parent: 'game-container',
+  backgroundColor: '#0a0612',
+  scene: [TitleScene, CityScene, DecisionScene, ScrambleScene, OutcomeScene],
+  scale: {
+    mode: Phaser.Scale.FIT,
+    autoCenter: Phaser.Scale.CENTER_BOTH
+  }
+};
+
+new Phaser.Game(config);
+</script>
+</body>
+</html>
