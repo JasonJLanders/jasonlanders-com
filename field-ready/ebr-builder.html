@@ -42,6 +42,8 @@
     .ai-prompt-summary:hover { border-color: var(--accent); }
     .ai-prompt-summary::-webkit-details-marker { display: none; }
     .ai-prompt-summary::before { content: '\2728'; font-size: 11px; }
+    .ai-prompt-summary::after { content: '\25BA'; font-size: 9px; margin-left: 4px; transition: transform 0.2s; display: inline-block; }
+    details[open] .ai-prompt-summary::after { content: '\25BC'; }
     .ai-prompt-body { background: var(--surface2); border: 1.5px solid var(--border); border-radius: 10px; padding: 14px 16px; margin-top: 8px; }
     .ai-prompt-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: var(--accent); margin-bottom: 8px; }
     .ai-prompt-text { font-size: 13px; color: var(--muted); line-height: 1.7; white-space: pre-wrap; font-family: monospace; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 10px 12px; margin-bottom: 10px; }
