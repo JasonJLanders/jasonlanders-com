@@ -313,18 +313,25 @@
         <summary class="ai-prompt-summary">Get an AI prompt for this</summary>
         <div class="ai-prompt-body">
           <div class="ai-prompt-label">Paste into Claude, ChatGPT, or Gemini</div>
-          <div class="ai-prompt-text" id="prompt-priorities">I am preparing a QBR/EBR contribution for [COMPANY NAME], a [INDUSTRY] company with approximately [EMPLOYEE COUNT / ARR / SIZE SIGNAL if known].
+          <div class="ai-prompt-text" id="prompt-priorities">I am preparing a QBR/EBR contribution for [COMPANY NAME], a [INDUSTRY] company.
 
-Using any publicly available information you can find -- recent earnings calls, press releases, LinkedIn posts from their leadership, news coverage, or their own website -- identify their top 2-3 business priorities right now.
+Step 1 -- Check connected sources first:
+If you have access to any of the following, search them before going to public sources:
+- My email or calendar for recent conversations, meeting notes, or follow-ups related to [COMPANY NAME]
+- Any shared drives, folders, or CRM records I have access to that contain account notes, call recordings, or customer documents for this account
+- Any Slack or Teams channels related to this account
 
-Focus on priorities that a CTO, VP Engineering, or similar technical executive would care about: reliability, developer productivity, platform consolidation, compliance, cost reduction, or AI adoption.
+Step 2 -- Fill gaps with public research:
+For anything not covered by internal sources, use publicly available information: recent earnings calls, press releases, LinkedIn posts from their leadership, news coverage, job postings (which often signal priorities), or their own website.
+
+Based on everything you find, identify their top 2-3 business priorities right now that a CTO, VP Engineering, or technical executive would care about: reliability, developer productivity, platform consolidation, compliance, cost reduction, AI adoption, or similar.
 
 For each priority, give me:
-- A one-sentence summary of the priority
-- Why it is likely top of mind right now (the signal)
-- How an observability or monitoring product might connect to it
+- A one-sentence summary of the priority in the customer's own language where possible
+- The signal that indicates this is top of mind (internal note, earnings quote, job posting, news item)
+- How an observability or monitoring solution could connect to it
 
-Context I have from my own conversations with them: [PASTE ANY NOTES FROM DISCOVERY OR PREVIOUS MEETINGS]</div>
+Additional context I am providing: [PASTE ANY NOTES FROM DISCOVERY OR PREVIOUS MEETINGS]</div>
           <button class="btn-copy-prompt" onclick="copyPrompt('prompt-priorities', this)">Copy prompt</button>
           <div class="ai-prompt-hint">Paste the output directly into the priority fields above. Edit to match what you have heard from the customer directly.</div>
         </div>
@@ -397,14 +404,22 @@ Context I have from my own conversations with them: [PASTE ANY NOTES FROM DISCOV
           <div class="ai-prompt-label">Paste into Claude, ChatGPT, or Gemini</div>
           <div class="ai-prompt-text" id="prompt-wins">I need to write 2-3 value win statements for a QBR/EBR with [COMPANY NAME].
 
-Here are my raw notes on what we delivered since the last review:
-[PASTE YOUR NOTES -- can be rough, bullet points, call notes, Salesforce activity log, anything]
+Step 1 -- Check connected sources first:
+Before using my notes below, search any sources you have access to:
+- My email or calendar for messages from [COMPANY NAME] contacts that mention outcomes, results, or feedback
+- Any CRM records, account notes, or shared folders for this account that might contain usage data, support tickets resolved, or success metrics
+- Any call recordings or transcripts where they described what improved
 
-For each win, rewrite it as:
-- Headline: one sentence, business outcome first, metric included if possible (e.g. "P1 incident MTTR reduced by 64% since Payments team deployment")
-- Supporting detail: 1-2 sentences of context explaining what changed, for which team, and why it matters to the business
+If you find specific metrics or quotes from the customer themselves, prioritize those -- they are far more credible than our own claims.
 
-Write in plain language appropriate for a VP or CTO audience. Avoid product feature names and technical jargon. Every sentence should answer "so what?" for a business leader.</div>
+Step 2 -- Use my notes to fill any gaps:
+[PASTE YOUR NOTES -- rough bullet points, Salesforce activity log, call notes, anything]
+
+For each win, write:
+- Headline: one sentence, business outcome first, metric included where possible (e.g. "P1 incident MTTR reduced by 64% since Payments team deployment")
+- Supporting detail: 1-2 sentences explaining what changed, for which team, and why it matters to the business
+
+Write for a VP or CTO audience. Avoid product feature names and technical jargon. Every sentence should answer "so what?" from a business perspective.</div>
           <button class="btn-copy-prompt" onclick="copyPrompt('prompt-wins', this)">Copy prompt</button>
           <div class="ai-prompt-hint">Paste your rough notes into the prompt before running it. Use the output as a starting point and edit to match what you can actually stand behind.</div>
         </div>
@@ -447,19 +462,25 @@ Write in plain language appropriate for a VP or CTO audience. Avoid product feat
           <div class="ai-prompt-label">Paste into Claude, ChatGPT, or Gemini</div>
           <div class="ai-prompt-text" id="prompt-expansion">I am building an expansion narrative for a QBR/EBR with [COMPANY NAME].
 
-Current state:
-- Their maturity level: [e.g. Core Deployed -- Payments team fully instrumented, Infrastructure not started]
+Step 1 -- Check connected sources first:
+Search any sources you have access to before relying on what I provide below:
+- My email, calendar, or meeting notes for conversations where [COMPANY NAME] contacts mentioned gaps, frustrations, future plans, or things they wish were in place
+- Any CRM records or account documents that describe their environment, roadmap, or strategic initiatives
+- Any previous QBR or EBR notes or slide decks for this account that might show what was discussed before
+
+If you find specific quotes from the customer about where they want to go or what is missing, use those. A recommendation grounded in their own words lands very differently than one that comes only from our side.
+
+Step 2 -- Use the context I am providing:
+- Their current maturity level: [e.g. Core Deployed -- Payments team fully instrumented, Infrastructure not started]
 - What is working well: [PASTE VALUE WINS]
 - Their stated business priorities: [PASTE PRIORITIES]
+- Expansion opportunity I am considering: [DESCRIBE WHAT YOU WANT TO SUGGEST]
 
-Expansion opportunity I am considering recommending:
-[DESCRIBE WHAT YOU WANT TO SUGGEST -- e.g. extending coverage to Infrastructure team, adding security monitoring, adopting new AI detection capability]
+Write:
+1. One sentence describing the expansion from the customer's perspective -- what gap it closes, not what product we would sell
+2. Two to three sentences explaining why this maps to the priorities they have stated, using their language where possible
 
-Write me:
-1. A one-sentence description of the expansion opportunity from the customer's perspective (not "we want to sell you X" but "here is what closing this gap means for your business")
-2. A 2-3 sentence explanation of why this maps directly to the priorities they have stated, using their language
-
-Do not use upsell language. Write it as a technical recommendation from an advisor who knows their environment.</div>
+Write it as a technical recommendation from a trusted advisor. No upsell language.</div>
           <button class="btn-copy-prompt" onclick="copyPrompt('prompt-expansion', this)">Copy prompt</button>
           <div class="ai-prompt-hint">Fill in the bracketed sections before running. The goal is an expansion story that feels like advice, not a pitch.</div>
         </div>
