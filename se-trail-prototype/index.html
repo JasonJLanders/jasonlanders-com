@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The SE Trail — Visual Prototype</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { width: 100%; height: 100%; background: #0a0612; overflow: hidden; }
+    #game-container { width: 100%; height: 100%; }
+    canvas { display: block; }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
+</head>
+<body>
+<div id="game-container"></div>
+<script>
+// ============================================================
+// THE SE TRAIL — Visual Prototype
+// Demonstrates: city map, character movement, HUD, day cycle
+// ============================================================
+
+const W = window.innerWidth;
+const H = window.innerHeight;
+
+// ---- SCENE 1: CITY MAP ----
+class CityScene extends Phaser.Scene {
+  constructor() { super({ key: 'CityScene' }); }
+
+  preload() {
+    // We generate all graphics procedurally — no external assets needed
+  }
+
+  create() {
+    this.cameras.main.setBackgroundColor('#1a3a2a');
+
+    // Day/night overlay
+    this.timeOfDay = 0; // 0=morning, 1=noon, 2=dusk, 3=night
+    this.dayTimer = 0;
+
+    // Draw the city
+    this.drawGround();
+    this.drawRoads();
+    this.drawBuildings();
+    this.drawTrees();
+    this.createCar();
+    this.createCompetitorCar();
+    this.createHUD();
+    this.createDayNightOverlay();
+    this.createClickTargets();
+    this.createNotification();
+
+    // Start gentle ambient animations
+    this.time.addEvent({ delay: 8000, callback: this.advanceDay, callbackScope: this, loop: true });
+
+    // Occasionally show inbox notification
+    this.time.addEvent({ delay: 5000, callback: this.showNotification, callbackScope: this, loop: true });
+  }
+
+  drawGround() {
+    // Base ground tiles (simple colored rectangles for now)
+    const g = this.add.graphics();
+
+    // Grass areas
+    g.fillStyle(0x2d5a3a);
+    g.fillRect(0, 0, W, H);
+
+    // Sidewalk areas around roads
+    g.fillStyle(0x3a3248, 0.6);
+    // Main horizontal road
+    g.fillRect(0, H * 0.52 - 24, W, 48);
+    // Secondary horizontal
+    g.fillRect(0, H * 0.75 - 20, W, 40);
+    // Main vertical road
+    g.fillRect(W * 0.38 - 24, 0, 48, H);
+    // Right vertical
+    g.fillRect(W * 0.72 - 22, 0, 44, H);
+
+    // Pavement/concrete areas near buildings
+    g.fillStyle(0x2a2040, 0.5);
+    g.fillRect(40, 80, 200, 160);  // HQ area
+    g.fillRect(W - 260, 60, 220, 200); // Axiom area
+    g.fillRect(W * 0.42, H * 0.58, 150, 120); // Coffee shop area
+    g.fillRect(W * 0.55, H * 0.72, 140, 100); // Competitor area
+  }
+
+  drawRoads() {
+    const g = this.add.graphics();
+
+    // Road surfaces
+    g.fillStyle(0x2e2448);
+
+    // Main horizontal road
+    g.fillRect(0, H * 0.52 - 20, W, 40);
+    // Secondary horizontal
+    g.fillRect(0, H * 0.75 - 16, W, 32);
+    // Main vertical
+    g.fillRect(W * 0.38 - 20, 0, 40, H);
+    // Right vertical
+    g.fillRect(W * 0.72 - 18, 0, 36, H);
+
+    // Road center lines
+    g.lineStyle(2, 0xf59e0b, 0.35);
+    // Dashed horizontal line (main)
+    for (let x = 0; x < W; x += 40) {
+      g.fillStyle(0xf59e0b, 0.35);
+      g.fillRect(x, H * 0.52 - 1, 24, 2);
+    }
+    // Dashed vertical
+    for (let y = 0; y < H; y += 40) {
+      g.fillStyle(0xf59e0b, 0.35);
+      g.fillRect(W * 0.38 - 1, y, 2, 24);
+    }
+    for (let y = 0; y < H; y += 40) {
+      g.fillStyle(0xf59e0b, 0.35);
+      g.fillRect(W * 0.72 - 1, y, 2, 24);
+    }
+
+    // Intersection highlights
+    g.fillStyle(0x3a3060, 0.5);
+    g.fillRect(W * 0.38 - 20, H * 0.52 - 20, 40, 40);
+    g.fillRect(W * 0.72 - 18, H * 0.52 - 20, 36, 40);
+  }
+
+  drawBuildings() {
+    const g = this.add.graphics();
+
+    // ---- HQ BUILDING ----
+    const hqX = 60, hqY = 90, hqW = 180, hqH = 130;
+    // Shadow
+    g.fillStyle(0x000000, 0.3);
+    g.fillRect(hqX + 6, hqY + 6, hqW, hqH);
+    // Body
+    g.fillStyle(0x1e1535);
+    g.fillRect(hqX, hqY, hqW, hqH);
+    // Purple accent border
+    g.lineStyle(2, 0xd946ef);
+    g.strokeRect(hqX, hqY, hqW, hqH);
+    // Roof accent
+    g.fillStyle(0xd946ef);
+    g.fillRect(hqX, hqY, hqW, 6);
+    // Windows grid
+    for (let row = 0; row < 4; row++) {
+      for (let col = 0; col < 5; col++) {
+        const wx = hqX + 16 + col * 30;
+        const wy = hqY + 20 + row * 24;
+        const lit = Math.random() > 0.4;
+        g.fillStyle(lit ? 0xd946ef : 0x271c3d, lit ? 0.4 : 1);
+        g.fillRect(wx, wy, 18, 14);
+      }
+    }
+    // Label
+    this.add.text(hqX + hqW / 2, hqY - 18, 'YOUR HQ', {
+      fontSize: '10px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold',
+      color: '#d946ef', letterSpacing: 2
+    }).setOrigin(0.5);
+    this.add.text(hqX + hqW / 2, hqY + hqH / 2, 'HQ', {
+      fontSize: '20px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold',
+      color: '#ffffff', alpha: 0.15
+    }).setOrigin(0.5);
+
+    // ---- AXIOM SYSTEMS ----
+    const axX = W - 280, axY = 60, axW = 220, axH = 170;
+    g.fillStyle(0x000000, 0.3);
+    g.fillRect(axX + 8, axY + 8, axW, axH);
+    g.fillStyle(0x0d1f35);
+    g.fillRect(axX, axY, axW, axH);
+    g.lineStyle(2, 0x60a5fa);
+    g.strokeRect(axX, axY, axW, axH);
+    g.fillStyle(0x60a5fa);
+    g.fillRect(axX, axY, axW, 6);
+    // Windows
+    for (let row = 0; row < 5; row++) {
+      for (let col = 0; col < 6; col++) {
+        const wx = axX + 14 + col * 32;
+        const wy = axY + 20 + row * 26;
+        const lit = Math.random() > 0.35;
+        g.fillStyle(lit ? 0x60a5fa : 0x0d1f35, lit ? 0.45 : 1);
+        g.fillRect(wx, wy, 20, 16);
+      }
+    }
+    this.add.text(axX + axW / 2, axY - 18, 'AXIOM SYSTEMS', {
+      fontSize: '10px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold',
+      color: '#60a5fa', letterSpacing: 2
+    }).setOrigin(0.5);
+    this.add.text(axX + axW / 2, axY + axH / 2, 'AXIOM', {
+      fontSize: '18px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold',
+      color: '#ffffff', alpha: 0.1
+    }).setOrigin(0.5);
+
+    // ---- COFFEE SHOP ----
+    const cfX = W * 0.44, cfY = H * 0.60, cfW = 120, cfH = 90;
+    g.fillStyle(0x000000, 0.25);
+    g.fillRect(cfX + 4, cfY + 4, cfW, cfH);
+    g.fillStyle(0x2d1a0a);
+    g.fillRect(cfX, cfY, cfW, cfH);
+    g.lineStyle(2, 0xf59e0b);
+    g.strokeRect(cfX, cfY, cfW, cfH);
+    g.fillStyle(0xf59e0b);
+    g.fillRect(cfX, cfY, cfW, 5);
+    // Awning stripes
+    g.fillStyle(0xf59e0b, 0.3);
+    for (let i = 0; i < 5; i++) {
+      g.fillRect(cfX + i * 26, cfY + 5, 13, 18);
+    }
+    this.add.text(cfX + cfW / 2, cfY - 18, 'THE CORNER', {
+      fontSize: '10px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold',
+      color: '#f59e0b', letterSpacing: 1
+    }).setOrigin(0.5);
+    this.add.text(cfX + cfW / 2, cfY + cfH / 2 + 6, '☕', {
+      fontSize: '22px'
+    }).setOrigin(0.5);
+
+    // ---- COMPETITOR BUILDING ----
+    const vtX = W * 0.57, vtY = H * 0.73, vtW = 140, vtH = 100;
+    g.fillStyle(0x000000, 0.25);
+    g.fillRect(vtX + 5, vtY + 5, vtW, vtH);
+    g.fillStyle(0x2d0d0d);
+    g.fillRect(vtX, vtY, vtW, vtH);
+    g.lineStyle(2, 0xef4444, 0.7);
+    g.strokeRect(vtX, vtY, vtW, vtH);
+    g.fillStyle(0xef4444);
+    g.fillRect(vtX, vtY, vtW, 5);
+    for (let row = 0; row < 3; row++) {
+      for (let col = 0; col < 4; col++) {
+        const wx = vtX + 12 + col * 30;
+        const wy = vtY + 18 + row * 24;
+        g.fillStyle(0xef4444, 0.2);
+        g.fillRect(wx, wy, 18, 14);
+      }
+    }
+    this.add.text(vtX + vtW / 2, vtY - 18, 'VERTEX SOLUTIONS', {
+      fontSize: '9px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold',
+      color: '#ef4444', letterSpacing: 1, alpha: 0.8
+    }).setOrigin(0.5);
+  }
+
+  drawTrees() {
+    const g = this.add.graphics();
+    const trees = [
+      [220, 160], [240, 340], [360, 120], [360, 340],
+      [W - 320, 300], [W - 100, 300], [W - 100, 420],
+      [W * 0.38 + 40, H * 0.3], [W * 0.38 - 60, H * 0.35],
+      [140, H * 0.65], [200, H * 0.7]
+    ];
+    trees.forEach(([x, y]) => {
+      // Tree shadow
+      g.fillStyle(0x000000, 0.2);
+      g.fillEllipse(x + 3, y + 3, 26, 16);
+      // Tree
+      g.fillStyle(0x22c55e);
+      g.fillCircle(x, y, 14);
+      g.fillStyle(0x16a34a);
+      g.fillCircle(x - 4, y - 3, 10);
+      g.fillStyle(0x4ade80, 0.4);
+      g.fillCircle(x + 3, y - 5, 7);
+    });
+  }
+
+  createCar() {
+    const g = this.add.graphics();
+
+    // Player car (purple)
+    const drawCar = (gfx, x, y, color, glowColor) => {
+      // Shadow
+      gfx.fillStyle(0x000000, 0.3);
+      gfx.fillEllipse(x + 2, y + 6, 36, 10);
+      // Body
+      gfx.fillStyle(color);
+      gfx.fillRoundedRect(x - 18, y - 8, 36, 16, 4);
+      // Windshield
+      gfx.fillStyle(0xffffff, 0.25);
+      gfx.fillRoundedRect(x - 8, y - 6, 16, 8, 2);
+      // Wheels
+      gfx.fillStyle(0x1a1020);
+      gfx.fillCircle(x - 12, y + 7, 5);
+      gfx.fillCircle(x + 12, y + 7, 5);
+      gfx.fillStyle(0x6b5c7e, 0.5);
+      gfx.fillCircle(x - 12, y + 7, 3);
+      gfx.fillCircle(x + 12, y + 7, 3);
+    };
+
+    this.carGraphics = this.add.graphics();
+    this.carX = 280;
+    this.carY = H * 0.52;
+    drawCar(this.carGraphics, this.carX, this.carY, 0xd946ef, 0xd946ef);
+
+    // Car glow
+    this.carGlow = this.add.graphics();
+    this.carGlow.fillStyle(0xd946ef, 0.15);
+    this.carGlow.fillCircle(this.carX, this.carY, 24);
+
+    // Animate car driving path
+    this.carPath = [
+      { x: 60, y: H * 0.52 },
+      { x: W * 0.38 - 20, y: H * 0.52 },
+      { x: W * 0.38 - 20, y: 240 },
+      { x: W - 170, y: 240 },
+      { x: W - 170, y: H * 0.52 },
+      { x: W * 0.72 - 18, y: H * 0.52 },
+      { x: W * 0.72 - 18, y: H * 0.62 },
+      { x: W * 0.46, y: H * 0.62 },
+      { x: W * 0.46, y: H * 0.52 },
+      { x: 280, y: H * 0.52 },
+    ];
+    this.carPathIndex = 0;
+    this.moveCar();
+  }
+
+  moveCar() {
+    const next = this.carPath[this.carPathIndex % this.carPath.length];
+    this.tweens.add({
+      targets: this,
+      carX: next.x, carY: next.y,
+      duration: 2500,
+      ease: 'Linear',
+      onUpdate: () => {
+        this.carGraphics.clear();
+        this.carGlow.clear();
+        // Shadow
+        this.carGraphics.fillStyle(0x000000, 0.25);
+        this.carGraphics.fillEllipse(this.carX + 2, this.carY + 8, 38, 12);
+        // Body
+        this.carGraphics.fillStyle(0xd946ef);
+        this.carGraphics.fillRoundedRect(this.carX - 18, this.carY - 8, 36, 16, 4);
+        // Windshield
+        this.carGraphics.fillStyle(0xffffff, 0.25);
+        this.carGraphics.fillRoundedRect(this.carX - 8, this.carY - 6, 16, 8, 2);
+        // Wheels
+        this.carGraphics.fillStyle(0x1a1020);
+        this.carGraphics.fillCircle(this.carX - 12, this.carY + 7, 5);
+        this.carGraphics.fillCircle(this.carX + 12, this.carY + 7, 5);
+        // Glow
+        this.carGlow.fillStyle(0xd946ef, 0.12);
+        this.carGlow.fillCircle(this.carX, this.carY, 22);
+      },
+      onComplete: () => {
+        this.carPathIndex++;
+        this.time.addEvent({ delay: 400, callback: this.moveCar, callbackScope: this });
+      }
+    });
+  }
+
+  createCompetitorCar() {
+    this.compCar = this.add.graphics();
+    this.compX = W - 200;
+    this.compY = H * 0.75;
+
+    const drawComp = () => {
+      this.compCar.clear();
+      this.compCar.fillStyle(0x000000, 0.2);
+      this.compCar.fillEllipse(this.compX + 2, this.compY + 6, 30, 9);
+      this.compCar.fillStyle(0xef4444);
+      this.compCar.fillRoundedRect(this.compX - 14, this.compY - 6, 28, 12, 3);
+      this.compCar.fillStyle(0xffffff, 0.2);
+      this.compCar.fillRoundedRect(this.compX - 5, this.compY - 5, 10, 7, 2);
+      this.compCar.fillStyle(0x1a0d0d);
+      this.compCar.fillCircle(this.compX - 9, this.compY + 5, 4);
+      this.compCar.fillCircle(this.compX + 9, this.compY + 5, 4);
+    };
+    drawComp();
+
+    // Competitor drives toward Axiom occasionally
+    this.time.addEvent({
+      delay: 12000,
+      callback: () => {
+        this.tweens.add({
+          targets: this,
+          compX: W * 0.72 - 18, compY: H * 0.52,
+          duration: 3000, ease: 'Linear',
+          onUpdate: drawComp
+        });
+      },
+      loop: true
+    });
+  }
+
+  createHUD() {
+    const hudH = 90;
+    const hudY = H - hudH;
+
+    // HUD background
+    const hud = this.add.graphics();
+    hud.fillStyle(0x0d0618, 0.95);
+    hud.fillRect(0, hudY, W, hudH);
+    hud.lineStyle(1, 0x2e2249);
+    hud.strokeRect(0, hudY, W, hudH);
+    // Top accent line
+    hud.lineStyle(2, 0xd946ef, 0.6);
+    hud.lineBetween(0, hudY, W, hudY);
+
+    // Day counter
+    this.dayText = this.add.text(20, hudY + 14, 'DAY 12', {
+      fontSize: '16px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold',
+      color: '#d946ef'
+    });
+    this.add.text(20, hudY + 36, 'ACT 1: THE PITCH', {
+      fontSize: '9px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold',
+      color: '#8b7fa8', letterSpacing: 1
+    });
+
+    // Meters
+    const meterX = 160;
+    this.drawMeter(hud, meterX, hudY + 16, 200, 'DEAL HEALTH', 73, 0xd946ef, 0xa78bfa);
+    this.drawMeter(hud, meterX, hudY + 40, 200, 'ENERGY', 60, 0xf59e0b, 0xfde68a);
+    this.drawMeter(hud, meterX, hudY + 64, 200, 'CHAMPION', 45, 0x22c55e, 0x86efac);
+
+    // Location box
+    const locX = meterX + 230;
+    hud.fillStyle(0x1e1530);
+    hud.fillRoundedRect(locX, hudY + 12, 160, 60, 8);
+    hud.lineStyle(1, 0x2e2249);
+    hud.strokeRoundedRect(locX, hudY + 12, 160, 60, 8);
+    this.add.text(locX + 10, hudY + 20, 'HEADING TO', {
+      fontSize: '9px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold',
+      color: '#8b7fa8', letterSpacing: 1
+    });
+    this.add.text(locX + 10, hudY + 36, 'Axiom Systems HQ', {
+      fontSize: '12px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold',
+      color: '#ede8f5'
+    });
+    this.add.text(locX + 10, hudY + 56, '~2 min drive', {
+      fontSize: '10px', fontFamily: 'Inter, sans-serif',
+      color: '#8b7fa8'
+    });
+
+    // Inbox notification area
+    this.inboxBox = this.add.graphics();
+    this.inboxText = this.add.text(0, 0, '', {
+      fontSize: '11px', fontFamily: 'Inter, sans-serif',
+      color: '#ede8f5', wordWrap: { width: 200 }
+    });
+  }
+
+  drawMeter(g, x, y, width, label, pct, color1, color2) {
+    // Label
+    this.add.text(x, y, label, {
+      fontSize: '9px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold',
+      color: '#8b7fa8', letterSpacing: 1
+    });
+    // Track
+    g.fillStyle(0x1e1530);
+    g.fillRoundedRect(x, y + 14, width, 8, 4);
+    // Fill
+    g.fillGradientStyle(color1, color2, color1, color2, 1);
+    g.fillRoundedRect(x, y + 14, width * (pct / 100), 8, 4);
+    // Value
+    this.add.text(x + width + 8, y + 12, pct.toString(), {
+      fontSize: '11px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold',
+      color: '#ede8f5'
+    });
+  }
+
+  createDayNightOverlay() {
+    this.dayOverlay = this.add.graphics();
+    this.dayOverlay.setDepth(10);
+    this.updateDayNight(0);
+  }
+
+  updateDayNight(phase) {
+    this.dayOverlay.clear();
+    if (phase === 0) {
+      // Morning — slight warm tint
+      this.dayOverlay.fillStyle(0xff9900, 0.04);
+    } else if (phase === 1) {
+      // Noon — neutral
+    } else if (phase === 2) {
+      // Dusk — orange
+      this.dayOverlay.fillStyle(0xff5500, 0.1);
+    } else {
+      // Night — dark blue
+      this.dayOverlay.fillStyle(0x000033, 0.35);
+    }
+    this.dayOverlay.fillRect(0, 0, W, H);
+  }
+
+  advanceDay() {
+    this.timeOfDay = (this.timeOfDay + 1) % 4;
+    this.updateDayNight(this.timeOfDay);
+    const labels = ['Day 12', 'Day 12', 'Day 13', 'Day 13'];
+    if (this.dayText) this.dayText.setText(labels[this.timeOfDay].toUpperCase());
+  }
+
+  createClickTargets() {
+    // Clickable building overlays with hover effect
+    const buildings = [
+      { x: 60, y: 90, w: 180, h: 130, label: 'Visit HQ', color: 0xd946ef },
+      { x: W - 280, y: 60, w: 220, h: 170, label: 'Visit Axiom', color: 0x60a5fa },
+      { x: W * 0.44, y: H * 0.60, w: 120, h: 90, label: 'Coffee Shop', color: 0xf59e0b },
+    ];
+
+    buildings.forEach(b => {
+      const zone = this.add.zone(b.x, b.y, b.w, b.h).setOrigin(0).setInteractive({ cursor: 'pointer' });
+      const highlight = this.add.graphics();
+      highlight.setAlpha(0);
+
+      zone.on('pointerover', () => {
+        highlight.clear();
+        highlight.lineStyle(2, b.color, 0.8);
+        highlight.strokeRect(b.x, b.y, b.w, b.h);
+        highlight.fillStyle(b.color, 0.08);
+        highlight.fillRect(b.x, b.y, b.w, b.h);
+        highlight.setAlpha(1);
+      });
+      zone.on('pointerout', () => highlight.setAlpha(0));
+      zone.on('pointerdown', () => {
+        this.showDecisionPrompt(b.label);
+      });
+    });
+  }
+
+  showDecisionPrompt(location) {
+    // Flash to decision scene
+    this.cameras.main.flash(300, 13, 6, 24);
+    this.time.delayedCall(400, () => {
+      this.scene.start('DecisionScene', { from: location });
+    });
+  }
+
+  createNotification() {
+    this.notifVisible = false;
+    this.notifGraphics = this.add.graphics().setDepth(20);
+    this.notifTitle = this.add.text(0, 0, '', {
+      fontSize: '9px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold',
+      color: '#d946ef', letterSpacing: 1
+    }).setDepth(21);
+    this.notifBody = this.add.text(0, 0, '', {
+      fontSize: '11px', fontFamily: 'Inter, sans-serif',
+      color: '#ede8f5', wordWrap: { width: 220 }
+    }).setDepth(21);
+  }
+
+  showNotification() {
+    const messages = [
+      { from: 'Priya', text: 'Do you support Kubernetes-native deployment?' },
+      { from: 'Alex', text: "FYI I heard Vertex is sniffing around Axiom. Might be nothing." },
+      { from: 'Marcus', text: 'Looking forward to our session Tuesday.' },
+      { from: 'Sarah', text: 'How is the Axiom deal tracking? Board review is next week.' },
+    ];
+    const msg = messages[Math.floor(Math.random() * messages.length)];
+    const nx = W - 280, ny = 20, nw = 260, nh = 64;
+
+    this.notifGraphics.clear();
+    this.notifGraphics.fillStyle(0xd946ef, 0.1);
+    this.notifGraphics.fillRoundedRect(nx, ny, nw, nh, 10);
+    this.notifGraphics.lineStyle(1, 0xd946ef, 0.4);
+    this.notifGraphics.strokeRoundedRect(nx, ny, nw, nh, 10);
+
+    this.notifTitle.setText('📬 ' + msg.from.toUpperCase());
+    this.notifTitle.setPosition(nx + 12, ny + 10);
+    this.notifBody.setText(msg.text);
+    this.notifBody.setPosition(nx + 12, ny + 28);
+
+    this.notifGraphics.setAlpha(0);
+    this.notifTitle.setAlpha(0);
+    this.notifBody.setAlpha(0);
+
+    this.tweens.add({
+      targets: [this.notifGraphics, this.notifTitle, this.notifBody],
+      alpha: 1, duration: 300, ease: 'Power2',
+      onComplete: () => {
+        this.time.addEvent({
+          delay: 3500,
+          callback: () => {
+            this.tweens.add({
+              targets: [this.notifGraphics, this.notifTitle, this.notifBody],
+              alpha: 0, duration: 400
+            });
+          }
+        });
+      }
+    });
+  }
+}
+
+// ---- SCENE 2: DECISION SCENE ----
+class DecisionScene extends Phaser.Scene {
+  constructor() { super({ key: 'DecisionScene' }); }
+
+  init(data) { this.fromLocation = data.from || 'Axiom Systems'; }
+
+  create() {
+    this.cameras.main.setBackgroundColor('#130d1c');
+
+    const g = this.add.graphics();
+
+    // Background texture
+    g.fillStyle(0x130d1c);
+    g.fillRect(0, 0, W, H);
+
+    // Subtle grid
+    g.lineStyle(1, 0x1e1530);
+    for (let x = 0; x < W; x += 40) g.lineBetween(x, 0, x, H);
+    for (let y = 0; y < H; y += 40) g.lineBetween(0, y, W, y);
+
+    const cx = W / 2;
+
+    // Scene context bar
+    g.fillStyle(0x1e1530);
+    g.fillRect(0, 0, W, 60);
+    g.lineStyle(1, 0x2e2249);
+    g.lineBetween(0, 60, W, 60);
+    g.fillStyle(0xd946ef);
+    g.fillRect(0, 0, W, 3);
+
+    this.add.text(20, 18, this.fromLocation.toUpperCase() + ' — CONFERENCE ROOM', {
+      fontSize: '10px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold',
+      color: '#d946ef', letterSpacing: 2
+    });
+    this.add.text(20, 38, 'Day 12  ·  Act 1: The Pitch  ·  Energy: 6/10', {
+      fontSize: '10px', fontFamily: 'Inter, sans-serif',
+      color: '#8b7fa8'
+    });
+
+    // Meters top right
+    this.drawSmallMeter(g, W - 200, 14, 180, 'DEAL', 73, 0xd946ef, 0xa78bfa);
+    this.drawSmallMeter(g, W - 200, 36, 180, 'CHAMPION', 45, 0x22c55e, 0x86efac);
+
+    // Context box
+    g.fillStyle(0x271c3d);
+    g.fillRoundedRect(cx - 340, 80, 680, 50, 8);
+    g.lineStyle(1, 0xd946ef, 0.4);
+    g.strokeRoundedRect(cx - 340, 80, 680, 50, 8);
+    g.fillStyle(0xd946ef, 1);
+    g.fillRect(cx - 340, 80, 4, 50);
+
+    this.add.text(cx - 326, 92, 'Marcus has just described their P1 incident problem. Priya is nodding. Two engineers are in the back of the room.', {
+      fontSize: '12px', fontFamily: 'Inter, sans-serif', fontStyle: 'italic',
+      color: '#8b7fa8', wordWrap: { width: 640 }
+    });
+
+    // Speaker bubble
+    const speakerY = 150;
+    // Avatar
+    g.fillStyle(0x1a3a5c);
+    g.fillCircle(cx - 300, speakerY + 30, 28);
+    g.lineStyle(2, 0x60a5fa);
+    g.strokeCircle(cx - 300, speakerY + 30, 28);
+    this.add.text(cx - 300, speakerY + 30, '🧑‍💻', { fontSize: '22px' }).setOrigin(0.5);
+
+    this.add.text(cx - 265, speakerY, 'PRIYA — SENIOR ENGINEER', {
+      fontSize: '9px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold',
+      color: '#60a5fa', letterSpacing: 1
+    });
+
+    g.fillStyle(0x271c3d);
+    g.fillRoundedRect(cx - 266, speakerY + 14, 500, 80, 10);
+    g.lineStyle(1, 0x2e2249);
+    g.strokeRoundedRect(cx - 266, speakerY + 14, 500, 80, 10);
+
+    this.add.text(cx - 250, speakerY + 26, '"Our problem honestly is not the tools. Nobody owns the alert taxonomy.\nEveryone sets their own thresholds. When a real incident hits, we\'re\ndrowning in noise."', {
+      fontSize: '14px', fontFamily: 'Inter, sans-serif',
+      color: '#ede8f5', lineSpacing: 4
+    });
+
+    // Choices
+    this.add.text(cx - 340, speakerY + 116, 'HOW DO YOU RESPOND?', {
+      fontSize: '10px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold',
+      color: '#8b7fa8', letterSpacing: 2
+    });
+
+    const choices = [
+      '"Tell me more — what does that actually look like when a real incident fires?"',
+      '"We have an alert management module that handles exactly that."',
+      '"What would it look like for your team if the alert noise was gone?"',
+      '"How many alerts are you getting per day across all your tools?"',
+    ];
+    const letters = ['A', 'B', 'C', 'D'];
+
+    choices.forEach((text, i) => {
+      const cy = speakerY + 140 + i * 56;
+      const card = g.fillStyle(0x1e1530);
+      g.fillRoundedRect(cx - 340, cy, 680, 48, 8);
+      g.lineStyle(2, 0x2e2249);
+      g.strokeRoundedRect(cx - 340, cy, 680, 48, 8);
+
+      // Letter badge
+      g.fillStyle(0x271c3d);
+      g.fillRoundedRect(cx - 328, cy + 10, 26, 26, 5);
+      this.add.text(cx - 315, cy + 23, letters[i], {
+        fontSize: '11px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold',
+        color: '#d946ef'
+      }).setOrigin(0.5);
+
+      this.add.text(cx - 294, cy + 14, text, {
+        fontSize: '13px', fontFamily: 'Inter, sans-serif',
+        color: '#ede8f5', wordWrap: { width: 630 }
+      });
+
+      // Hover zone
+      const zone = this.add.zone(cx - 340, cy, 680, 48).setOrigin(0).setInteractive({ cursor: 'pointer' });
+      const hover = this.add.graphics();
+      zone.on('pointerover', () => {
+        hover.clear();
+        hover.lineStyle(2, 0xd946ef);
+        hover.strokeRoundedRect(cx - 340, cy, 680, 48, 8);
+        hover.fillStyle(0xd946ef, 0.06);
+        hover.fillRoundedRect(cx - 340, cy, 680, 48, 8);
+      });
+      zone.on('pointerout', () => hover.clear());
+      zone.on('pointerdown', () => {
+        this.cameras.main.flash(200, 13, 6, 24);
+        this.time.delayedCall(300, () => this.scene.start('CityScene'));
+      });
+    });
+
+    // Back button
+    this.add.text(W - 20, H - 20, '← Back to map', {
+      fontSize: '11px', fontFamily: 'Inter, sans-serif',
+      color: '#8b7fa8'
+    }).setOrigin(1).setInteractive({ cursor: 'pointer' })
+      .on('pointerdown', () => this.scene.start('CityScene'))
+      .on('pointerover', function() { this.setColor('#d946ef'); })
+      .on('pointerout', function() { this.setColor('#8b7fa8'); });
+  }
+
+  drawSmallMeter(g, x, y, width, label, pct, c1, c2) {
+    this.add.text(x, y, label, {
+      fontSize: '9px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold',
+      color: '#8b7fa8', letterSpacing: 1
+    });
+    g.fillStyle(0x1e1530);
+    g.fillRoundedRect(x + 70, y + 1, width - 70, 7, 3);
+    g.fillGradientStyle(c1, c2, c1, c2, 1);
+    g.fillRoundedRect(x + 70, y + 1, (width - 70) * (pct / 100), 7, 3);
+    this.add.text(x + width + 4, y - 1, pct.toString(), {
+      fontSize: '10px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold',
+      color: '#ede8f5'
+    });
+  }
+}
+
+// ---- SCENE 3: DISCOVERY SCRAMBLE ----
+class ScrambleScene extends Phaser.Scene {
+  constructor() { super({ key: 'ScrambleScene' }); }
+
+  create() {
+    this.cameras.main.setBackgroundColor('#0d0618');
+    const g = this.add.graphics();
+
+    // Header
+    g.fillStyle(0x1e1530);
+    g.fillRect(0, 0, W, 52);
+    g.lineStyle(1, 0x2e2249);
+    g.lineBetween(0, 52, W, 52);
+    g.fillStyle(0xd946ef);
+    g.fillRect(0, 0, W, 3);
+
+    this.add.text(20, 16, '⚡ DISCOVERY SCRAMBLE', {
+      fontSize: '13px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold',
+      color: '#d946ef', letterSpacing: 2
+    });
+
+    this.add.text(W / 2, 26, 'Get 4 in a row to unlock a Discovery Insight', {
+      fontSize: '11px', fontFamily: 'Inter, sans-serif',
+      color: '#8b7fa8'
+    }).setOrigin(0.5);
+
+    // Streak dots
+    const dots = [0, 1, 2, 3];
+    dots.forEach((_, i) => {
+      const dx = W - 120 + i * 22;
+      g.fillStyle(i < 2 ? 0xd946ef : 0x2e2249);
+      g.fillCircle(dx, 26, 7);
+      if (i < 2) {
+        g.fillStyle(0xd946ef, 0.2);
+        g.fillCircle(dx, 26, 11);
+      }
+    });
+
+    // Split layout
+    const splitX = W * 0.45;
+
+    // Left: Customer
+    g.fillStyle(0x130d1c);
+    g.fillRect(0, 52, splitX, H - 52);
+
+    // Customer avatar area
+    const avatarY = H * 0.25;
+    g.fillStyle(0x1a3a5c);
+    g.fillCircle(splitX * 0.5, avatarY, 48);
+    g.lineStyle(3, 0x60a5fa);
+    g.strokeCircle(splitX * 0.5, avatarY, 48);
+
+    this.add.text(splitX * 0.5, avatarY, '🧑‍💻', { fontSize: '36px' }).setOrigin(0.5);
+
+    this.add.text(splitX * 0.5, avatarY + 62, 'PRIYA SHARMA', {
+      fontSize: '11px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold',
+      color: '#60a5fa', letterSpacing: 1
+    }).setOrigin(0.5);
+
+    this.add.text(splitX * 0.5, avatarY + 80, 'Senior Engineer, Axiom Systems', {
+      fontSize: '10px', fontFamily: 'Inter, sans-serif',
+      color: '#8b7fa8'
+    }).setOrigin(0.5);
+
+    // Speech bubble
+    const bubY = avatarY + 106;
+    const bubW = splitX - 60;
+    const bubX = 30;
+    g.fillStyle(0x1e1530);
+    g.fillRoundedRect(bubX, bubY, bubW, 100, 12);
+    g.lineStyle(1.5, 0x2e2249);
+    g.strokeRoundedRect(bubX, bubY, bubW, 100, 12);
+    // Bubble tail
+    g.fillStyle(0x1e1530);
+    g.fillTriangle(bubX + bubW * 0.35, bubY + 100, bubX + bubW * 0.35 + 16, bubY + 100, bubX + bubW * 0.35 + 8, bubY + 116);
+
+    this.add.text(bubX + 16, bubY + 14, '"My engineers might actually sleep\nif we got this right. Two people left\nlast year. I know on-call was part of it."', {
+      fontSize: '13px', fontFamily: 'Inter, sans-serif',
+      color: '#ede8f5', lineSpacing: 5
+    });
+
+    // Divider
+    g.lineStyle(1, 0x2e2249);
+    g.lineBetween(splitX, 52, splitX, H);
+
+    // Right: Options
+    g.fillStyle(0x0d0618);
+    g.fillRect(splitX, 52, W - splitX, H - 52);
+
+    this.add.text(splitX + 24, 80, 'CHOOSE YOUR RESPONSE', {
+      fontSize: '10px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold',
+      color: '#8b7fa8', letterSpacing: 2
+    });
+
+    // Timer arc (circular)
+    const timerX = W - 70, timerY = 100;
+    g.lineStyle(4, 0x2e2249);
+    g.strokeCircle(timerX, timerY, 28);
+    g.lineStyle(4, 0xd946ef);
+    // Draw arc for 65% remaining
+    g.beginPath();
+    g.arc(timerX, timerY, 28, -Math.PI / 2, -Math.PI / 2 + (Math.PI * 2 * 0.65), false);
+    g.strokePath();
+    this.add.text(timerX, timerY, '4s', {
+      fontSize: '13px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold',
+      color: '#d946ef'
+    }).setOrigin(0.5);
+
+    // Timer countdown tween
+    this.timerSecs = 4;
+    this.timerText = this.add.text(timerX, timerY, '4s', {
+      fontSize: '13px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold',
+      color: '#d946ef'
+    }).setOrigin(0.5);
+
+    const options = [
+      { text: '"You mentioned engineers burning out — has that affected retention beyond those two?"', best: true },
+      { text: '"Let\'s talk about how our ML-based anomaly detection reduces alert noise automatically."', best: false },
+      { text: '"What does your on-call rotation look like right now — how many engineers?"', best: false },
+    ];
+
+    const optStartY = 140;
+    options.forEach((opt, i) => {
+      const oy = optStartY + i * 90;
+      const ox = splitX + 24;
+      const ow = W - splitX - 48;
+
+      g.fillStyle(opt.best ? 0x0a2010 : 0x1e1530);
+      g.fillRoundedRect(ox, oy, ow, 76, 10);
+      g.lineStyle(2, opt.best ? 0x22c55e : 0x2e2249);
+      g.strokeRoundedRect(ox, oy, ow, 76, 10);
+
+      if (opt.best) {
+        g.fillStyle(0x22c55e, 0.15);
+        g.fillRoundedRect(ox, oy, ow, 76, 10);
+      }
+
+      this.add.text(ox + 16, oy + 16, opt.text, {
+        fontSize: '13px', fontFamily: 'Inter, sans-serif',
+        color: opt.best ? '#86efac' : '#ede8f5',
+        wordWrap: { width: ow - 32 }, lineSpacing: 3
+      });
+
+      if (!opt.best) {
+        const zone = this.add.zone(ox, oy, ow, 76).setOrigin(0).setInteractive({ cursor: 'pointer' });
+        const hov = this.add.graphics();
+        zone.on('pointerover', () => {
+          hov.clear();
+          hov.lineStyle(2, 0xd946ef);
+          hov.strokeRoundedRect(ox, oy, ow, 76, 10);
+        });
+        zone.on('pointerout', () => hov.clear());
+        zone.on('pointerdown', () => {
+          this.cameras.main.flash(200, 13, 6, 24);
+          this.time.delayedCall(300, () => this.scene.start('CityScene'));
+        });
+      }
+    });
+
+    // Best answer label
+    g.fillStyle(0x22c55e, 0.2);
+    g.fillRoundedRect(splitX + 24, optStartY - 2, 80, 20, 5);
+    this.add.text(splitX + 34, optStartY + 8, '★ BEST ANSWER', {
+      fontSize: '9px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold',
+      color: '#22c55e', letterSpacing: 0.5
+    }).setOrigin(0, 0.5);
+
+    // Back
+    this.add.text(W - 20, H - 20, '← Back to map', {
+      fontSize: '11px', fontFamily: 'Inter, sans-serif',
+      color: '#8b7fa8'
+    }).setOrigin(1).setInteractive({ cursor: 'pointer' })
+      .on('pointerdown', () => this.scene.start('CityScene'))
+      .on('pointerover', function() { this.setColor('#d946ef'); })
+      .on('pointerout', function() { this.setColor('#8b7fa8'); });
+
+    // Scene switcher hint
+    this.add.text(20, H - 20, 'Click buildings on the map to trigger decision scenes', {
+      fontSize: '10px', fontFamily: 'Inter, sans-serif',
+      color: '#4a3860'
+    });
+  }
+}
+
+// ---- LAUNCH ----
+const config = {
+  type: Phaser.AUTO,
+  width: W,
+  height: H,
+  parent: 'game-container',
+  backgroundColor: '#0a0612',
+  scene: [CityScene, DecisionScene, ScrambleScene],
+  scale: {
+    mode: Phaser.Scale.FIT,
+    autoCenter: Phaser.Scale.CENTER_BOTH
+  }
+};
+
+const game = new Phaser.Game(config);
+</script>
+</body>
+</html>
