@@ -1,0 +1,12 @@
+{
+  "name": "Should I Be an SE?",
+  "short_name": "Should I Be an SE?",
+  "description": "10 scenarios. Find out if the Sales Engineer role is right for you.",
+  "start_url": "/field-ready/should-i-be-an-se",
+  "display": "standalone",
+  "background_color": "#130d1c",
+  "theme_color": "#130d1c",
+  "icons": [
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}

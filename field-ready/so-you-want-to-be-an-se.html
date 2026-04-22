@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <title>Should I Be an SE? | Field Ready</title>
+  <meta name="description" content="10 scenarios. Real situations SEs live every week. Find out if you're actually wired for it — or just tired of your current job.">
+  <script defer src="https://umami-tau-drab.vercel.app/script.js" data-website-id="23015384-bcae-4732-9665-a39f261647e1"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <meta property="og:title" content="Should I Be an SE? | Field Ready" />
+  <meta property="og:description" content="10 scenarios. Real situations SEs live every week. Find out if you're actually wired for it — or just tired of your current job." />
+  <meta property="og:url" content="https://jasonlanders.com/field-ready/should-i-be-an-se" />
+  <meta property="og:type" content="website" />
+  <meta name="keywords" content="should I be a sales engineer, sales engineer career, presales career quiz, SE career path, is sales engineering right for me" />
+  <link rel="manifest" href="/field-ready/manifest-should-i-be-an-se.json" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Should I Be an SE?" />
+  <meta name="theme-color" content="#160d20" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #130d1c;
+      --surface: #1e1530;
+      --surface2: #271c3d;
+      --border: #2e2249;
+      --text: #ede8f5;
+      --muted: #8b7fa8;
+      --accent: #d946ef;
+      --accent-dark: #b91fd4;
+      --accent-light: rgba(217,70,239,0.12);
+      --accent-glow: rgba(217,70,239,0.25);
+      --green: #34d399;
+      --font: 'Inter', system-ui, sans-serif;
+    }
+
+    html, body {
+      min-height: 100%;
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .screen { display: none; }
+    .screen.active { display: block; }
+    body.quiz-active { overflow: hidden; height: 100vh; }
+    body.quiz-active #quiz,
+    body.quiz-active #result {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      overflow-y: auto; background: var(--bg); z-index: 50;
+    }
+
+    /* BRAND TAG */
+    .brand-tag {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--accent);
+      text-decoration: none;
+      display: inline-block;
+      transition: opacity 0.15s;
+    }
+    .brand-tag:hover { opacity: 0.75; }
+
+    /* INTRO */
+    #intro {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 24px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    #intro::before {
+      content: '';
+      position: absolute;
+      top: -10%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 700px;
+      height: 500px;
+      background: radial-gradient(ellipse, rgba(217,70,239,0.18) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .brand-tag-intro {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--accent);
+      text-decoration: none;
+      display: inline-block;
+      margin-bottom: 28px;
+      opacity: 0.9;
+      transition: opacity 0.15s;
+    }
+    .brand-tag-intro:hover { opacity: 1; }
+
+    .intro-title {
+      font-size: clamp(32px, 7vw, 56px);
+      font-weight: 800;
+      letter-spacing: -1.5px;
+      color: #fff;
+      line-height: 1.1;
+      margin-bottom: 16px;
+      max-width: 560px;
+    }
+
+    .intro-title em {
+      font-style: normal;
+      background: linear-gradient(135deg, var(--accent), #a78bfa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .intro-sub {
+      font-size: 16px;
+      color: var(--muted);
+      line-height: 1.7;
+      max-width: 440px;
+      margin-bottom: 32px;
+    }
+
+    .tags-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      margin-bottom: 36px;
+      max-width: 500px;
+    }
+
+    .tag-chip {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      padding: 6px 16px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--muted);
+    }
+
+    .btn-start {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 100px;
+      padding: 16px 44px;
+      font-family: var(--font);
+      font-size: 17px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s, box-shadow 0.15s;
+      box-shadow: 0 0 24px var(--accent-glow);
+      letter-spacing: -0.2px;
+    }
+
+    .btn-start:hover {
+      background: var(--accent-dark);
+      box-shadow: 0 0 36px var(--accent-glow);
+    }
+
+    .intro-footer { margin-top: 20px; font-size: 13px; color: var(--muted); }
+
+    /* QUIZ */
+    #quiz { padding: 24px; }
+
+    .quiz-inner { max-width: 600px; margin: 0 auto; }
+
+    .quiz-topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 32px;
+    }
+
+    .progress-wrap { flex: 1; margin: 0 24px; }
+
+    .progress-bar-bg {
+      background: var(--surface);
+      border-radius: 100px;
+      height: 3px;
+      overflow: hidden;
+      margin-bottom: 8px;
+    }
+
+    .progress-bar-fill {
+      background: linear-gradient(90deg, var(--accent), #a78bfa);
+      height: 100%;
+      border-radius: 100px;
+      transition: width 0.4s ease;
+    }
+
+    .progress-label { font-size: 12px; color: var(--muted); font-weight: 500; text-align: center; }
+
+    .question-block { animation: fadeUp 0.25s ease; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .question-num {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 12px;
+    }
+
+    .question-text {
+      font-size: clamp(18px, 3.5vw, 24px);
+      font-weight: 700;
+      color: #fff;
+      line-height: 1.35;
+      margin-bottom: 28px;
+      letter-spacing: -0.3px;
+    }
+
+    .answers { display: flex; flex-direction: column; gap: 10px; }
+
+    .answer-btn {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: 14px;
+      padding: 16px 20px;
+      font-family: var(--font);
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--text);
+      text-align: left;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s, transform 0.1s;
+      line-height: 1.45;
+    }
+
+    .answer-btn:hover {
+      border-color: var(--accent);
+      background: var(--accent-light);
+    }
+
+    .answer-btn:active { transform: scale(0.98); }
+
+    .answer-btn.selected {
+      border-color: var(--accent);
+      background: var(--accent-light);
+      color: #fff;
+    }
+
+    /* RESULT */
+    #result { padding: 40px 24px 60px; }
+
+    .result-inner { max-width: 600px; margin: 0 auto; }
+
+    .result-topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 36px;
+    }
+
+    .result-header {
+      text-align: center;
+      margin-bottom: 32px;
+      position: relative;
+    }
+
+    .result-header::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 50%;
+      transform: translateX(-50%);
+      width: 300px;
+      height: 200px;
+      background: radial-gradient(ellipse, rgba(217,70,239,0.2) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .result-emoji { font-size: 60px; margin-bottom: 16px; position: relative; }
+
+    .result-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 8px;
+    }
+
+    .result-name {
+      font-size: clamp(26px, 5.5vw, 38px);
+      font-weight: 800;
+      letter-spacing: -1px;
+      background: linear-gradient(135deg, #fff 40%, #a78bfa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 14px;
+      line-height: 1.2;
+    }
+
+    .result-tagline {
+      font-size: 16px;
+      color: var(--muted);
+      line-height: 1.65;
+      max-width: 460px;
+      margin: 0 auto 20px;
+    }
+
+    .score-meter {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+
+    .score-number {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--muted);
+    }
+
+    .score-bar-bg {
+      width: 200px;
+      height: 6px;
+      background: var(--surface2);
+      border-radius: 100px;
+      overflow: hidden;
+    }
+
+    .score-bar-fill {
+      height: 100%;
+      border-radius: 100px;
+      background: linear-gradient(90deg, var(--accent), #a78bfa);
+      transition: width 0.8s ease;
+    }
+
+    .result-section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 22px;
+      margin-bottom: 12px;
+    }
+
+    .result-section-title {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--accent);
+      margin-bottom: 12px;
+    }
+
+    .result-section p { font-size: 15px; color: var(--text); line-height: 1.65; }
+
+    .traits-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    @media (max-width: 480px) { .traits-grid { grid-template-columns: 1fr; } }
+
+    .trait-card {
+      background: var(--surface2);
+      border-radius: 12px;
+      padding: 16px;
+    }
+
+    .trait-card-label {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+    }
+
+    .trait-card-label.brings { color: var(--green); }
+    .trait-card-label.challenges { color: #fb923c; }
+    .trait-card p { font-size: 13px; color: var(--muted); line-height: 1.5; }
+
+    .quote-block {
+      font-style: italic;
+      font-size: 15px;
+      color: var(--muted);
+      border-left: 3px solid var(--accent);
+      padding-left: 16px;
+      line-height: 1.6;
+    }
+
+    .email-section {
+      background: linear-gradient(135deg, var(--accent-dark), #7c3aed);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 12px;
+      text-align: center;
+    }
+
+    .email-section h3 { font-size: 18px; font-weight: 800; color: #fff; margin-bottom: 6px; }
+    .email-section p { font-size: 14px; color: rgba(255,255,255,0.75); margin-bottom: 18px; line-height: 1.5; }
+
+    .email-form { display: flex; gap: 8px; flex-wrap: wrap; }
+
+    .email-input {
+      flex: 1;
+      min-width: 180px;
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.25);
+      border-radius: 10px;
+      padding: 12px 14px;
+      color: #fff;
+      font-family: var(--font);
+      font-size: 14px;
+      outline: none;
+    }
+
+    .email-input:focus { border-color: rgba(255,255,255,0.6); }
+    .email-input::placeholder { color: rgba(255,255,255,0.5); }
+
+    .email-submit {
+      background: #fff;
+      color: var(--accent-dark);
+      border: none;
+      border-radius: 10px;
+      padding: 12px 20px;
+      font-family: var(--font);
+      font-size: 14px;
+      font-weight: 800;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: opacity 0.15s;
+    }
+
+    .email-submit:hover { opacity: 0.9; }
+
+    @media (max-width: 480px) {
+      .email-form { flex-direction: column; }
+      .email-input, .email-submit { width: 100%; }
+    }
+
+    .result-actions { display: flex; flex-direction: column; gap: 10px; margin-top: 4px; }
+
+    .btn-share {
+      width: 100%;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      padding: 15px;
+      font-family: var(--font);
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s, box-shadow 0.15s;
+      box-shadow: 0 0 18px var(--accent-glow);
+      letter-spacing: -0.2px;
+    }
+
+    .btn-share:hover { background: var(--accent-dark); }
+
+    .btn-retake {
+      width: 100%;
+      background: transparent;
+      color: var(--muted);
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      padding: 13px;
+      font-family: var(--font);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: border-color 0.15s, color 0.15s;
+    }
+
+    .btn-retake:hover { border-color: var(--accent); color: var(--text); }
+
+    .field-ready-footer {
+      margin-top: 28px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+      text-align: center;
+    }
+
+    .field-ready-footer a { font-size: 12px; color: var(--muted); text-decoration: none; }
+    .field-ready-footer a:hover { color: var(--accent); }
+
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--accent);
+      color: #fff;
+      padding: 11px 22px;
+      border-radius: 100px;
+      font-size: 14px;
+      font-weight: 700;
+      transition: transform 0.3s ease;
+      pointer-events: none;
+      z-index: 100;
+      white-space: nowrap;
+      box-shadow: 0 4px 20px var(--accent-glow);
+    }
+
+    .toast.show { transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body>
+
+<div class="toast" id="toast">Copied to clipboard!</div>
+
+<!-- INTRO -->
+<div id="intro" class="active">
+  <a href="/field-ready/" class="brand-tag-intro">&#8592; Field Ready by Jason Landers</a>
+  <h1 class="intro-title">Should I Be<br>an <em>SE?</em></h1>
+  <p class="intro-sub">You're technical. You can talk. People keep saying you'd be "great in sales." But have you actually thought about what you're signing up for?<br><br>10 scenarios. Real situations SEs live every week. Find out if you're wired for it — or just tired of your current job.</p>
+  <div class="tags-row">
+    <span class="tag-chip">Demo chaos</span>
+    <span class="tag-chip">Cryptic AEs</span>
+    <span class="tag-chip">Friday RFPs</span>
+    <span class="tag-chip">Live pressure</span>
+    <span class="tag-chip">Impossible asks</span>
+  </div>
+  <button class="btn-start" onclick="startQuiz()">Find out &#8594;</button>
+  <p class="intro-footer">10 scenarios &nbsp;&#183;&nbsp; 4 result tiers &nbsp;&#183;&nbsp; ~3 minutes</p>
+</div>
+
+<!-- QUIZ -->
+<div id="quiz" class="screen">
+  <div class="quiz-inner">
+    <div class="quiz-topbar">
+      <a href="/field-ready/" class="brand-tag">&#8592; Field Ready</a>
+      <div class="progress-wrap">
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill" id="progressBar" style="width:0%"></div>
+        </div>
+        <div class="progress-label" id="progressLabel">Scenario 1 of 10</div>
+      </div>
+    </div>
+    <div class="question-block" id="questionBlock"></div>
+  </div>
+</div>
+
+<!-- RESULT -->
+<div id="result" class="screen">
+  <div class="result-inner">
+    <div class="result-topbar">
+      <a href="/field-ready/" class="brand-tag">&#8592; Field Ready by Jason Landers</a>
+    </div>
+
+    <div class="result-header">
+      <div class="result-emoji" id="resultEmoji"></div>
+      <div class="result-label">Your SE Fit</div>
+      <div class="result-name" id="resultName"></div>
+      <p class="result-tagline" id="resultTagline"></p>
+      <div class="score-meter">
+        <div class="score-number" id="scoreNumber"></div>
+        <div class="score-bar-bg">
+          <div class="score-bar-fill" id="scoreBarFill" style="width:0%"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="result-section">
+      <div class="result-section-title">What the score reflects</div>
+      <p id="resultDescription"></p>
+    </div>
+
+    <div class="traits-grid" style="margin-bottom:12px;">
+      <div class="trait-card">
+        <div class="trait-card-label brings">What you'd bring</div>
+        <p id="resultBrings"></p>
+      </div>
+      <div class="trait-card">
+        <div class="trait-card-label challenges">What might challenge you</div>
+        <p id="resultChallenges"></p>
+      </div>
+    </div>
+
+    <div class="result-section">
+      <div class="result-section-title">Reality check</div>
+      <div class="quote-block" id="resultQuote"></div>
+    </div>
+
+    <div class="email-section">
+      <h3>The SE Edge</h3>
+      <p>Weekly insights on the Sales Engineer role, career, and craft.</p>
+      <form class="email-form" action="https://magic.beehiiv.com/v1/ed62bc9e-56bd-41ca-be98-5ab6463a12bf" method="get" target="_blank">
+        <input class="email-input" type="email" name="email" placeholder="your@email.com" required />
+        <button class="email-submit" type="submit">Subscribe</button>
+      </form>
+    </div>
+
+    <div class="result-actions">
+      <button class="btn-share" onclick="shareResult()">Share your result</button>
+      <button class="btn-retake" onclick="retake()">Retake the quiz</button>
+    </div>
+
+    <div class="field-ready-footer">
+      <a href="/field-ready/">Field Ready by Jason Landers &nbsp;&#183;&nbsp; jasonlanders.com</a>
+    </div>
+  </div>
+</div>
+
+<script>
+  var QUESTIONS = [
+    {
+      text: "It's 9:58 AM. Your demo starts at 10:00. Your sandbox environment is completely down. Your AE is already on the call telling the customer how impressive this is going to look. You...",
+      answers: [
+        { text: "Keep calm, narrate what should be happening with confidence, and have three backup slides mentally queued before the call started — the story is the product", score: 3 },
+        { text: "Mute fast, text your AE to buy 5 minutes, and ask the customer to walk you through their use case while you scramble", score: 2 },
+        { text: "Jump on, apologize immediately, and pray the environment comes back in the next four minutes", score: 1 },
+        { text: "Seriously consider faking a power outage", score: 0 }
+      ]
+    },
+    {
+      text: "You prepped a deep-dive architecture session for a room full of engineers. The CTO just joined. She has 40 minutes. Your AE is typing something in the chat you can't read fast enough. You...",
+      answers: [
+        { text: "Reopen with one business outcome sentence and shelve the architecture until someone asks for it", score: 3 },
+        { text: "Watch your AE's sidebar messages and pivot your opener based on what they flag", score: 2 },
+        { text: "Run your prepared flow and trust that technical depth impresses any audience", score: 1 },
+        { text: "Say a quiet prayer and hope she drops off after the intro", score: 0 }
+      ]
+    },
+    {
+      text: "Your AE assures you: 'Keep it high level — they're not very technical.' First question from the customer: 'What does your ingestion pipeline look like at 10 billion events per day?' You...",
+      answers: [
+        { text: "Pivot smoothly — you studied the architecture because you always study the architecture", score: 3 },
+        { text: "Acknowledge the question, give what you have, and offer to schedule a dedicated technical session this week", score: 2 },
+        { text: "Explain that you prepared for a different kind of conversation and offer to reschedule", score: 1 },
+        { text: "Make a very specific mental note for the next prep call — after this one is over", score: 0 }
+      ]
+    },
+    {
+      text: "Prospect: 'Your competitor showed us this exact feature last week and told us you can't do it.' You have no idea if that's true, false, or some creative combination of both. You...",
+      answers: [
+        { text: "Ask them to walk you through exactly what they saw — you need the scenario before you give any answer", score: 3 },
+        { text: "Buy yourself time with clarifying questions and verify before you commit to anything on the call", score: 2 },
+        { text: "Defend your product on instinct and sort out the details in the follow-up email", score: 1 },
+        { text: "Frantically text your AE under the table", score: 0 }
+      ]
+    },
+    {
+      text: "Friday, 4:58 PM. Your AE drops a 400-question RFP in your inbox due Monday morning. Subject line: 'Quick one for you!' You...",
+      answers: [
+        { text: "Open it, triage by deal importance and question difficulty, and identify which 30 questions actually determine this deal", score: 3 },
+        { text: "Block the weekend, pour something strong, and get it done — this is the job", score: 2 },
+        { text: "Call your AE immediately and negotiate the deadline before touching a single question", score: 1 },
+        { text: "Quietly update your LinkedIn headline", score: 0 }
+      ]
+    },
+    {
+      text: "Your demo crashes. Not a small glitch — a full black-screen crash. Eight people on the call, including two VPs you've never met. Twelve pairs of eyes staring at you. You...",
+      answers: [
+        { text: "Calmly narrate what should be happening, drop one self-aware line about demo environments, and keep the business conversation moving forward", score: 3 },
+        { text: "Pause, explain the expected behavior clearly, and offer to send a clean recorded demo within the hour", score: 2 },
+        { text: "Apologize, get visibly rattled, and try to fix it live while everyone watches", score: 1 },
+        { text: "Blame AWS with impressive specificity and conviction", score: 0 }
+      ]
+    },
+    {
+      text: "You spent three weeks building a custom proof of concept. Your champion went completely dark for two weeks. They just emailed: 'Hey, can we redo the demo for a new stakeholder?' No context. Just that. You...",
+      answers: [
+        { text: "Confirm warmly and immediately schedule 20 minutes with the champion to understand what actually changed internally", score: 3 },
+        { text: "Agree, ask for some prep context, and rebuild the narrative for the new audience", score: 2 },
+        { text: "Agree and start rebuilding the demo before you understand why it needs rebuilding", score: 1 },
+        { text: "Forward the email to your AE with only '???'", score: 0 }
+      ]
+    },
+    {
+      text: "Prospect: 'Can you integrate with our internal system? It was built in 2011 by a contractor who left, has zero documentation, and runs on a server in the IT closet.' You...",
+      answers: [
+        { text: "Ask clarifying questions about what the integration actually needs to accomplish before making any claim about feasibility", score: 3 },
+        { text: "Say you'd need to assess that specifically, get the technical contact's info, and scope it properly after the call", score: 2 },
+        { text: "Say yes confidently and figure out what that means later with product management", score: 1 },
+        { text: "Start nodding slowly while internally calculating whether 'yes' or 'maybe' is the safer answer right now", score: 0 }
+      ]
+    },
+    {
+      text: "Honestly — what's actually drawing you to the SE role?",
+      answers: [
+        { text: "Being the person who sits at the intersection of technical and business — credible with both, beholden to neither", score: 3 },
+        { text: "The live performance energy. A high-stakes demo is genuinely more exciting than terrifying to me", score: 2 },
+        { text: "I want to stay technical but get out of engineering-only work and start talking to real customers", score: 1 },
+        { text: "A friend who's an SE has a really nice car", score: 0 }
+      ]
+    },
+    {
+      text: "You're assigned a deal in an industry you've never worked in. First call is in four days. You...",
+      answers: [
+        { text: "Start reading the night you find out — industry context shapes technical questions more than the product itself does", score: 3 },
+        { text: "Get your champion on the phone immediately and ask what questions typically come up in evaluations like this", score: 2 },
+        { text: "Trust that your product knowledge is strong enough to carry the call regardless of the industry context", score: 1 },
+        { text: "Google the industry name, read for about 90 seconds, and close the tab", score: 0 }
+      ]
+    }
+  ];
+
+  var RESULTS = [
+    {
+      min: 24, max: 30,
+      emoji: "🏆",
+      name: "Born in a Demo Environment",
+      tagline: "The way you handle these situations is exactly how strong SEs operate. You prepare before anyone asks. You're calm when things break — and they will. You're curious about the customer's problem before you start solving it. That combination is legitimately rare.",
+      description: "You show the core instincts consistently: you adapt before you're told to, you stay curious under fire, and you care about the outcome even when the outcome is uncertain. These aren't skills that show up because someone trained you — they're the habits that made you good at whatever you're doing right now. SEs who think this way don't just survive the role. They're the ones everyone wants on their deal.",
+      brings: "Technical credibility without the performance, adaptability before anyone else panics, genuine curiosity that customers can actually feel",
+      challenges: "Knowing when to stop going deep. The best SEs know exactly which rabbit holes to skip — that's calibrated with reps, not just instinct.",
+      quote: "You were built for this. The question now is finding the right product, company, and team to point that energy at."
+    },
+    {
+      min: 16, max: 23,
+      emoji: "🎯",
+      name: "Strong Signal, Some Static",
+      tagline: "You've got the foundation. The instincts are there — you care about the outcome, you're thinking about the customer, you're not just running a script. A few responses show where the nerves or habits haven't fully caught up yet. That's reps, not wiring.",
+      description: "The caring part is already present, and that's the part you can't teach into someone. Where the score pulls back is in the high-uncertainty moments — the unexpected exec, the competitive curveball, the demo that crashes in front of someone important. Those get more comfortable with reps. The SEs who get there fastest are the ones who stay curious about what didn't work. You seem like one of those people.",
+      brings: "Customer focus, real communication flexibility, enough technical grounding to hold credibility when it matters most",
+      challenges: "The gap between 'I know what I should do' and 'I automatically do it' under real pressure. Reps close that gap faster than anything else.",
+      quote: "The instincts are right. The calibration comes with the reps."
+    },
+    {
+      min: 8, max: 15,
+      emoji: "🤔",
+      name: "Curious, But Let's Have a Real Conversation",
+      tagline: "There's real potential here. But the honest question worth sitting with: what specifically is drawing you to SE? Because the part of the role that makes it great is also the part that makes it miserable when it doesn't fit.",
+      description: "Some instincts are clearly present. But several responses suggest the most distinctly uncomfortable parts of SE — live uncertainty, competitive pressure, long ambiguous cycles, the recovery work after losing a deal you fought hard for — might drain you more than they energize you. That's important information to sit with before committing. The role isn't just demos and customer calls. It's a specific kind of sustained performance under pressure that some people find thrilling and others find quietly exhausting.",
+      brings: "Enough of the core instincts to be effective in the right environment with the right product and support structure",
+      challenges: "SE asks you to be technically curious and emotionally regulated simultaneously, under real pressure, for a 6-month sales cycle. That's a specific kind of endurance.",
+      quote: "SE is one of the best roles in tech for the right person. For the wrong person, it's exhausting in a way that sneaks up on you. Make sure you know which one you're walking into."
+    },
+    {
+      min: 0, max: 7,
+      emoji: "💡",
+      name: "Maybe Look Next Door",
+      tagline: "This doesn't mean you can't do the work. It means the work might not be what you think it is — or what you're actually after.",
+      description: "The SE role is a specific combination: technical depth, adaptability, persuasion, and resilience over long cycles with uncertain outcomes. A few of your answers suggest a different kind of energy — one that's not worse, just better pointed at something adjacent. Solutions Consulting, Customer Success, Technical Account Management, Technical PM — these aren't fallbacks. They're serious, well-compensated roles where the SE skill set travels very far with a different pressure profile.",
+      brings: "Technical credibility, customer orientation, and communication skills that transfer directly into adjacent roles that carry a lot of the upside",
+      challenges: "The distinctly uncomfortable parts of SE — demo chaos, competitive tension, long ambiguous cycles — seem to cut against your natural energy rather than with it",
+      quote: "Adjacent isn't lesser. Several of the highest-impact roles in tech are one step away from SE."
+    }
+  ];
+
+  var currentQ = 0;
+  var totalScore = 0;
+
+  function startQuiz() {
+    currentQ = 0;
+    totalScore = 0;
+    showScreen('quiz');
+    renderQuestion();
+  }
+
+  function renderQuestion() {
+    var pct = (currentQ / QUESTIONS.length) * 100;
+    document.getElementById('progressBar').style.width = pct + '%';
+    document.getElementById('progressLabel').textContent = 'Scenario ' + (currentQ + 1) + ' of ' + QUESTIONS.length;
+
+    var q = QUESTIONS[currentQ];
+    var shuffled = q.answers.slice().sort(function() { return Math.random() - 0.5; });
+
+    document.getElementById('questionBlock').innerHTML =
+      '<div class="question-num">Scenario ' + (currentQ + 1) + '</div>' +
+      '<div class="question-text">' + q.text + '</div>' +
+      '<div class="answers">' +
+      shuffled.map(function(a) {
+        return '<button class="answer-btn" onclick="selectAnswer(' + a.score + ', this)">' + a.text + '</button>';
+      }).join('') +
+      '</div>';
+  }
+
+  function selectAnswer(score, el) {
+    document.querySelectorAll('.answer-btn').forEach(function(b) { b.classList.remove('selected'); });
+    el.classList.add('selected');
+    totalScore += score;
+    setTimeout(function() {
+      currentQ++;
+      if (currentQ < QUESTIONS.length) {
+        renderQuestion();
+        document.getElementById('quiz').scrollTop = 0;
+      } else {
+        showResult();
+      }
+    }, 280);
+  }
+
+  function showResult() {
+    var result = null;
+    for (var i = 0; i < RESULTS.length; i++) {
+      if (totalScore >= RESULTS[i].min && totalScore <= RESULTS[i].max) {
+        result = RESULTS[i];
+        break;
+      }
+    }
+    if (!result) result = RESULTS[RESULTS.length - 1];
+
+    var maxScore = 30;
+    var pct = Math.round((totalScore / maxScore) * 100);
+
+    document.getElementById('resultEmoji').textContent = result.emoji;
+    document.getElementById('resultName').textContent = result.name;
+    document.getElementById('resultTagline').textContent = result.tagline;
+    document.getElementById('resultDescription').textContent = result.description;
+    document.getElementById('resultBrings').textContent = result.brings;
+    document.getElementById('resultChallenges').textContent = result.challenges;
+    document.getElementById('resultQuote').textContent = result.quote;
+    document.getElementById('scoreNumber').textContent = totalScore + ' / ' + maxScore + ' points';
+
+    window._quizResult = { result: result, totalScore: totalScore, pct: pct };
+    showScreen('result');
+
+    setTimeout(function() {
+      document.getElementById('scoreBarFill').style.width = pct + '%';
+    }, 100);
+
+    window.scrollTo(0, 0);
+  }
+
+  function shareResult() {
+    var r = window._quizResult;
+    if (!r) return;
+    var text = 'I just took "Should I Be an SE?" and got: ' + r.result.emoji + ' ' + r.result.name + '\n\n' + r.result.tagline + '\n\nFind out if the Sales Engineer role is right for you: jasonlanders.com/field-ready/should-i-be-an-se';
+    if (navigator.share) {
+      navigator.share({ text: text }).catch(function() { copyText(text); });
+    } else {
+      copyText(text);
+    }
+  }
+
+  function copyText(text) {
+    navigator.clipboard.writeText(text).then(showToast).catch(function() {
+      var ta = document.createElement('textarea');
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      showToast();
+    });
+  }
+
+  function showToast() {
+    var t = document.getElementById('toast');
+    t.classList.add('show');
+    setTimeout(function() { t.classList.remove('show'); }, 2500);
+  }
+
+  function retake() { startQuiz(); }
+
+  function showScreen(id) {
+    document.querySelectorAll('.screen, #intro').forEach(function(s) { s.classList.remove('active'); });
+    document.getElementById(id).classList.add('active');
+    if (id === 'intro') {
+      document.body.classList.remove('quiz-active');
+      window.scrollTo(0, 0);
+    } else {
+      document.body.classList.add('quiz-active');
+      document.getElementById(id).scrollTop = 0;
+    }
+  }
+</script>
+</body>
+</html>
