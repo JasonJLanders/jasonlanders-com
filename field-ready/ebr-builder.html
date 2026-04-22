@@ -36,6 +36,20 @@
     .page-title em { font-style: normal; background: linear-gradient(135deg, var(--accent), #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
     .page-sub { font-size: 16px; color: var(--muted); line-height: 1.65; max-width: 720px; margin-bottom: 32px; }
 
+    /* AI prompt toggles */
+    .ai-prompt-toggle { margin-bottom: 12px; }
+    .ai-prompt-summary { font-size: 12px; font-weight: 700; color: var(--accent); cursor: pointer; list-style: none; display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border: 1.5px solid var(--border); border-radius: 100px; user-select: none; transition: border-color 0.15s; }
+    .ai-prompt-summary:hover { border-color: var(--accent); }
+    .ai-prompt-summary::-webkit-details-marker { display: none; }
+    .ai-prompt-summary::before { content: '\2728'; font-size: 11px; }
+    .ai-prompt-body { background: var(--surface2); border: 1.5px solid var(--border); border-radius: 10px; padding: 14px 16px; margin-top: 8px; }
+    .ai-prompt-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: var(--accent); margin-bottom: 8px; }
+    .ai-prompt-text { font-size: 13px; color: var(--muted); line-height: 1.7; white-space: pre-wrap; font-family: monospace; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 10px 12px; margin-bottom: 10px; }
+    .btn-copy-prompt { background: var(--accent-light); color: var(--accent); border: 1.5px solid var(--border); border-radius: 8px; padding: 7px 14px; font-family: var(--font); font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.15s; }
+    .btn-copy-prompt:hover { background: var(--accent); color: #fff; }
+    .btn-copy-prompt.copied { background: #16a34a; color: #fff; border-color: #16a34a; }
+    .ai-prompt-hint { font-size: 11px; color: var(--muted); margin-top: 6px; }
+
     /* Best practices */
     .best-practices { background: var(--surface); border: 1.5px solid var(--border); border-radius: 14px; margin-bottom: 36px; overflow: hidden; max-width: 720px; }
     .bp-summary { font-size: 14px; font-weight: 700; color: var(--accent); padding: 16px 20px; cursor: pointer; list-style: none; display: flex; align-items: center; gap: 10px; user-select: none; }
@@ -294,7 +308,27 @@
       <div class="section-title">Their Business Priorities</div>
     </div>
     <div class="field-group">
-      <p style="font-size:13px;color:var(--muted);margin-bottom:4px;">What are this customer's top stated business goals right now? These anchor your entire technical narrative.</p>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:12px;">What are this customer's top stated business goals right now? These anchor your entire technical narrative.</p>
+      <details class="ai-prompt-toggle">
+        <summary class="ai-prompt-summary">Get an AI prompt for this</summary>
+        <div class="ai-prompt-body">
+          <div class="ai-prompt-label">Paste into Claude, ChatGPT, or Gemini</div>
+          <div class="ai-prompt-text" id="prompt-priorities">I am preparing a QBR/EBR contribution for [COMPANY NAME], a [INDUSTRY] company with approximately [EMPLOYEE COUNT / ARR / SIZE SIGNAL if known].
+
+Using any publicly available information you can find -- recent earnings calls, press releases, LinkedIn posts from their leadership, news coverage, or their own website -- identify their top 2-3 business priorities right now.
+
+Focus on priorities that a CTO, VP Engineering, or similar technical executive would care about: reliability, developer productivity, platform consolidation, compliance, cost reduction, or AI adoption.
+
+For each priority, give me:
+- A one-sentence summary of the priority
+- Why it is likely top of mind right now (the signal)
+- How an observability or monitoring product might connect to it
+
+Context I have from my own conversations with them: [PASTE ANY NOTES FROM DISCOVERY OR PREVIOUS MEETINGS]</div>
+          <button class="btn-copy-prompt" onclick="copyPrompt('prompt-priorities', this)">Copy prompt</button>
+          <div class="ai-prompt-hint">Paste the output directly into the priority fields above. Edit to match what you have heard from the customer directly.</div>
+        </div>
+      </details>
       <div class="field">
         <label class="field-label">Priority 1</label>
         <input type="text" id="priority1" placeholder="e.g. Reduce infrastructure incident response time across all teams" />
@@ -356,7 +390,25 @@
       <div class="section-title">Value Delivered Since Last EBR</div>
     </div>
     <div class="field-group">
-      <p style="font-size:13px;color:var(--muted);margin-bottom:8px;">2 to 3 specific wins. Lead with the business outcome, not the technical action. Include a metric wherever possible.</p>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:12px;">2 to 3 specific wins. Lead with the business outcome, not the technical action. Include a metric wherever possible.</p>
+      <details class="ai-prompt-toggle">
+        <summary class="ai-prompt-summary">Get an AI prompt for this</summary>
+        <div class="ai-prompt-body">
+          <div class="ai-prompt-label">Paste into Claude, ChatGPT, or Gemini</div>
+          <div class="ai-prompt-text" id="prompt-wins">I need to write 2-3 value win statements for a QBR/EBR with [COMPANY NAME].
+
+Here are my raw notes on what we delivered since the last review:
+[PASTE YOUR NOTES -- can be rough, bullet points, call notes, Salesforce activity log, anything]
+
+For each win, rewrite it as:
+- Headline: one sentence, business outcome first, metric included if possible (e.g. "P1 incident MTTR reduced by 64% since Payments team deployment")
+- Supporting detail: 1-2 sentences of context explaining what changed, for which team, and why it matters to the business
+
+Write in plain language appropriate for a VP or CTO audience. Avoid product feature names and technical jargon. Every sentence should answer "so what?" for a business leader.</div>
+          <button class="btn-copy-prompt" onclick="copyPrompt('prompt-wins', this)">Copy prompt</button>
+          <div class="ai-prompt-hint">Paste your rough notes into the prompt before running it. Use the output as a starting point and edit to match what you can actually stand behind.</div>
+        </div>
+      </details>
       <div class="win-list" id="winList"></div>
       <button class="btn-add" onclick="addWin()">+ Add a win</button>
     </div>
@@ -388,7 +440,30 @@
       <div class="section-title">Expansion Opportunity</div>
     </div>
     <div class="field-group">
-      <p style="font-size:13px;color:var(--muted);margin-bottom:8px;">The technical case for what they should do next, framed around their business priorities, not your quota.</p>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:12px;">The technical case for what they should do next, framed around their business priorities, not your quota.</p>
+      <details class="ai-prompt-toggle">
+        <summary class="ai-prompt-summary">Get an AI prompt for this</summary>
+        <div class="ai-prompt-body">
+          <div class="ai-prompt-label">Paste into Claude, ChatGPT, or Gemini</div>
+          <div class="ai-prompt-text" id="prompt-expansion">I am building an expansion narrative for a QBR/EBR with [COMPANY NAME].
+
+Current state:
+- Their maturity level: [e.g. Core Deployed -- Payments team fully instrumented, Infrastructure not started]
+- What is working well: [PASTE VALUE WINS]
+- Their stated business priorities: [PASTE PRIORITIES]
+
+Expansion opportunity I am considering recommending:
+[DESCRIBE WHAT YOU WANT TO SUGGEST -- e.g. extending coverage to Infrastructure team, adding security monitoring, adopting new AI detection capability]
+
+Write me:
+1. A one-sentence description of the expansion opportunity from the customer's perspective (not "we want to sell you X" but "here is what closing this gap means for your business")
+2. A 2-3 sentence explanation of why this maps directly to the priorities they have stated, using their language
+
+Do not use upsell language. Write it as a technical recommendation from an advisor who knows their environment.</div>
+          <button class="btn-copy-prompt" onclick="copyPrompt('prompt-expansion', this)">Copy prompt</button>
+          <div class="ai-prompt-hint">Fill in the bracketed sections before running. The goal is an expansion story that feels like advice, not a pitch.</div>
+        </div>
+      </details>
       <div class="field">
         <label class="field-label">What the expansion is</label>
         <textarea id="expansionWhat" placeholder="e.g. Extending observability coverage to the Infrastructure team, which currently has no visibility into their Kubernetes layer."></textarea>
@@ -918,6 +993,15 @@ function downloadPPTX() {
   pres.writeFile({ fileName: filename }).then(function() {
     btn.disabled = false;
     btn.textContent = '\u2193 Download as Slides';
+  });
+}
+
+function copyPrompt(id, btn) {
+  var text = document.getElementById(id).textContent;
+  navigator.clipboard.writeText(text).then(function() {
+    btn.textContent = '\u2713 Copied!';
+    btn.classList.add('copied');
+    setTimeout(function() { btn.textContent = 'Copy prompt'; btn.classList.remove('copied'); }, 2500);
   });
 }
 
