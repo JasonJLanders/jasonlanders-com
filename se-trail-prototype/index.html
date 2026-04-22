@@ -23,12 +23,208 @@
 const W = window.innerWidth;
 const H = window.innerHeight;
 
+// ============================================================
+// AUDIO SYSTEM — procedural sounds via Web Audio API
+// No external assets required. All sounds are synthesized.
+// Call AudioSystem.init() on first user gesture (browser req).
+// ============================================================
+const AudioSystem = (() => {
+  let ctx = null;
+  let masterGain = null;
+  let ambientNodes = [];
+  let initialized = false;
+  let muted = false;
+
+  function init() {
+    if (initialized) return;
+    try {
+      ctx = new (window.AudioContext || window.webkitAudioContext)();
+      masterGain = ctx.createGain();
+      masterGain.gain.setValueAtTime(0.35, ctx.currentTime);
+      masterGain.connect(ctx.destination);
+      initialized = true;
+    } catch (e) {
+      console.warn('AudioSystem: Web Audio API not available.', e);
+    }
+  }
+
+  function resume() {
+    if (ctx && ctx.state === 'suspended') ctx.resume();
+  }
+
+  function ready() {
+    if (!initialized) return false;
+    resume();
+    return !!ctx;
+  }
+
+  // Low-level tone primitive
+  function tone(freq, type, duration, vol, delay = 0) {
+    if (!ready()) return;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    const t = ctx.currentTime + delay;
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, t);
+    gain.gain.setValueAtTime(vol, t);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + duration);
+    osc.connect(gain);
+    gain.connect(masterGain);
+    osc.start(t);
+    osc.stop(t + duration + 0.02);
+  }
+
+  // White noise burst (for swooshes and transitions)
+  function noise(duration, vol, delay = 0, filterFreqStart = 3000, filterFreqEnd = 200) {
+    if (!ready()) return;
+    const bufSize = Math.ceil(ctx.sampleRate * duration);
+    const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < bufSize; i++) data[i] = Math.random() * 2 - 1;
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'bandpass';
+    const t = ctx.currentTime + delay;
+    filter.frequency.setValueAtTime(filterFreqStart, t);
+    filter.frequency.exponentialRampToValueAtTime(filterFreqEnd, t + duration);
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(vol, t);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + duration);
+    src.connect(filter);
+    filter.connect(gain);
+    gain.connect(masterGain);
+    src.start(t);
+    src.stop(t + duration + 0.02);
+  }
+
+  // ---- Public sound effects ----
+
+  // Soft UI click
+  function playClick() {
+    tone(720, 'sine', 0.09, 0.28);
+    tone(540, 'sine', 0.09, 0.14, 0.045);
+  }
+
+  // Subtle hover tick
+  function playHover() {
+    tone(520, 'sine', 0.04, 0.08);
+  }
+
+  // Two-note inbox chime
+  function playNotification() {
+    tone(880, 'sine', 0.22, 0.22);
+    tone(1109, 'sine', 0.20, 0.18, 0.16);
+  }
+
+  // Scene flash whoosh
+  function playTransition() {
+    noise(0.32, 0.38, 0, 2800, 180);
+    tone(220, 'sine', 0.32, 0.12);
+  }
+
+  // Scramble timer normal tick
+  function playTick() {
+    tone(420, 'square', 0.07, 0.12);
+  }
+
+  // Scramble timer urgent tick (last 2 seconds)
+  function playUrgentTick() {
+    tone(640, 'square', 0.07, 0.18);
+    tone(480, 'square', 0.05, 0.10, 0.04);
+  }
+
+  // Correct / best answer selected
+  function playSuccess() {
+    [440, 554, 659, 880].forEach((f, i) => tone(f, 'sine', 0.22, 0.28, i * 0.09));
+  }
+
+  // Wrong answer or timeout
+  function playWrong() {
+    tone(220, 'sawtooth', 0.28, 0.26);
+    tone(196, 'sawtooth', 0.22, 0.20, 0.12);
+  }
+
+  // Day advancement chime
+  function playDayChime() {
+    tone(660, 'sine', 0.18, 0.14);
+    tone(990, 'sine', 0.14, 0.10, 0.20);
+  }
+
+  // ---- Ambient background music ----
+  // Soft pad: two detuned sines + a quiet triangle fifth, slow filter LFO
+
+  function startAmbient() {
+    if (!ready()) return;
+    stopAmbient();
+
+    const baseFreq = 55; // A1
+    const voices = [
+      { f: baseFreq,        type: 'sine',     vol: 0.055 },
+      { f: baseFreq * 1.005, type: 'sine',    vol: 0.050 }, // slight detune
+      { f: baseFreq * 1.5,  type: 'triangle', vol: 0.030 }, // perfect fifth
+      { f: baseFreq * 2,    type: 'sine',     vol: 0.018 }, // octave
+    ];
+
+    voices.forEach(({ f, type, vol }) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(f, ctx.currentTime);
+      gain.gain.setValueAtTime(0, ctx.currentTime);
+      gain.gain.linearRampToValueAtTime(vol, ctx.currentTime + 2.5);
+      osc.connect(gain);
+      gain.connect(masterGain);
+      osc.start();
+      ambientNodes.push({ osc, gain, targetVol: vol });
+    });
+  }
+
+  function stopAmbient() {
+    if (!ctx) return;
+    ambientNodes.forEach(({ osc, gain }) => {
+      try {
+        gain.gain.linearRampToValueAtTime(0, ctx.currentTime + 1.2);
+        osc.stop(ctx.currentTime + 1.4);
+      } catch (_) {}
+    });
+    ambientNodes = [];
+  }
+
+  function fadeAmbient(targetMul, durationSecs = 1.5) {
+    if (!ctx) return;
+    ambientNodes.forEach(({ gain, targetVol }) => {
+      gain.gain.linearRampToValueAtTime(targetVol * targetMul, ctx.currentTime + durationSecs);
+    });
+  }
+
+  // ---- Mute toggle ----
+
+  function toggleMute() {
+    if (!ready()) return muted;
+    muted = !muted;
+    masterGain.gain.linearRampToValueAtTime(muted ? 0 : 0.35, ctx.currentTime + 0.1);
+    return muted;
+  }
+
+  function isMuted() { return muted; }
+
+  return {
+    init,
+    playClick, playHover, playNotification, playTransition,
+    playTick, playUrgentTick, playSuccess, playWrong, playDayChime,
+    startAmbient, stopAmbient, fadeAmbient,
+    toggleMute, isMuted,
+  };
+})();
+
+
 // ---- SCENE 1: CITY MAP ----
 class CityScene extends Phaser.Scene {
   constructor() { super({ key: 'CityScene' }); }
 
   preload() {
-    // We generate all graphics procedurally — no external assets needed
+    // All graphics generated procedurally — no external assets needed
   }
 
   create() {
@@ -53,8 +249,14 @@ class CityScene extends Phaser.Scene {
     // Start gentle ambient animations
     this.time.addEvent({ delay: 8000, callback: this.advanceDay, callbackScope: this, loop: true });
 
-    // Occasionally show inbox notification
-    this.time.addEvent({ delay: 5000, callback: this.showNotification, callbackScope: this, loop: true });
+    // Occasionally show inbox notification (first fires at 7s, then every 6s)
+    this.time.addEvent({ delay: 7000, callback: this.showNotification, callbackScope: this, loop: true });
+
+    // Init audio on first interaction (browser autoplay policy)
+    this.input.once('pointerdown', () => {
+      AudioSystem.init();
+      AudioSystem.startAmbient();
+    });
   }
 
   drawGround() {
@@ -360,15 +562,26 @@ class CityScene extends Phaser.Scene {
     };
     drawComp();
 
-    // Competitor drives toward Axiom occasionally
+    // Competitor drives toward Axiom occasionally, then returns
     this.time.addEvent({
       delay: 12000,
       callback: () => {
+        const startX = W - 200, startY = H * 0.75;
         this.tweens.add({
           targets: this,
           compX: W * 0.72 - 18, compY: H * 0.52,
           duration: 3000, ease: 'Linear',
-          onUpdate: drawComp
+          onUpdate: drawComp,
+          onComplete: () => {
+            this.time.delayedCall(2000, () => {
+              this.tweens.add({
+                targets: this,
+                compX: startX, compY: startY,
+                duration: 3000, ease: 'Linear',
+                onUpdate: drawComp
+              });
+            });
+          }
         });
       },
       loop: true
@@ -424,11 +637,21 @@ class CityScene extends Phaser.Scene {
       color: '#8b7fa8'
     });
 
-    // Inbox notification area
-    this.inboxBox = this.add.graphics();
-    this.inboxText = this.add.text(0, 0, '', {
-      fontSize: '11px', fontFamily: 'Inter, sans-serif',
-      color: '#ede8f5', wordWrap: { width: 200 }
+    // Mute button (top-right of HUD)
+    this.muteBtn = this.add.text(W - 16, hudY + 14, AudioSystem.isMuted() ? '🔇' : '🔊', {
+      fontSize: '16px'
+    }).setOrigin(1, 0).setInteractive({ cursor: 'pointer' }).setDepth(30);
+
+    this.muteBtn.on('pointerdown', () => {
+      AudioSystem.init(); // ensure initialized on first click
+      const nowMuted = AudioSystem.toggleMute();
+      this.muteBtn.setText(nowMuted ? '🔇' : '🔊');
+    });
+
+    // Map hint
+    this.add.text(20, hudY - 18, 'Click a building to enter a scene', {
+      fontSize: '10px', fontFamily: 'Inter, sans-serif',
+      color: '#4a3860'
     });
   }
 
@@ -479,14 +702,15 @@ class CityScene extends Phaser.Scene {
     this.updateDayNight(this.timeOfDay);
     const labels = ['Day 12', 'Day 12', 'Day 13', 'Day 13'];
     if (this.dayText) this.dayText.setText(labels[this.timeOfDay].toUpperCase());
+    AudioSystem.playDayChime();
   }
 
   createClickTargets() {
     // Clickable building overlays with hover effect
     const buildings = [
-      { x: 60, y: 90, w: 180, h: 130, label: 'Visit HQ', color: 0xd946ef },
-      { x: W - 280, y: 60, w: 220, h: 170, label: 'Visit Axiom', color: 0x60a5fa },
-      { x: W * 0.44, y: H * 0.60, w: 120, h: 90, label: 'Coffee Shop', color: 0xf59e0b },
+      { x: 60, y: 90, w: 180, h: 130, label: 'Your HQ', color: 0xd946ef },
+      { x: W - 280, y: 60, w: 220, h: 170, label: 'Axiom Systems', color: 0x60a5fa },
+      { x: W * 0.44, y: H * 0.60, w: 120, h: 90, label: 'The Corner', color: 0xf59e0b },
     ];
 
     buildings.forEach(b => {
@@ -495,6 +719,7 @@ class CityScene extends Phaser.Scene {
       highlight.setAlpha(0);
 
       zone.on('pointerover', () => {
+        AudioSystem.playHover();
         highlight.clear();
         highlight.lineStyle(2, b.color, 0.8);
         highlight.strokeRect(b.x, b.y, b.w, b.h);
@@ -504,13 +729,14 @@ class CityScene extends Phaser.Scene {
       });
       zone.on('pointerout', () => highlight.setAlpha(0));
       zone.on('pointerdown', () => {
+        AudioSystem.playClick();
         this.showDecisionPrompt(b.label);
       });
     });
   }
 
   showDecisionPrompt(location) {
-    // Flash to decision scene
+    AudioSystem.playTransition();
     this.cameras.main.flash(300, 13, 6, 24);
     this.time.delayedCall(400, () => {
       this.scene.start('DecisionScene', { from: location });
@@ -555,18 +781,17 @@ class CityScene extends Phaser.Scene {
     this.notifTitle.setAlpha(0);
     this.notifBody.setAlpha(0);
 
+    AudioSystem.playNotification();
+
     this.tweens.add({
       targets: [this.notifGraphics, this.notifTitle, this.notifBody],
       alpha: 1, duration: 300, ease: 'Power2',
       onComplete: () => {
-        this.time.addEvent({
-          delay: 3500,
-          callback: () => {
-            this.tweens.add({
-              targets: [this.notifGraphics, this.notifTitle, this.notifBody],
-              alpha: 0, duration: 400
-            });
-          }
+        this.time.delayedCall(3500, () => {
+          this.tweens.add({
+            targets: [this.notifGraphics, this.notifTitle, this.notifBody],
+            alpha: 0, duration: 400
+          });
         });
       }
     });
@@ -580,6 +805,9 @@ class DecisionScene extends Phaser.Scene {
   init(data) { this.fromLocation = data.from || 'Axiom Systems'; }
 
   create() {
+    // Fade ambient down for focused scene feel
+    AudioSystem.fadeAmbient(0.3, 1.2);
+
     this.cameras.main.setBackgroundColor('#130d1c');
 
     const g = this.add.graphics();
@@ -669,7 +897,7 @@ class DecisionScene extends Phaser.Scene {
 
     choices.forEach((text, i) => {
       const cy = speakerY + 140 + i * 56;
-      const card = g.fillStyle(0x1e1530);
+      g.fillStyle(0x1e1530);
       g.fillRoundedRect(cx - 340, cy, 680, 48, 8);
       g.lineStyle(2, 0x2e2249);
       g.strokeRoundedRect(cx - 340, cy, 680, 48, 8);
@@ -691,6 +919,7 @@ class DecisionScene extends Phaser.Scene {
       const zone = this.add.zone(cx - 340, cy, 680, 48).setOrigin(0).setInteractive({ cursor: 'pointer' });
       const hover = this.add.graphics();
       zone.on('pointerover', () => {
+        AudioSystem.playHover();
         hover.clear();
         hover.lineStyle(2, 0xd946ef);
         hover.strokeRoundedRect(cx - 340, cy, 680, 48, 8);
@@ -699,6 +928,9 @@ class DecisionScene extends Phaser.Scene {
       });
       zone.on('pointerout', () => hover.clear());
       zone.on('pointerdown', () => {
+        AudioSystem.playClick();
+        AudioSystem.playTransition();
+        AudioSystem.fadeAmbient(1.0, 1.5); // restore ambient for city
         this.cameras.main.flash(200, 13, 6, 24);
         this.time.delayedCall(300, () => this.scene.start('CityScene'));
       });
@@ -709,7 +941,10 @@ class DecisionScene extends Phaser.Scene {
       fontSize: '11px', fontFamily: 'Inter, sans-serif',
       color: '#8b7fa8'
     }).setOrigin(1).setInteractive({ cursor: 'pointer' })
-      .on('pointerdown', () => this.scene.start('CityScene'))
+      .on('pointerdown', () => {
+        AudioSystem.fadeAmbient(1.0, 1.5);
+        this.scene.start('CityScene');
+      })
       .on('pointerover', function() { this.setColor('#d946ef'); })
       .on('pointerout', function() { this.setColor('#8b7fa8'); });
   }
@@ -735,6 +970,9 @@ class ScrambleScene extends Phaser.Scene {
   constructor() { super({ key: 'ScrambleScene' }); }
 
   create() {
+    // Fade ambient down further for tension
+    AudioSystem.fadeAmbient(0.15, 0.8);
+
     this.cameras.main.setBackgroundColor('#0d0618');
     const g = this.add.graphics();
 
@@ -826,24 +1064,57 @@ class ScrambleScene extends Phaser.Scene {
 
     // Timer arc (circular)
     const timerX = W - 70, timerY = 100;
+    const totalSecs = 6;
     g.lineStyle(4, 0x2e2249);
     g.strokeCircle(timerX, timerY, 28);
-    g.lineStyle(4, 0xd946ef);
-    // Draw arc for 65% remaining
-    g.beginPath();
-    g.arc(timerX, timerY, 28, -Math.PI / 2, -Math.PI / 2 + (Math.PI * 2 * 0.65), false);
-    g.strokePath();
-    this.add.text(timerX, timerY, '4s', {
+
+    this.timerArc = this.add.graphics();
+    this.timerSecs = totalSecs;
+    this.timerText = this.add.text(timerX, timerY, totalSecs + 's', {
       fontSize: '13px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold',
       color: '#d946ef'
     }).setOrigin(0.5);
 
-    // Timer countdown tween
-    this.timerSecs = 4;
-    this.timerText = this.add.text(timerX, timerY, '4s', {
-      fontSize: '13px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold',
-      color: '#d946ef'
-    }).setOrigin(0.5);
+    const drawTimerArc = (pct) => {
+      this.timerArc.clear();
+      // Color shifts red when urgent
+      const arcColor = this.timerSecs <= 2 ? 0xef4444 : 0xd946ef;
+      this.timerArc.lineStyle(4, arcColor);
+      this.timerArc.beginPath();
+      this.timerArc.arc(timerX, timerY, 28, -Math.PI / 2, -Math.PI / 2 + (Math.PI * 2 * pct), false);
+      this.timerArc.strokePath();
+    };
+    drawTimerArc(1);
+
+    this.timerActive = true;
+
+    this.time.addEvent({
+      delay: 1000,
+      repeat: totalSecs - 1,
+      callback: () => {
+        if (!this.timerActive) return;
+        this.timerSecs--;
+        const pct = this.timerSecs / totalSecs;
+        this.timerText.setText(this.timerSecs + 's');
+        drawTimerArc(Math.max(pct, 0));
+
+        // Audio tick — urgent for last 2 seconds
+        if (this.timerSecs <= 2) {
+          AudioSystem.playUrgentTick();
+          this.timerText.setColor('#ef4444');
+        } else {
+          AudioSystem.playTick();
+        }
+
+        if (this.timerSecs <= 0) {
+          this.timerActive = false;
+          AudioSystem.playWrong();
+          AudioSystem.fadeAmbient(1.0, 1.5);
+          this.cameras.main.flash(200, 13, 6, 24);
+          this.time.delayedCall(300, () => this.scene.start('CityScene'));
+        }
+      }
+    });
 
     const options = [
       { text: '"You mentioned engineers burning out — has that affected retention beyond those two?"', best: true },
@@ -873,20 +1144,29 @@ class ScrambleScene extends Phaser.Scene {
         wordWrap: { width: ow - 32 }, lineSpacing: 3
       });
 
-      if (!opt.best) {
-        const zone = this.add.zone(ox, oy, ow, 76).setOrigin(0).setInteractive({ cursor: 'pointer' });
-        const hov = this.add.graphics();
-        zone.on('pointerover', () => {
-          hov.clear();
-          hov.lineStyle(2, 0xd946ef);
-          hov.strokeRoundedRect(ox, oy, ow, 76, 10);
-        });
-        zone.on('pointerout', () => hov.clear());
-        zone.on('pointerdown', () => {
-          this.cameras.main.flash(200, 13, 6, 24);
-          this.time.delayedCall(300, () => this.scene.start('CityScene'));
-        });
-      }
+      const zone = this.add.zone(ox, oy, ow, 76).setOrigin(0).setInteractive({ cursor: 'pointer' });
+      const hov = this.add.graphics();
+
+      zone.on('pointerover', () => {
+        AudioSystem.playHover();
+        hov.clear();
+        hov.lineStyle(2, opt.best ? 0x22c55e : 0xd946ef);
+        hov.strokeRoundedRect(ox, oy, ow, 76, 10);
+      });
+      zone.on('pointerout', () => hov.clear());
+      zone.on('pointerdown', () => {
+        if (!this.timerActive) return; // prevent double-fire after timeout
+        this.timerActive = false;
+        AudioSystem.playClick();
+        if (opt.best) {
+          AudioSystem.playSuccess();
+        } else {
+          AudioSystem.playWrong();
+        }
+        AudioSystem.fadeAmbient(1.0, 1.5);
+        this.cameras.main.flash(200, 13, 6, 24);
+        this.time.delayedCall(400, () => this.scene.start('CityScene'));
+      });
     });
 
     // Best answer label
@@ -902,15 +1182,13 @@ class ScrambleScene extends Phaser.Scene {
       fontSize: '11px', fontFamily: 'Inter, sans-serif',
       color: '#8b7fa8'
     }).setOrigin(1).setInteractive({ cursor: 'pointer' })
-      .on('pointerdown', () => this.scene.start('CityScene'))
+      .on('pointerdown', () => {
+        this.timerActive = false;
+        AudioSystem.fadeAmbient(1.0, 1.5);
+        this.scene.start('CityScene');
+      })
       .on('pointerover', function() { this.setColor('#d946ef'); })
       .on('pointerout', function() { this.setColor('#8b7fa8'); });
-
-    // Scene switcher hint
-    this.add.text(20, H - 20, 'Click buildings on the map to trigger decision scenes', {
-      fontSize: '10px', fontFamily: 'Inter, sans-serif',
-      color: '#4a3860'
-    });
   }
 }
 
