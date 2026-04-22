@@ -35,6 +35,22 @@
     .page-title em { font-style: normal; background: linear-gradient(135deg, var(--accent), #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
     .page-sub { font-size: 16px; color: var(--muted); line-height: 1.65; max-width: 560px; margin-bottom: 40px; }
 
+    /* AI prompt toggles */
+    .ai-prompt-toggle { margin-bottom: 12px; }
+    .ai-prompt-summary { font-size: 12px; font-weight: 700; color: var(--accent); cursor: pointer; list-style: none; display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border: 1.5px solid var(--border); border-radius: 100px; user-select: none; transition: border-color 0.15s; }
+    .ai-prompt-summary:hover { border-color: var(--accent); }
+    .ai-prompt-summary::-webkit-details-marker { display: none; }
+    .ai-prompt-summary::before { content: '\2728'; font-size: 11px; }
+    .ai-prompt-summary::after { content: '\25BA'; font-size: 9px; margin-left: 4px; display: inline-block; }
+    details[open] .ai-prompt-summary::after { content: '\25BC'; }
+    .ai-prompt-body { background: var(--surface2); border: 1.5px solid var(--border); border-radius: 10px; padding: 14px 16px; margin-top: 8px; }
+    .ai-prompt-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: var(--accent); margin-bottom: 8px; }
+    .ai-prompt-text { font-size: 13px; color: var(--muted); line-height: 1.7; white-space: pre-wrap; font-family: monospace; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 10px 12px; margin-bottom: 10px; }
+    .btn-copy-prompt { background: var(--accent-light); color: var(--accent); border: 1.5px solid var(--border); border-radius: 8px; padding: 7px 14px; font-family: var(--font); font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.15s; }
+    .btn-copy-prompt:hover { background: var(--accent); color: #fff; }
+    .btn-copy-prompt.copied { background: #16a34a; color: #fff; border-color: #16a34a; }
+    .ai-prompt-hint { font-size: 11px; color: var(--muted); margin-top: 6px; }
+
     /* Best practices */
     .best-practices { background: var(--surface); border: 1.5px solid var(--border); border-radius: 14px; margin-bottom: 36px; overflow: hidden; }
     .bp-summary { font-size: 14px; font-weight: 700; color: var(--accent); padding: 16px 20px; cursor: pointer; list-style: none; display: flex; align-items: center; gap: 10px; user-select: none; }
@@ -298,6 +314,34 @@
       <div class="field">
         <label class="field-label">POV Objective</label>
         <p class="field-hint">One sentence. What specific problem is this evaluation proving you can solve?</p>
+        <details class="ai-prompt-toggle">
+          <summary class="ai-prompt-summary">Get an AI prompt for this</summary>
+          <div class="ai-prompt-body">
+            <div class="ai-prompt-label">Paste into Claude, ChatGPT, or Gemini</div>
+            <div class="ai-prompt-text" id="prompt-objective">I need to write a one-sentence POV objective for an evaluation with [COMPANY NAME].
+
+Step 1 -- Check connected sources first:
+Search any sources you have access to before using my notes below:
+- My email or calendar for messages from [COMPANY NAME] contacts describing what they are trying to solve
+- Any CRM records, call notes, or account documents that capture the problem they described in their own words
+- Any discovery call transcripts or recordings for this opportunity
+
+Step 2 -- Use my notes to fill gaps:
+[PASTE YOUR DISCOVERY NOTES, CALL NOTES, OR OPPORTUNITY DESCRIPTION]
+
+Write a single sentence that:
+- Names the specific technical or business problem being evaluated
+- States what success looks like in measurable terms if possible (e.g. reduce, eliminate, prove, demonstrate)
+- Is written from the customer's perspective, not the vendor's
+- Avoids product names and feature language
+
+Example format: "Prove that [solution] can [specific outcome] for [team/context] within [timeframe]."
+
+Give me 2-3 options and I will choose the most accurate one.</div>
+            <button class="btn-copy-prompt" onclick="copyPrompt('prompt-objective', this)">Copy prompt</button>
+            <div class="ai-prompt-hint">If the customer helped define the scope, their words should anchor this sentence.</div>
+          </div>
+        </details>
         <textarea id="povObjective" placeholder="e.g. Prove that [product] can reduce mean time to resolution for P1 incidents from 4 hours to under 45 minutes for the Payments engineering team."></textarea>
       </div>
     </div>
@@ -412,11 +456,62 @@
       <div class="field">
         <label class="field-label">What does a completed POV look like?</label>
         <p class="field-hint">The specific moment when the evaluation ends and a decision is made. Not "the trial ends" -- a defined review meeting with an owner.</p>
+        <details class="ai-prompt-toggle">
+          <summary class="ai-prompt-summary">Get an AI prompt for this</summary>
+          <div class="ai-prompt-body">
+            <div class="ai-prompt-label">Paste into Claude, ChatGPT, or Gemini</div>
+            <div class="ai-prompt-text" id="prompt-done">I need to write a Definition of Done for a POV with [COMPANY NAME].
+
+Context:
+- POV end date: [DATE]
+- Champion name and title: [NAME, TITLE]
+- Executive sponsor: [NAME, TITLE if known]
+- What we are proving: [PASTE POV OBJECTIVE]
+
+Step 1 -- Check connected sources:
+If you have access to my email, calendar, or CRM notes for this account, check whether we have already discussed or agreed to a review meeting or decision process with the customer. If so, use that as the basis.
+
+Step 2 -- Draft from context above:
+Write a Definition of Done that:
+- Names the specific review meeting (date, attendees, format)
+- States who will present the results and to whom
+- Defines what happens next after the review (next step if positive, next step if not)
+- Uses plain, professional language the customer could read and agree to
+
+Keep it to 2-4 sentences. Specific and concrete, not vague.</div>
+            <button class="btn-copy-prompt" onclick="copyPrompt('prompt-done', this)">Copy prompt</button>
+            <div class="ai-prompt-hint">A good Definition of Done names a meeting, not just a date. If you haven't agreed on one yet, this prompt will help you draft a proposal to share with the customer.</div>
+          </div>
+        </details>
         <textarea id="definitionOfDone" placeholder="e.g. By [end date], [Champion name] will present POV results to [VP name]. At that meeting, both teams will review results against the success criteria and determine next steps. A written summary will be shared within 3 business days."></textarea>
       </div>
       <div class="field">
         <label class="field-label">Escalation Path</label>
         <p class="field-hint">If something goes wrong during the POV (blockers, scope creep, silence), who resolves it and how?</p>
+        <details class="ai-prompt-toggle">
+          <summary class="ai-prompt-summary">Get an AI prompt for this</summary>
+          <div class="ai-prompt-body">
+            <div class="ai-prompt-label">Paste into Claude, ChatGPT, or Gemini</div>
+            <div class="ai-prompt-text" id="prompt-escalation">I need to write an Escalation Path section for a POV Mutual Action Plan with [COMPANY NAME].
+
+Context:
+- SE on our side: [NAME]
+- AE on our side: [NAME]
+- Customer champion: [NAME, TITLE]
+- Executive sponsor (if known): [NAME, TITLE]
+- Likely risk areas: [e.g. technical blockers, security review delays, stakeholder availability, scope changes]
+
+Write an escalation path that covers:
+1. How technical blockers are handled (who owns them, timeframe to resolve, when to escalate)
+2. How scope changes or additions are managed (who must agree before proceeding)
+3. What happens if communication goes quiet for more than [X] days
+4. The escalation chain on both sides if something cannot be resolved at the working level
+
+Write it in plain language that both sides can read and agree to. Keep it practical and specific -- not a legal clause, but a clear working agreement. 3-5 sentences is enough.</div>
+            <button class="btn-copy-prompt" onclick="copyPrompt('prompt-escalation', this)">Copy prompt</button>
+            <div class="ai-prompt-hint">The escalation path works best when it's agreed before problems arise. Consider sharing this section with the customer's champion before kickoff.</div>
+          </div>
+        </details>
         <textarea id="escalationPath" placeholder="e.g. Technical blockers are escalated to [SE name] within 24 hours. If unresolved after 48 hours, [AE name] escalates to [Champion name]. Any scope changes require written agreement from both sides before proceeding."></textarea>
       </div>
     </div>
@@ -693,6 +788,15 @@ function copyMAP() {
     btn.textContent = '\u2713 Copied!';
     btn.classList.add('copied');
     setTimeout(function() { btn.textContent = 'Copy as text'; btn.classList.remove('copied'); }, 2500);
+  });
+}
+
+function copyPrompt(id, btn) {
+  var text = document.getElementById(id).textContent;
+  navigator.clipboard.writeText(text).then(function() {
+    btn.textContent = '\u2713 Copied!';
+    btn.classList.add('copied');
+    setTimeout(function() { btn.textContent = 'Copy prompt'; btn.classList.remove('copied'); }, 2500);
   });
 }
 
