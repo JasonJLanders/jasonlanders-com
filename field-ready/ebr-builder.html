@@ -1046,35 +1046,6 @@ function fmtDate(d) {
 
 // Init default wins
 document.addEventListener('DOMContentLoaded', function() {
-  // ---- TEST DATA (remove before launch) ----
-  document.getElementById('customerName').value = 'Nexus Health';
-  document.getElementById('ebrDate').value = '2026-05-15';
-  document.getElementById('seName').value = 'Jason Landers';
-  document.getElementById('aeName').value = 'Sarah Chen';
-  document.getElementById('audience').value = 'CTO, VP Engineering, Director of Platform Engineering';
-  document.getElementById('priority1').value = 'Reduce infrastructure incident response time across all engineering teams';
-  document.getElementById('priority2').value = 'Standardize observability tooling before Q3 platform migration';
-  document.getElementById('priority3').value = 'Reduce on-call burnout on the SRE team';
-  selectMaturity(3);
-  document.getElementById('maturityContext').value = 'Payments team is fully deployed and mature. Infrastructure team is early adoption. Security has not started yet.';
-  addWin();
-  addWin();
-  var wins = document.querySelectorAll('[id^="win_"][id$="_headline"]');
-  if (wins[0]) wins[0].value = 'P1 incident mean time to resolution dropped 68% since deployment';
-  var details = document.querySelectorAll('[id^="win_"][id$="_detail"]');
-  if (details[0]) details[0].value = 'The Payments engineering team went from 4+ hour average MTTR on P1 incidents to under 80 minutes. Three major incidents in Q1 were resolved without escalation to leadership.';
-  if (wins[1]) wins[1].value = 'On-call burden reduced by 40% for the Payments SRE team';
-  if (details[1]) details[1].value = 'Alert noise reduction from unified observability eliminated an average of 23 false-positive pages per week per engineer.';
-  document.getElementById('risk').value = 'The Infrastructure team integration is still on a legacy agent version reaching end-of-life in Q3. If not updated before the compliance audit window, they will lose coverage at exactly the wrong moment.';
-  document.getElementById('mitigation').value = 'We have an upgrade path ready and have offered to run a guided migration session with their infrastructure architect. Proposing to schedule this before end of May so it is complete well ahead of Q3.';
-  document.getElementById('expansionWhat').value = 'Extending observability coverage to the Infrastructure team, which currently has no visibility into their Kubernetes layer.';
-  document.getElementById('expansionWhy').value = 'This directly addresses the Q3 reliability goals. The Infrastructure team owns the platform the Payments team runs on. A gap there is a risk to outcomes they just celebrated in this review.';
-  document.getElementById('capabilityName').value = 'AI-powered anomaly detection';
-  document.getElementById('capabilityStatus').value = 'Now in Preview';
-  document.getElementById('capabilityRelevance').value = 'Directly addresses the on-call burnout issue the SRE lead raised last quarter. Instead of manual threshold tuning, the system surfaces anomalies before they trigger pages. Worth a dedicated demo for the SRE team before end of Q2.';
-  document.getElementById('theAsk').value = 'A 45-minute technical roadmap session with the Infrastructure lead and SRE architect before end of May. We will cover the Kubernetes coverage gap and walk through the AI anomaly detection preview together.';
-  // ---- END TEST DATA ----
-  return;
   addWin(); addWin();
 });
 </script>
