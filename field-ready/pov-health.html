@@ -129,7 +129,7 @@
   </style>
   <meta property="og:title" content="POV Health Check | Free tool for Sales Engineers" />
   <meta property="og:description" content="Answer 8 questions about your active evaluation and get an instant health assessment with specific actions to take this week." />
-  <meta property="og:url" content="https://jasonlanders.com/field-ready/pov-health.html" />
+  <meta property="og:url" content="https://jasonlanders.com/field-ready/pov-health" />
   <meta property="og:type" content="website" />
   <meta name="keywords" content="POV health check, proof of value assessment, SE evaluation tracker, presales POV tool, sales engineering POV" />
   <link rel="manifest" href="/field-ready/manifest-pov-health.json" />
@@ -467,7 +467,7 @@
     const r = window._povResult;
     if (!r) return;
     const riskText = r.risks.length > 0 ? `\nRisks: ${r.risks.slice(0,2).join(', ')}` : '';
-    const text = `POV Health Check result: ${r.status} (${r.pct}/100)${riskText}\n\nCheck your active POV: jasonlanders.com/field-ready/pov-health.html`;
+    const text = `POV Health Check result: ${r.status} (${r.pct}/100)${riskText}\n\nCheck your active POV: jasonlanders.com/field-ready/pov-health`;
     if (navigator.share) {
       navigator.share({ text }).catch(() => copyText(text));
     } else {
