@@ -40,6 +40,8 @@ const STATE = {
   feedbackQueue: [],
   lastChoice: null,
   streak: 0,
+  vertexInPlay: false,
+  vertexEncounterDone: false,
 };
 
 function resetState() {
@@ -53,6 +55,8 @@ function resetState() {
   STATE.feedbackQueue = [];
   STATE.lastChoice = null;
   STATE.streak = 0;
+  STATE.vertexInPlay = false;
+  STATE.vertexEncounterDone = false;
 }
 
 // ---- SCENARIOS ----
@@ -104,6 +108,22 @@ const SCENARIOS = [
       { text: '"That\'s useful , I\'ll make sure we have clear ROI numbers in the proposal."', tags: ['proposal', 'roi'], deal: 6, champion: 6, energy: -1, feedback: 'Okay response. But you missed the chance to make Priya your internal champion instead of a messenger.' },
       { text: '"Don\'t worry , we have a strong pricing team. We\'ll make the number work."', tags: ['price', 'discount'], deal: -6, champion: -8, energy: -1, feedback: 'You implied you can discount before you\'ve even built value. Priya looks uncertain.' },
       { text: '"I appreciate the intel. I\'ll handle Marcus directly."', tags: ['executive', 'bypass'], deal: -10, champion: -15, energy: -1, feedback: 'Mistake. Priya is your champion. You just told her she\'s not needed for the close. She pulls back.' },
+    ]
+  },
+  // VERTEX ENCOUNTER: one-time event at The Corner, Act 1 days 5-15
+  {
+    id: 'vertex_encounter',
+    location: 'The Corner',
+    act: 1,
+    type: 'decision',
+    title: 'An Unexpected Run-In',
+    context: 'You arrive at The Corner for a coffee strategy session. Two people at the corner table look familiar. Too familiar. They spot you at the same moment.',
+    speaker: { name: 'Vertex Rep', role: 'Vertex Solutions', emoji: '\u26a1', color: '#ef4444' },
+    quote: '"Small world. We heard Axiom is evaluating a few vendors right now. Funny running into you here." They smile, gather their things, and leave.',
+    choices: [
+      { text: '"Good to know. Time to make sure our discovery is sharper than anything they can offer."', deal: 5, champion: 0, energy: -1, feedback: 'Alex leans in: "That was the Vertex team. Word is they are undercutting on price and offering a free POV. We need to be sharper than that." You both feel the urgency. Real competition now.' },
+      { text: '"Do not worry about them. Our product is better and the customer knows it."', deal: 0, champion: 0, energy: -1, feedback: 'Alex looks slightly unsettled. "They are in this deal, Jason. Free POV, lower price point. We need a plan." Confidence is useful. Complacency is not.' },
+      { text: '"Let us find out more about their approach before our next Axiom meeting."', deal: 3, champion: 0, energy: -1, feedback: 'Alex nods. "Good call. I heard they are leading with a free POV and undercutting on price. Knowing that before we go back in helps." Smart move.' },
     ]
   },
   // ACT 2: DEMO
@@ -595,6 +615,8 @@ class CityScene extends Phaser.Scene {
     this.createAvailabilityGlow();
     this.createNotification();
     this.createDayNightOverlay();
+    this.createCharacterSilhouettes();
+    this.checkVertexInPlayHUD();
 
     // Show feedback from last decision
     if (STATE.feedbackQueue.length > 0) {
@@ -873,34 +895,7 @@ class CityScene extends Phaser.Scene {
   }
 
   showCompetitorAlert() {
-    AudioSystem.playNotification();
-    const nw = 286, nh = 66;
-    const nx = 20, ny = H - 100 - nh - 14;
-    const alertG = this.add.graphics().setDepth(20);
-    const alertT = this.add.text(nx + 12, ny + 10, '\u26a0\ufe0f COMPETITOR ALERT', {
-      fontSize: '9px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold', color: '#ef4444', letterSpacing: 1
-    }).setDepth(21);
-    const alertB = this.add.text(nx + 12, ny + 28, 'Vertex spotted heading to Axiom...', {
-      fontSize: '11px', fontFamily: 'Inter, sans-serif', color: '#ede8f5', wordWrap: { width: nw - 24 }
-    }).setDepth(21);
-    alertG.fillStyle(0x1a0808, 0.97);
-    alertG.fillRoundedRect(nx, ny, nw, nh, 8);
-    alertG.lineStyle(2, 0xef4444, 0.85);
-    alertG.strokeRoundedRect(nx, ny, nw, nh, 8);
-    alertG.fillStyle(0xef4444);
-    alertG.fillRect(nx, ny, nw, 3);
-    [alertG, alertT, alertB].forEach(o => o.setAlpha(0));
-    this.tweens.add({
-      targets: [alertG, alertT, alertB], alpha: 1, duration: 300,
-      onComplete: () => {
-        this.time.delayedCall(3000, () => {
-          this.tweens.add({
-            targets: [alertG, alertT, alertB], alpha: 0, duration: 400,
-            onComplete: () => { alertG.destroy(); alertT.destroy(); alertB.destroy(); }
-          });
-        });
-      }
-    });
+    this.showStackedNotif('COMPETITOR ALERT', 'Vertex spotted heading to Axiom. They are making a move.', 0xef4444);
   }
 
   createHUD() {
@@ -1052,14 +1047,16 @@ class CityScene extends Phaser.Scene {
           targets: glow, alpha: 0.25, duration: 1400,
           ease: 'Sine.easeInOut', yoyo: true, repeat: -1
         });
-        // FIX 4: pulsing dot badge at corner
+        // Notification-style badge at top-right corner of building
         const dot = this.add.graphics().setDepth(3);
-        dot.fillStyle(b.color, 1);
-        dot.fillCircle(b.x + b.w - 7, b.y + 7, 7);
+        const badgeX = b.x + b.w - 8;
+        const badgeY = b.y + 8;
+        dot.fillStyle(0xff3333, 1);
+        dot.fillCircle(badgeX, badgeY, 8);
         dot.lineStyle(2, 0x0d0618);
-        dot.strokeCircle(b.x + b.w - 7, b.y + 7, 7);
+        dot.strokeCircle(badgeX, badgeY, 8);
         this.tweens.add({
-          targets: dot, alpha: 0.2, duration: 850,
+          targets: dot, alpha: 0.3, duration: 700,
           ease: 'Sine.easeInOut', yoyo: true, repeat: -1
         });
       }
@@ -1119,47 +1116,83 @@ class CityScene extends Phaser.Scene {
   }
 
   createNotification() {
-    this.notifG = this.add.graphics().setDepth(20);
-    this.notifT = this.add.text(0, 0, '', {
-      fontSize: '9px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold', color: '#d946ef', letterSpacing: 1
+    // Notification queue for vertical tiling
+    this.notifQueue = [];
+  }
+
+  showStackedNotif(fromLabel, body, accentColor) {
+    accentColor = accentColor || 0xd946ef;
+    const MAX = 3;
+    const NW = 272, NH = 66, NX = 20;
+    const STACK_BOTTOM = H - 100 - 14; // above HUD and tip
+    const SPACING = NH + 6;
+
+    // Remove oldest if full
+    if (this.notifQueue.length >= MAX) {
+      const oldest = this.notifQueue.shift();
+      if (oldest) { oldest.g.destroy(); oldest.t.destroy(); oldest.b.destroy(); }
+    }
+
+    // Shift existing notifications up
+    this.notifQueue.forEach((n, i) => {
+      const targetY = STACK_BOTTOM - (this.notifQueue.length - i) * SPACING;
+      this.tweens.add({ targets: [n.g, n.t, n.b], y: targetY - NH, duration: 200 });
+    });
+
+    // New notification at bottom slot
+    const ny = STACK_BOTTOM - NH;
+    const g = this.add.graphics().setDepth(20);
+    g.fillStyle(0x1e1530, 0.97);
+    g.fillRoundedRect(NX, ny, NW, NH, 8);
+    g.lineStyle(1.5, accentColor, 0.75);
+    g.strokeRoundedRect(NX, ny, NW, NH, 8);
+    g.fillStyle(accentColor);
+    g.fillRect(NX, ny, NW, 3);
+
+    const t = this.add.text(NX + 12, ny + 10, '\uD83D\uDCEC ' + fromLabel.toUpperCase(), {
+      fontSize: '9px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold',
+      color: '#' + accentColor.toString(16).padStart(6, '0'), letterSpacing: 1
     }).setDepth(21);
-    this.notifB = this.add.text(0, 0, '', {
-      fontSize: '11px', fontFamily: 'Inter, sans-serif', color: '#ede8f5', wordWrap: { width: 230 }
+    const b = this.add.text(NX + 12, ny + 26, body, {
+      fontSize: '11px', fontFamily: 'Inter, sans-serif', color: '#ede8f5',
+      wordWrap: { width: NW - 24 }
     }).setDepth(21);
+
+    [g, t, b].forEach(o => o.setAlpha(0));
+    AudioSystem.playNotification();
+    this.tweens.add({
+      targets: [g, t, b], alpha: 1, duration: 280
+    });
+
+    const notif = { g, t, b };
+    this.notifQueue.push(notif);
+
+    // Fade out after 4 seconds in arrival order
+    this.time.delayedCall(4000, () => {
+      const idx = this.notifQueue.indexOf(notif);
+      if (idx > -1) this.notifQueue.splice(idx, 1);
+      this.tweens.add({
+        targets: [g, t, b], alpha: 0, duration: 400,
+        onComplete: () => { g.destroy(); t.destroy(); b.destroy(); }
+      });
+      // Shift remaining down
+      this.notifQueue.forEach((n, i) => {
+        const targetY = STACK_BOTTOM - NH - i * SPACING;
+        this.tweens.add({ targets: [n.g, n.t, n.b], y: targetY - NH + SPACING * i, duration: 200 });
+      });
+    });
   }
 
   showInboxNotif() {
     const msgs = [
-      { from: 'Priya', text: 'Quick question on the API auth flow , can we chat?' },
-      { from: 'Alex (AE)', text: 'Heads up: Vertex is sniffing around Axiom. Heard it from their CTO\'s EA.' },
+      { from: 'Priya', text: 'Quick question on the API auth flow. Can we chat?' },
+      { from: 'Alex (AE)', text: 'Heads up: Vertex is sniffing around Axiom. Heard it from their CTO EA.' },
       { from: 'Marcus', text: 'Looking forward to next week. Bring something concrete on ROI.' },
       { from: 'Sarah', text: 'Board review is Thursday. How does the Axiom deal look?' },
       { from: 'Dev (Axiom)', text: 'Do you support OTel natively or is it a plugin?' },
     ];
     const msg = msgs[Math.floor(Math.random() * msgs.length)];
-    // FIX 6: bottom-left, solid dark background
-    const nw = 270, nh = 66;
-    const nx = 20, ny = H - 100 - nh - 14;
-    this.notifG.clear();
-    this.notifG.fillStyle(0x0d0618, 0.97);
-    this.notifG.fillRoundedRect(nx, ny, nw, nh, 10);
-    this.notifG.lineStyle(2, 0xd946ef, 0.65);
-    this.notifG.strokeRoundedRect(nx, ny, nw, nh, 10);
-    this.notifG.fillStyle(0xd946ef);
-    this.notifG.fillRect(nx, ny, nw, 3);
-    this.notifT.setText('\uD83D\uDCEC ' + msg.from.toUpperCase()).setPosition(nx + 12, ny + 10);
-    this.notifB.setText(msg.text).setPosition(nx + 12, ny + 28);
-    [this.notifG, this.notifT, this.notifB].forEach(o => o.setAlpha(0));
-    AudioSystem.playNotification();
-    this.tweens.add({
-      targets: [this.notifG, this.notifT, this.notifB],
-      alpha: 1, duration: 300,
-      onComplete: () => {
-        this.time.delayedCall(3800, () => {
-          this.tweens.add({ targets: [this.notifG, this.notifT, this.notifB], alpha: 0, duration: 400 });
-        });
-      }
-    });
+    this.showStackedNotif(msg.from, msg.text, 0xd946ef);
   }
 
   showFeedback(msg) {
@@ -1201,6 +1234,74 @@ class CityScene extends Phaser.Scene {
       fontSize: '12px', fontFamily: 'Inter, sans-serif', color: '#f59e0b'
     }).setOrigin(0, 0.5).setDepth(31);
     this.time.delayedCall(2500, () => { g.destroy(); t.destroy(); });
+  }
+
+  createCharacterSilhouettes() {
+    // SE silhouette (You) - near HQ building
+    const seX = 165, seY = H * 0.52 - 38;
+    const drawSilhouette = (scene, x, y, color, label) => {
+      const g = scene.add.graphics().setDepth(4);
+      // Head
+      g.fillStyle(color, 0.85);
+      g.fillCircle(x, y, 9);
+      // Body
+      g.fillRoundedRect(x - 8, y + 9, 16, 22, 4);
+      // Shadow
+      g.fillStyle(0x000000, 0.15);
+      g.fillEllipse(x, y + 34, 20, 6);
+      const lbl = scene.add.text(x, y + 44, label, {
+        fontSize: '9px', fontFamily: 'Inter, sans-serif', color: '#' + color.toString(16).padStart(6, '0'),
+        align: 'center'
+      }).setOrigin(0.5).setDepth(4);
+      return { g, lbl };
+    };
+
+    const seSlug = drawSilhouette(this, seX, seY, 0xd946ef, 'You');
+    const aeSlug = drawSilhouette(this, seX + 22, seY + 4, 0xb06fd4, 'Alex');
+
+    // Idle bob animation (offset so they are not in sync)
+    this.tweens.add({
+      targets: [seSlug.g, seSlug.lbl], y: '-=3',
+      duration: 1400, ease: 'Sine.easeInOut', yoyo: true, repeat: -1
+    });
+    this.tweens.add({
+      targets: [aeSlug.g, aeSlug.lbl], y: '-=3',
+      duration: 1700, ease: 'Sine.easeInOut', yoyo: true, repeat: -1, delay: 400
+    });
+
+    // Store for deal health reactions
+    this.seSlug = seSlug;
+    this.aeSlug = aeSlug;
+
+    // React to deal health changes
+    const lastHealth = STATE.dealHealth;
+    this.time.addEvent({
+      delay: 1000,
+      callback: () => {
+        const delta = STATE.dealHealth - lastHealth;
+        if (delta >= 10) {
+          // Jump celebration
+          [seSlug.g, seSlug.lbl, aeSlug.g, aeSlug.lbl].forEach(t => {
+            this.tweens.add({ targets: t, y: '-=18', duration: 150, yoyo: true, ease: 'Quad.easeOut' });
+          });
+        } else if (delta <= -10) {
+          // Droop
+          [seSlug.g, aeSlug.g].forEach(t => {
+            this.tweens.add({ targets: t, angle: -5, duration: 200, yoyo: true });
+          });
+        }
+      },
+      loop: true
+    });
+  }
+
+  checkVertexInPlayHUD() {
+    if (STATE.vertexInPlay) {
+      this.add.text(W / 2, H - 100 + 14, '\u26a1 VERTEX IN PLAY', {
+        fontSize: '9px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold',
+        color: '#ef4444', letterSpacing: 2
+      }).setOrigin(0.5).setDepth(7);
+    }
   }
 }
 
@@ -1362,12 +1463,18 @@ class DecisionScene extends Phaser.Scene {
       AudioSystem.playWrong();
     }
     AudioSystem.playTransition();
+    const prevEnergy = STATE.energy;
     STATE.dealHealth = clamp(0, 100, STATE.dealHealth + choice.deal);
     STATE.championStrength = clamp(0, 100, STATE.championStrength + choice.champion);
     STATE.energy = clamp(0, 10, STATE.energy + choice.energy);
     STATE.completed.push(this.scenario.id);
+    if (this.scenario.id === 'vertex_encounter') STATE.vertexInPlay = true;
     STATE.lastChoice = choice;
     STATE.feedbackQueue.push(choice.feedback);
+    // Force energy change notification if it increased unexpectedly
+    if (STATE.energy > prevEnergy) {
+      STATE.feedbackQueue.push('Energy restored to ' + STATE.energy + '/10.');
+    }
     this.cameras.main.flash(300, 13, 6, 24);
     this.time.delayedCall(400, () => {
       AudioSystem.fadeAmbient(1.0, 1.5);
@@ -1661,7 +1768,11 @@ class ScrambleScene extends Phaser.Scene {
       STATE.dealHealth = clamp(0, 100, STATE.dealHealth + 8);
       STATE.championStrength = clamp(0, 100, STATE.championStrength + 6);
       STATE.streak++;
-      if (STATE.streak >= 3) STATE.energy = clamp(0, 10, STATE.energy + 1);
+      if (STATE.streak >= 3) {
+        const prevE = STATE.energy;
+        STATE.energy = clamp(0, 10, STATE.energy + 1);
+        if (STATE.energy > prevE) STATE.feedbackQueue.push('Streak bonus! Energy restored to ' + STATE.energy + '/10.');
+      }
       this.correct++;
     } else {
       STATE.dealHealth = clamp(0, 100, STATE.dealHealth - 4);
@@ -1924,7 +2035,7 @@ class OnboardingScene extends Phaser.Scene {
 
     // Skip link
     this.add.text(W - 20, H - 18, 'Skip \u2192', {
-      fontSize: '11px', fontFamily: 'Inter, sans-serif', color: '#4a3860'
+      fontSize: '13px', fontFamily: 'Inter, sans-serif', color: '#8b7fa8'
     }).setOrigin(1).setInteractive({ cursor: 'pointer' })
       .on('pointerdown', () => {
         AudioSystem.playClick();
@@ -2044,8 +2155,8 @@ class OnboardingScene extends Phaser.Scene {
     const buildings = [
       { label: 'Your HQ', bx: mapX + mapW * 0.06, by: mapY + mapH * 0.12, bw: 44, bh: 26, color: 0xd946ef, note: 'Prep & debrief' },
       { label: 'Axiom Systems', bx: mapX + mapW * 0.76, by: mapY + mapH * 0.08, bw: 52, bh: 30, color: 0x60a5fa, note: 'Your customer' },
-      { label: 'The Corner', bx: mapX + mapW * 0.44, by: mapY + mapH * 0.60, bw: 30, bh: 20, color: 0xf59e0b, note: 'Meet Priya here' },
-      { label: 'Vertex Solutions', bx: mapX + mapW * 0.57, by: mapY + mapH * 0.73, bw: 34, bh: 18, color: 0xef4444, note: 'Watch for their car' },
+      { label: 'The Corner', bx: mapX + mapW * 0.44, by: mapY + mapH * 0.60, bw: 30, bh: 20, color: 0xf59e0b, note: 'Meet your AE. Coffee and strategy.' },
+      { label: 'Vertex Solutions', bx: mapX + mapW * 0.57, by: mapY + mapH * 0.73, bw: 34, bh: 18, color: 0xef4444, note: 'Your rival for Axiom. Their car = making a move on your customer.' },
     ];
     buildings.forEach(b => {
       g.fillStyle(b.color, 0.25);
@@ -2104,14 +2215,14 @@ class OnboardingScene extends Phaser.Scene {
       const ccx = cx2 + cw / 2;
       this.add.text(ccx, cy + 28, c.emoji, { fontSize: '26px' }).setOrigin(0.5);
       this.add.text(ccx, cy + 60, c.name, {
-        fontSize: '10px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold', color: c.color,
+        fontSize: '13px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold', color: c.color,
         align: 'center', wordWrap: { width: cw - 12 }
       }).setOrigin(0.5);
       this.add.text(ccx, cy + 82, c.role, {
-        fontSize: '9px', fontFamily: 'Inter, sans-serif', color: '#8b7fa8', align: 'center'
+        fontSize: '11px', fontFamily: 'Inter, sans-serif', color: '#8b7fa8', align: 'center'
       }).setOrigin(0.5);
       this.add.text(ccx, cy + 104, c.note, {
-        fontSize: '9px', fontFamily: 'Inter, sans-serif', color: '#4a3860',
+        fontSize: '11px', fontFamily: 'Inter, sans-serif', color: '#a895c0',
         align: 'center', lineSpacing: 3, wordWrap: { width: cw - 12 }
       }).setOrigin(0.5);
       cx2 += cw + 12;
@@ -2155,8 +2266,8 @@ class OnboardingScene extends Phaser.Scene {
         fontSize: '11px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold', color: m.hex
       });
       this.add.text(mx + mw / 2 + 8, my + 14, m.desc, {
-        fontSize: '10px', fontFamily: 'Inter, sans-serif', color: '#8b7fa8',
-        wordWrap: { width: mw / 2 - 20 }, lineSpacing: 3
+        fontSize: '11px', fontFamily: 'Inter, sans-serif', color: '#a895c0',
+        wordWrap: { width: mw / 2 - 60 }, lineSpacing: 3
       });
 
       my += 84;
