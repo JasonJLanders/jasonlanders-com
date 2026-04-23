@@ -1647,7 +1647,16 @@ class DecisionScene extends Phaser.Scene {
       if (STATE.dealHealth <= 0) {
         this.scene.start('OutcomeScene', { won: false });
       } else {
-        this.scene.start('CityScene');
+        // If next scenario is at the same location, go straight into it
+        const nextUp = SCENARIOS.find(s => !STATE.completed.includes(s.id) && s.act === STATE.act)
+          || SCENARIOS.find(s => !STATE.completed.includes(s.id));
+        if (nextUp && nextUp.location === this.scenario.location) {
+          this.time.delayedCall(200, () => {
+            this.scene.start('DecisionScene', { scenarioId: nextUp.id });
+          });
+        } else {
+          this.scene.start('CityScene');
+        }
       }
     });
   }
