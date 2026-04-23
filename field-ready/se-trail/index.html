@@ -633,13 +633,27 @@ class CityScene extends Phaser.Scene {
 
   drawGround() {
     const g = this.add.graphics();
-    g.fillStyle(0x2d5a3a);
-    g.fillRect(0, 0, W, H);
+    // Base grass
+    g.fillStyle(0x2d5a3a); g.fillRect(0, 0, W, H);
+    // Texture patches - subtle shade variation
+    g.fillStyle(0x2a5236, 0.7); g.fillRect(0, 0, W * 0.45, H * 0.48);
+    g.fillStyle(0x316040, 0.5); g.fillRect(W * 0.42, 0, W * 0.3, H * 0.5);
+    g.fillStyle(0x285034, 0.6); g.fillRect(0, H * 0.55, W * 0.36, H * 0.45);
+    g.fillStyle(0x336644, 0.4); g.fillRect(W * 0.74, H * 0.55, W * 0.26, H * 0.45);
+    g.fillStyle(0x265030, 0.5); g.fillRect(W * 0.38, H * 0.54, W * 0.34, H * 0.2);
+    g.fillStyle(0x356848, 0.3); g.fillRect(W * 0.55, H * 0.3, W * 0.16, H * 0.22);
+    // Small random dark patches for extra texture
+    [[80,260,60,40],[320,380,80,50],[W*0.8,H*0.3,70,45],[W*0.25,H*0.7,90,55],
+     [W*0.6,H*0.65,65,40],[W*0.12,H*0.42,50,35]].forEach(([x,y,w,h]) => {
+      g.fillStyle(0x244830, 0.35); g.fillRect(x, y, w, h);
+    });
+    // Road ground shadows
     g.fillStyle(0x3a3248, 0.5);
     g.fillRect(0, H * 0.52 - 24, W, 48);
     g.fillRect(0, H * 0.75 - 20, W, 40);
     g.fillRect(W * 0.38 - 24, 0, 48, H);
     g.fillRect(W * 0.72 - 22, 0, 44, H);
+    // Block zones under buildings
     g.fillStyle(0x2a2040, 0.4);
     g.fillRect(40, 80, 200, 160);
     g.fillRect(W - 260, 60, 230, 200);
@@ -739,19 +753,38 @@ class CityScene extends Phaser.Scene {
   }
 
   drawTrees() {
-    const g = this.add.graphics();
     const pts = [
-      // Moved away from HQ (was [220,160] overlapping building)
       [258, 150], [240, 340], [360, 120], [360, 340],
       [W - 320, 300], [W - 95, 300], [W - 95, 425],
       [W * 0.38 + 40, H * 0.30], [W * 0.38 - 60, H * 0.35],
       [140, H * 0.65], [200, H * 0.70],
     ];
-    pts.forEach(([x, y]) => {
-      g.fillStyle(0x000000, 0.2); g.fillEllipse(x + 3, y + 3, 26, 16);
-      g.fillStyle(0x22c55e); g.fillCircle(x, y, 14);
-      g.fillStyle(0x16a34a); g.fillCircle(x - 4, y - 3, 10);
-      g.fillStyle(0x4ade80, 0.35); g.fillCircle(x + 3, y - 5, 7);
+    pts.forEach(([x, y], i) => {
+      // Draw shadow on ground graphics (static)
+      const shadow = this.add.graphics().setDepth(1);
+      shadow.fillStyle(0x000000, 0.18);
+      shadow.fillEllipse(x + 3, y + 4, 28, 14);
+
+      // Tree canopy as a graphics object so we can tween it
+      const tree = this.add.graphics().setDepth(2);
+      tree.fillStyle(0x22c55e); tree.fillCircle(0, 0, 14);
+      tree.fillStyle(0x16a34a); tree.fillCircle(-4, -3, 10);
+      tree.fillStyle(0x4ade80, 0.35); tree.fillCircle(3, -5, 7);
+      tree.x = x; tree.y = y;
+
+      // Wind jitter: subtle rotation + slight x sway, each tree offset
+      const windDuration = 2200 + i * 340;
+      const swayAmt = 1.5 + (i % 3) * 0.8;
+      this.tweens.add({
+        targets: tree,
+        angle: swayAmt,
+        x: x + swayAmt * 0.7,
+        duration: windDuration,
+        ease: 'Sine.easeInOut',
+        yoyo: true,
+        repeat: -1,
+        delay: i * 180
+      });
     });
   }
 
