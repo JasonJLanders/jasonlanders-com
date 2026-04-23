@@ -114,7 +114,7 @@ const SCENARIOS = [
     type: 'decision',
     title: 'The Technical Demo',
     context: 'You\'re in the big conference room. Priya brought two engineers. Marcus is dialed in remotely.',
-    speaker: { name: 'Dev , Backend Engineer', role: 'Backend Infra, Axiom', emoji: '🧑‍🔬', color: '#a78bfa' },
+    speaker: { name: 'Dev', role: 'Backend Infra, Axiom', emoji: '🧑‍🔬', color: '#a78bfa' },
     quote: '"What does the API integration look like? We\'re Kubernetes-native. We\'ve been burned by tools that say they support K8s and then it\'s just a Helm chart wrapper."',
     choices: [
       { text: '"Tell me about your current K8s setup , what version, what operators are you running? I want to make sure I show you exactly what\'s relevant."', tags: ['technical', 'discovery'], deal: 16, champion: 10, energy: -1, feedback: 'Dev nods. You asked before you answered. The next 20 minutes are laser-focused on their stack.' },
@@ -205,7 +205,7 @@ const SCRAMBLE_QS = [
   },
   {
     context: 'Mid-demo. A technical stakeholder suddenly asks a question you weren\'t expecting.',
-    speaker: { name: 'Dev , Backend Engineer', role: 'Infra Lead, Axiom', emoji: '🧑‍🔬', color: '#a78bfa' },
+    speaker: { name: 'Dev', role: 'Infra Lead, Axiom', emoji: '🧑‍🔬', color: '#a78bfa' },
     quote: '"Does this work with our internal secrets manager? It\'s not Vault , it\'s something we built in-house."',
     options: [
       { text: '"Tell me more about how it works , then I\'ll give you an honest answer."', best: true, label: 'Clarify before committing' },
@@ -1231,7 +1231,7 @@ class DecisionScene extends Phaser.Scene {
     g.lineStyle(1, 0x2e2249); g.lineBetween(0, 60, W, 60);
     g.fillStyle(0xd946ef); g.fillRect(0, 0, W, 3);
 
-    this.add.text(20, 16, sc.location.toUpperCase() + ' , ' + sc.title.toUpperCase(), {
+    this.add.text(20, 16, sc.location.toUpperCase() + ' \u2014 ' + sc.title.toUpperCase(), {
       fontSize: '10px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold', color: '#d946ef', letterSpacing: 2
     });
     this.add.text(20, 38, 'Day ' + STATE.day + '  \u00b7  Act ' + STATE.act + ': ' + STATE.actName + '  \u00b7  Energy: ' + STATE.energy + '/10', {
@@ -1981,8 +1981,8 @@ class OnboardingScene extends Phaser.Scene {
 
     const acts = [
       { n: 1, days: 'Days 1\u201330', name: 'Discovery', desc: 'Understand the real\nproblem. Build trust.', color: 0xd946ef },
-      { n: 2, days: 'Days 31\u201360', name: 'The Proof', desc: 'Demo on their terms.\nHandle the competitor.', color: 0x60a5fa },
-      { n: 3, days: 'Days 61\u201390', name: 'The Close', desc: 'Navigate objections.\nActivate your champion.', color: 0x22c55e },
+      { n: 2, days: 'Days 31\u201360', name: 'Demo', desc: 'Demo on their terms.\nHandle the competitor.', color: 0x60a5fa },
+      { n: 3, days: 'Days 61\u201390', name: 'Close', desc: 'Navigate objections.\nActivate your champion.', color: 0x22c55e },
     ];
     const cw = Math.min(172, (W - 80) / 3 - 14);
     const ch = 164;
@@ -2044,8 +2044,8 @@ class OnboardingScene extends Phaser.Scene {
     const buildings = [
       { label: 'Your HQ', bx: mapX + mapW * 0.06, by: mapY + mapH * 0.12, bw: 44, bh: 26, color: 0xd946ef, note: 'Prep & debrief' },
       { label: 'Axiom Systems', bx: mapX + mapW * 0.76, by: mapY + mapH * 0.08, bw: 52, bh: 30, color: 0x60a5fa, note: 'Your customer' },
-      { label: 'The Corner', bx: mapX + mapW * 0.44, by: mapY + mapH * 0.60, bw: 30, bh: 20, color: 0xf59e0b, note: 'Meet Alex here' },
-      { label: 'Vertex HQ', bx: mapX + mapW * 0.57, by: mapY + mapH * 0.73, bw: 34, bh: 18, color: 0xef4444, note: 'Watch for their car' },
+      { label: 'The Corner', bx: mapX + mapW * 0.44, by: mapY + mapH * 0.60, bw: 30, bh: 20, color: 0xf59e0b, note: 'Meet Priya here' },
+      { label: 'Vertex Solutions', bx: mapX + mapW * 0.57, by: mapY + mapH * 0.73, bw: 34, bh: 18, color: 0xef4444, note: 'Watch for their car' },
     ];
     buildings.forEach(b => {
       g.fillStyle(b.color, 0.25);
@@ -2071,7 +2071,7 @@ class OnboardingScene extends Phaser.Scene {
       }).setOrigin(0.5);
     });
 
-    this.add.text(cx, descY + 46, 'Click buildings to visit. Each visit costs energy.', {
+    this.add.text(cx, descY + 46, 'Click buildings to visit. Each choice costs energy.', {
       fontSize: '11px', fontFamily: 'Inter, sans-serif', fontStyle: 'italic', color: '#8b7fa8'
     }).setOrigin(0.5);
   }
