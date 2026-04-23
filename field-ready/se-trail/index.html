@@ -1105,7 +1105,9 @@ class CityScene extends Phaser.Scene {
         }
         if (scenario.location !== b.key) {
           AudioSystem.playClick();
-          this.showToast('\u25b6 Head to ' + scenario.location + ' next');
+          STATE.day += 1;
+          STATE.energy = Math.max(0, STATE.energy - 1);
+          this.showWanderEncounter(b.key);
           return;
         }
         AudioSystem.playClick();
@@ -1131,6 +1133,34 @@ class CityScene extends Phaser.Scene {
 
   createNotification() {
     this.notifQueue = [];
+  }
+
+  showWanderEncounter(location) {
+    const hq = [
+      'You spend an hour reorganizing your demo environment. Nothing breaks. Nothing improves.',
+      'You update your CRM. The deal is still at the same stage it was before you updated your CRM.',
+      'Sarah stops by your desk. "How\'s Axiom going?" You say "good." She nods and walks away.',
+      'You rewrite your intro slide for the fourth time. It\'s now worse than the original.',
+      'You find a three-month-old email from Priya you forgot to answer. You archive it.',
+      'You sit through an internal all-hands. You learn nothing actionable. One hour gone.',
+    ];
+    const axiom = [
+      'You show up to Axiom without a meeting scheduled. The receptionist is polite but confused.',
+      'You run into a junior engineer in the lobby. They say the evaluation is going well. You have no idea what that means.',
+      'You sit in the Axiom lobby for 20 minutes before realizing Priya is working from home today.',
+      'You bump into a Vertex Solutions rep leaving the building. They smile. You both pretend not to know why the other is there.',
+      'The Axiom front desk asks if you have an appointment. You say you were just in the area. They are not impressed.',
+    ];
+    const corner = [
+      'You grab a coffee and spend an hour scrolling the competitor\'s LinkedIn. You learn nothing you didn\'t already know.',
+      'You overhear two people at the next table discussing observability tooling. You resist the urge to interrupt.',
+      'Alex texts you while you\'re here: "Where are you? I thought we had prep time today?" You had forgotten.',
+      'The barista spells your name wrong on the cup. You decide not to correct it. Small victories.',
+      'You run into a former colleague who now works at Vertex. The conversation is extremely awkward for both of you.',
+    ];
+    const pool = location === 'Your HQ' ? hq : location === 'Axiom Systems' ? axiom : corner;
+    const msg = pool[Math.floor(Math.random() * pool.length)];
+    this.showStackedNotif('DAY ' + STATE.day, msg, 0x8b7fa8);
   }
 
   showStackedNotif(from, text, accentColor) {
