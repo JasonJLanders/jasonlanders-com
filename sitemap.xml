@@ -77,11 +77,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://jasonlanders.com/articles/se-metrics-that-matter</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://jasonlanders.com/articles/se-manager-first-90-days</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
