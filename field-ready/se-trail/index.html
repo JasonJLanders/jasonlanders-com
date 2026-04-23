@@ -654,6 +654,15 @@ class CityScene extends Phaser.Scene {
     g.fillRect(0, H * 0.75 - 16, W, 32);
     g.fillRect(W * 0.38 - 20, 0, 40, H);
     g.fillRect(W * 0.72 - 18, 0, 36, H);
+
+    // Driveways connecting buildings to main roads
+    // HQ driveway: from V_ROAD_1 (W*0.38) horizontally to HQ right edge (x=240)
+    g.fillStyle(0x261f3a);
+    g.fillRect(240, 188, W * 0.38 - 20 - 240, 18); // HQ entrance stub
+    // Axiom driveway: from V_ROAD_2 (W*0.72) left to Axiom left edge
+    const axiomLeft = W - 275;
+    g.fillRect(W * 0.72 + 18, 148, axiomLeft - (W * 0.72 + 18), 18);
+
     for (let x = 0; x < W; x += 40) {
       g.fillStyle(0xf59e0b, 0.3);
       g.fillRect(x, H * 0.52 - 1, 24, 2);
@@ -732,7 +741,8 @@ class CityScene extends Phaser.Scene {
   drawTrees() {
     const g = this.add.graphics();
     const pts = [
-      [220, 160], [240, 340], [360, 120], [360, 340],
+      // Moved away from HQ (was [220,160] overlapping building)
+      [258, 150], [240, 340], [360, 120], [360, 340],
       [W - 320, 300], [W - 95, 300], [W - 95, 425],
       [W * 0.38 + 40, H * 0.30], [W * 0.38 - 60, H * 0.35],
       [140, H * 0.65], [200, H * 0.70],
@@ -913,28 +923,24 @@ class CityScene extends Phaser.Scene {
     this.drawHUDMeter(g, mx, hudY + 40, 210, 'ENERGY', (STATE.energy / 10) * 100, 0xf59e0b, 0xfde68a);
     this.drawHUDMeter(g, mx, hudY + 66, 210, 'CHAMPION', STATE.championStrength, 0x22c55e, 0x86efac);
 
-    // Account info box
+    // Account info box — taller when Vertex is in play
     const infoX = mx + 246;
+    const infoH = STATE.vertexEncountered ? 90 : 74;
     g.fillStyle(0x1e1530);
-    g.fillRoundedRect(infoX, hudY + 10, 170, 74, 8);
+    g.fillRoundedRect(infoX, hudY + 10, 170, infoH, 8);
     g.lineStyle(1, 0x2e2249);
-    g.strokeRoundedRect(infoX, hudY + 10, 170, 74, 8);
+    g.strokeRoundedRect(infoX, hudY + 10, 170, infoH, 8);
     _t(this.add.text(infoX + 10, hudY + 19, 'ACTIVE ACCOUNT', {
       fontSize: '9px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold', color: '#8b7fa8', letterSpacing: 1
     }).setDepth(6));
-    _t(this.add.text(infoX + 10, hudY + 36, 'Axiom Systems', {
+    _t(this.add.text(infoX + 10, hudY + 34, 'Axiom Systems', {
       fontSize: '13px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold', color: '#ede8f5'
     }).setDepth(6));
-    _t(this.add.text(infoX + 10, hudY + 55, 'Champion: Priya Sharma', {
+    _t(this.add.text(infoX + 10, hudY + 52, 'Champion: Priya Sharma', {
       fontSize: '10px', fontFamily: 'Inter, sans-serif', color: '#60a5fa'
     }).setDepth(6));
-    _t(this.add.text(infoX + 10, hudY + 70, 'Competitor: Vertex Solutions', {
-      fontSize: '9px', fontFamily: 'Inter, sans-serif', color: '#ef4444', alpha: 0.7
-    }).setDepth(6));
-
-    // VERTEX IN PLAY flag (Fix 7)
     if (STATE.vertexEncountered) {
-      _t(this.add.text(infoX + 10, hudY + 84, 'VERTEX IN PLAY', {
+      _t(this.add.text(infoX + 10, hudY + 68, '\u26a1 VERTEX IN PLAY', {
         fontSize: '9px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold', color: '#ef4444', letterSpacing: 1
       }).setDepth(6));
     }
