@@ -1030,14 +1030,15 @@ class CityScene extends Phaser.Scene {
   }
 
   createAvailabilityGlow() {
+    const nextUp = this.nextScenario();
+    const nextLocation = nextUp ? nextUp.location : null;
     const buildings = [
       { x: 60,       y: 90,       w: 180, h: 130, key: 'Your HQ',       color: 0xd946ef },
       { x: W - 275,  y: 62,       w: 215, h: 165, key: 'Axiom Systems', color: 0x60a5fa },
       { x: W * 0.44, y: H * 0.60, w: 120, h: 90,  key: 'The Corner',    color: 0xf59e0b },
     ];
     buildings.forEach(b => {
-      const hasScenario = SCENARIOS.some(s => !STATE.completed.includes(s.id) && s.location === b.key);
-      if (hasScenario) {
+      if (b.key === nextLocation) {
         const glow = this.add.graphics().setDepth(2);
         glow.lineStyle(3, b.color, 0.55);
         glow.strokeRect(b.x - 4, b.y - 4, b.w + 8, b.h + 8);
