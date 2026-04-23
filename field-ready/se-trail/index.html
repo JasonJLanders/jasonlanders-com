@@ -1397,7 +1397,7 @@ class DecisionScene extends Phaser.Scene {
 
     // Layer 2: dark overlay + grid on separate graphics object
     const g = this.add.graphics();
-    g.fillStyle(0x0a0612, 0.76); g.fillRect(0, 0, W, H);
+    g.fillStyle(0x0a0612, 0.62); g.fillRect(0, 0, W, H);
     g.lineStyle(1, 0x1a1228, 0.4);
     for (let x = 0; x < W; x += 44) g.lineBetween(x, 0, x, H);
     for (let y = 0; y < H; y += 44) g.lineBetween(0, y, W, y);
@@ -1531,55 +1531,53 @@ class DecisionScene extends Phaser.Scene {
   }
 
   drawLocationBg(g, location) {
-    // Draw a silhouetted scene appropriate to the location
-    // All scenes share the same dark palette — silhouettes are very dark fills
-    const S = 0x0d0820; // silhouette dark
-    const SA = 0x12102a; // silhouette slightly lighter
-    const WC = 0xfde68a; // warm window light
-    const CL = 0x60a5fa; // cool window light
+    // Silhouette values must contrast against bg AND survive the 0.76 dark overlay
+    const S  = 0x1a1535; // silhouette (mid-dark purple)
+    const SA = 0x231d42; // silhouette lighter
+    const WC = 0xfde68a; // warm amber window glow
+    const CL = 0x93c5fd; // cool blue window glow
 
     if (location === 'The Corner') {
-      // Coffee shop: counter, stools, window with street outside
-      g.fillStyle(0x0e0c1a); g.fillRect(0, 0, W, H);
+      // Coffee shop background
+      g.fillStyle(0x0f0c1e); g.fillRect(0, 0, W, H);
       // Floor
       g.fillStyle(0x100e20); g.fillRect(0, H * 0.72, W, H * 0.28);
-      // Back wall windows
+      // Back wall windows with warm glow
       const winY = H * 0.18, winH = H * 0.38;
       for (let i = 0; i < 4; i++) {
         const wx = W * 0.08 + i * (W * 0.23);
-        g.fillStyle(WC, 0.06); g.fillRect(wx, winY, W * 0.16, winH);
-        g.lineStyle(1, WC, 0.12); g.strokeRect(wx, winY, W * 0.16, winH);
-        // Window cross
-        g.lineStyle(1, WC, 0.08);
+        g.fillStyle(WC, 0.14); g.fillRect(wx, winY, W * 0.16, winH);
+        g.lineStyle(2, WC, 0.35); g.strokeRect(wx, winY, W * 0.16, winH);
+        g.lineStyle(1, WC, 0.2);
         g.lineBetween(wx + W * 0.08, winY, wx + W * 0.08, winY + winH);
         g.lineBetween(wx, winY + winH * 0.5, wx + W * 0.16, winY + winH * 0.5);
-        // Street silhouette through window
         g.fillStyle(S, 1); g.fillRect(wx + 2, winY + winH * 0.62, W * 0.16 - 4, winH * 0.38 - 2);
       }
       // Counter bar
       g.fillStyle(SA); g.fillRect(0, H * 0.62, W * 0.38, H * 0.1);
-      g.fillStyle(S); g.fillRect(0, H * 0.62, W * 0.38, 4);
+      g.fillStyle(0x2e2448); g.fillRect(0, H * 0.62, W * 0.38, 4);
       // Stools at counter
       for (let i = 0; i < 4; i++) {
         const sx = W * 0.05 + i * W * 0.085;
-        g.fillStyle(S); g.fillEllipse(sx, H * 0.63, 28, 8);
+        g.fillStyle(SA); g.fillEllipse(sx, H * 0.63, 28, 8);
         g.fillRect(sx - 3, H * 0.63, 6, H * 0.09);
       }
-      // Seated person silhouettes at tables
+      // Seated silhouettes at tables
       [[W * 0.55, H * 0.56], [W * 0.62, H * 0.56], [W * 0.78, H * 0.52], [W * 0.84, H * 0.52]].forEach(([px, py]) => {
-        g.fillStyle(S); g.fillCircle(px, py - 22, 12); // head
-        g.fillStyle(SA); g.fillRoundedRect(px - 14, py - 12, 28, 28, 4); // body
+        g.fillStyle(SA); g.fillCircle(px, py - 22, 13);
+        g.fillStyle(SA); g.fillRoundedRect(px - 15, py - 10, 30, 30, 4);
       });
-      // Small round tables
+      // Tables
       [[W * 0.585, H * 0.65], [W * 0.81, H * 0.62]].forEach(([tx, ty]) => {
-        g.fillStyle(SA); g.fillEllipse(tx, ty, 60, 14);
+        g.fillStyle(SA); g.fillEllipse(tx, ty, 64, 16);
         g.fillStyle(S); g.fillRect(tx - 3, ty, 6, H * 0.07);
       });
-      // Pendant lights
+      // Pendant lights with glow pool
       for (let i = 0; i < 5; i++) {
         const lx = W * 0.12 + i * W * 0.19;
-        g.fillStyle(WC, 0.18); g.fillCircle(lx, H * 0.08, 16);
-        g.lineStyle(1, WC, 0.15); g.lineBetween(lx, 0, lx, H * 0.08);
+        g.fillStyle(WC, 0.06); g.fillCircle(lx, H * 0.35, 60);
+        g.fillStyle(WC, 0.3); g.fillCircle(lx, H * 0.08, 14);
+        g.lineStyle(1, WC, 0.25); g.lineBetween(lx, 0, lx, H * 0.08);
       }
 
     } else if (location === 'Axiom Systems') {
@@ -1588,7 +1586,8 @@ class DecisionScene extends Phaser.Scene {
       // Floor
       g.fillStyle(0x0c1020); g.fillRect(0, H * 0.70, W, H * 0.30);
       // Full width window wall (city view)
-      g.fillStyle(CL, 0.04); g.fillRect(0, H * 0.08, W, H * 0.54);
+      g.fillStyle(CL, 0.10); g.fillRect(0, H * 0.08, W, H * 0.54);
+      g.lineStyle(2, CL, 0.2); g.strokeRect(0, H * 0.08, W, H * 0.54);
       // City skyline through glass
       const skyY = H * 0.42;
       const cityBldgs = [[0,60,80],[80,44,60],[150,90,110],[260,55,75],[340,110,130],[480,48,68],[560,80,100],[660,70,90],[760,95,115],[880,55,75],[960,88,108],[W-80,65,85]];
