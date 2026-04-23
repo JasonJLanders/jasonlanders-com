@@ -557,7 +557,7 @@ class TitleScene extends Phaser.Scene {
       AudioSystem.playClick();
       AudioSystem.playTransition();
       this.cameras.main.flash(400, 13, 6, 24);
-      this.time.delayedCall(500, () => this.scene.start('CityScene'));
+      this.time.delayedCall(500, () => this.scene.start('OnboardingScene'));
     });
 
     this.tweens.add({
@@ -745,15 +745,21 @@ class CityScene extends Phaser.Scene {
 
   createCar() {
     this.carG = this.add.graphics();
-    this.carX = 280;
+    this.carX = W * 0.38;
     this.carY = H * 0.52;
     this.carPathIdx = 0;
+    // Road centerlines: H_ROAD_1=H*0.52, V_ROAD_1=W*0.38, V_ROAD_2=W*0.72
+    // Strictly horizontal or vertical segments only
     this.carPath = [
-      { x: 60, y: H * 0.52 }, { x: W * 0.38 - 20, y: H * 0.52 },
-      { x: W * 0.38 - 20, y: 240 }, { x: W - 170, y: 240 },
-      { x: W - 170, y: H * 0.52 }, { x: W * 0.72 - 18, y: H * 0.52 },
-      { x: W * 0.72 - 18, y: H * 0.62 }, { x: W * 0.46, y: H * 0.62 },
-      { x: W * 0.46, y: H * 0.52 }, { x: 280, y: H * 0.52 },
+      { x: W * 0.38, y: H * 0.52 },  // V_ROAD_1 / H_ROAD_1 junction
+      { x: W * 0.38, y: 185 },         // up V_ROAD_1 near HQ
+      { x: W * 0.38, y: H * 0.52 },  // back down to junction
+      { x: W * 0.72, y: H * 0.52 },  // right on H_ROAD_1 to V_ROAD_2 junction
+      { x: W * 0.72, y: 165 },         // up V_ROAD_2 near Axiom
+      { x: W * 0.72, y: H * 0.52 },  // back down to junction
+      { x: W * 0.38, y: H * 0.52 },  // left on H_ROAD_1 to V_ROAD_1
+      { x: W * 0.38, y: H * 0.64 },  // down V_ROAD_1 near Coffee Shop
+      { x: W * 0.38, y: H * 0.52 },  // back up to junction
     ];
     this.drawCarAt(this.carX, this.carY);
     this.moveCar();
@@ -777,25 +783,36 @@ class CityScene extends Phaser.Scene {
 
   moveCar() {
     const next = this.carPath[this.carPathIdx % this.carPath.length];
+    const dx = Math.abs(next.x - this.carX);
+    const dy = Math.abs(next.y - this.carY);
+    const dist = dx + dy;
+    const duration = Math.max(400, (dist / 110) * 1000);
     this.tweens.add({
       targets: this,
       carX: next.x, carY: next.y,
-      duration: 2800,
+      duration: duration,
       ease: 'Linear',
       onUpdate: () => this.drawCarAt(this.carX, this.carY),
       onComplete: () => {
         this.carPathIdx++;
-        this.time.addEvent({ delay: 300, callback: this.moveCar, callbackScope: this });
+        this.time.addEvent({ delay: 280, callback: this.moveCar, callbackScope: this });
       }
     });
   }
 
   createCompetitorCar() {
     this.compCar = this.add.graphics();
-    this.compX = W - 200;
+    this.compX = W * 0.65;
     this.compY = H * 0.75;
+    this.compMoving = false;
+
     this._drawComp = () => {
       this.compCar.clear();
+      if (this.compMoving) {
+        // Pulsing red glow while moving
+        this.compCar.fillStyle(0xef4444, 0.18);
+        this.compCar.fillCircle(this.compX, this.compY, 24);
+      }
       this.compCar.fillStyle(0x000000, 0.2);
       this.compCar.fillEllipse(this.compX + 2, this.compY + 6, 30, 9);
       this.compCar.fillStyle(0xef4444);
@@ -808,28 +825,81 @@ class CityScene extends Phaser.Scene {
     };
     this._drawComp();
 
+    // Helper: run waypoints sequentially with proportional speed
+    const runWaypoints = (wps, onDone) => {
+      let idx = 0;
+      const step = () => {
+        if (idx >= wps.length) { onDone(); return; }
+        const wp = wps[idx++];
+        const dist = Math.abs(wp.x - this.compX) + Math.abs(wp.y - this.compY);
+        const duration = Math.max(400, (dist / 100) * 1000);
+        this.tweens.add({
+          targets: this, compX: wp.x, compY: wp.y,
+          duration, ease: 'Linear',
+          onUpdate: this._drawComp,
+          onComplete: step
+        });
+      };
+      step();
+    };
+
     this.time.addEvent({
-      delay: 13000,
+      delay: 15000,
       callback: () => {
         const startX = this.compX, startY = this.compY;
-        this.tweens.add({
-          targets: this,
-          compX: W * 0.72 - 18, compY: H * 0.52,
-          duration: 3200, ease: 'Linear',
-          onUpdate: this._drawComp,
-          onComplete: () => {
-            this.time.delayedCall(2200, () => {
-              this.tweens.add({
-                targets: this,
-                compX: startX, compY: startY,
-                duration: 3200, ease: 'Linear',
-                onUpdate: this._drawComp
-              });
-            });
-          }
+        this.compMoving = true;
+        this.showCompetitorAlert();
+        // Road-following: H_ROAD_2 right to V_ROAD_2, up V_ROAD_2 to near Axiom
+        const toAxiom = [
+          { x: W * 0.72, y: H * 0.75 },
+          { x: W * 0.72, y: H * 0.52 },
+          { x: W * 0.72, y: 165 },
+        ];
+        const returnPath = [
+          { x: W * 0.72, y: H * 0.52 },
+          { x: W * 0.72, y: H * 0.75 },
+          { x: startX, y: startY },
+        ];
+        runWaypoints(toAxiom, () => {
+          this.compMoving = false;
+          this._drawComp();
+          this.time.delayedCall(4000, () => {
+            runWaypoints(returnPath, () => {});
+          });
         });
       },
       loop: true
+    });
+  }
+
+  showCompetitorAlert() {
+    AudioSystem.playNotification();
+    const nw = 286, nh = 66;
+    const nx = 20, ny = H - 100 - nh - 14;
+    const alertG = this.add.graphics().setDepth(20);
+    const alertT = this.add.text(nx + 12, ny + 10, '\u26a0\ufe0f COMPETITOR ALERT', {
+      fontSize: '9px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold', color: '#ef4444', letterSpacing: 1
+    }).setDepth(21);
+    const alertB = this.add.text(nx + 12, ny + 28, 'Vertex spotted heading to Axiom...', {
+      fontSize: '11px', fontFamily: 'Inter, sans-serif', color: '#ede8f5', wordWrap: { width: nw - 24 }
+    }).setDepth(21);
+    alertG.fillStyle(0x1a0808, 0.97);
+    alertG.fillRoundedRect(nx, ny, nw, nh, 8);
+    alertG.lineStyle(2, 0xef4444, 0.85);
+    alertG.strokeRoundedRect(nx, ny, nw, nh, 8);
+    alertG.fillStyle(0xef4444);
+    alertG.fillRect(nx, ny, nw, 3);
+    [alertG, alertT, alertB].forEach(o => o.setAlpha(0));
+    this.tweens.add({
+      targets: [alertG, alertT, alertB], alpha: 1, duration: 300,
+      onComplete: () => {
+        this.time.delayedCall(3000, () => {
+          this.tweens.add({
+            targets: [alertG, alertT, alertB], alpha: 0, duration: 400,
+            onComplete: () => { alertG.destroy(); alertT.destroy(); alertB.destroy(); }
+          });
+        });
+      }
     });
   }
 
@@ -920,29 +990,41 @@ class CityScene extends Phaser.Scene {
       muteBtn.setText(nowMuted ? '🔇' : '🔊');
     });
 
-    // Next destination hint
+    // Next destination hint — FIX 4: context-aware hint text
     const hint = this.nextScenario();
+    const hintMap = {
+      'disc_1': 'Priya is ready to meet \u2014 head to Axiom Systems',
+      'disc_2': 'Marcus is watching \u2014 follow up at Axiom Systems',
+      'coffee_1': 'Priya wants to talk \u2014 meet her at The Corner',
+      'demo_1': 'Technical demo scheduled \u2014 head to Axiom Systems',
+      'demo_2': 'Marcus has questions \u2014 head to Axiom Systems',
+      'hq_1': 'Sarah wants a deal update \u2014 check in at Your HQ',
+      'close_1': 'Marcus called \u2014 closing time at Axiom Systems',
+      'close_2': 'Priya texted you \u2014 meet her at The Corner',
+    };
     const hintTxt = hint
-      ? '\u25b6 Head to ' + hint.location + ' to continue your deal'
-      : 'All scenarios complete , deal concluding...';
+      ? '\u25b6 ' + (hintMap[hint.id] || 'Head to ' + hint.location)
+      : 'All scenarios complete \u2014 deal concluding...';
     this.add.text(20, hudY - 22, hintTxt, {
-      fontSize: '11px', fontFamily: 'Inter, sans-serif', color: '#4a3860'
+      fontSize: '11px', fontFamily: 'Inter, sans-serif', color: '#60a5fa'
     }).setDepth(6);
   }
 
   drawHUDMeter(g, x, y, width, label, pct, c1, c2) {
     this.add.text(x, y, label, {
-      fontSize: '9px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold',
-      color: '#8b7fa8', letterSpacing: 1
+      fontSize: '10px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold',
+      color: '#a895c0', letterSpacing: 1
     }).setDepth(6);
     g.fillStyle(0x1e1530);
-    g.fillRoundedRect(x, y + 14, width, 8, 4);
+    g.fillRoundedRect(x, y + 15, width, 8, 4);
     const fillW = Math.max(0, Math.min(1, pct / 100)) * width;
     if (fillW > 0) {
       g.fillGradientStyle(c1, c2, c1, c2, 1);
-      g.fillRoundedRect(x, y + 14, fillW, 8, 4);
+      g.fillRoundedRect(x, y + 15, fillW, 8, 4);
     }
-    this.add.text(x + width + 8, y + 12, Math.round(pct).toString(), {
+    // Ensure at least 24px padding from right edge
+    const valX = Math.min(x + width + 8, W - 28);
+    this.add.text(valX, y + 12, Math.round(pct).toString(), {
       fontSize: '11px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold', color: '#ede8f5'
     }).setDepth(6);
   }
@@ -968,6 +1050,16 @@ class CityScene extends Phaser.Scene {
         glow.fillRect(b.x - 4, b.y - 4, b.w + 8, b.h + 8);
         this.tweens.add({
           targets: glow, alpha: 0.25, duration: 1400,
+          ease: 'Sine.easeInOut', yoyo: true, repeat: -1
+        });
+        // FIX 4: pulsing dot badge at corner
+        const dot = this.add.graphics().setDepth(3);
+        dot.fillStyle(b.color, 1);
+        dot.fillCircle(b.x + b.w - 7, b.y + 7, 7);
+        dot.lineStyle(2, 0x0d0618);
+        dot.strokeCircle(b.x + b.w - 7, b.y + 7, 7);
+        this.tweens.add({
+          targets: dot, alpha: 0.2, duration: 850,
           ease: 'Sine.easeInOut', yoyo: true, repeat: -1
         });
       }
@@ -1045,13 +1137,17 @@ class CityScene extends Phaser.Scene {
       { from: 'Dev (Axiom)', text: 'Do you support OTel natively or is it a plugin?' },
     ];
     const msg = msgs[Math.floor(Math.random() * msgs.length)];
-    const nx = W - 280, ny = 22, nw = 265, nh = 66;
+    // FIX 6: bottom-left, solid dark background
+    const nw = 270, nh = 66;
+    const nx = 20, ny = H - 100 - nh - 14;
     this.notifG.clear();
-    this.notifG.fillStyle(0xd946ef, 0.08);
+    this.notifG.fillStyle(0x0d0618, 0.97);
     this.notifG.fillRoundedRect(nx, ny, nw, nh, 10);
-    this.notifG.lineStyle(1, 0xd946ef, 0.35);
+    this.notifG.lineStyle(2, 0xd946ef, 0.65);
     this.notifG.strokeRoundedRect(nx, ny, nw, nh, 10);
-    this.notifT.setText('📬 ' + msg.from.toUpperCase()).setPosition(nx + 12, ny + 10);
+    this.notifG.fillStyle(0xd946ef);
+    this.notifG.fillRect(nx, ny, nw, 3);
+    this.notifT.setText('\uD83D\uDCEC ' + msg.from.toUpperCase()).setPosition(nx + 12, ny + 10);
     this.notifB.setText(msg.text).setPosition(nx + 12, ny + 28);
     [this.notifG, this.notifT, this.notifB].forEach(o => o.setAlpha(0));
     AudioSystem.playNotification();
@@ -1068,21 +1164,22 @@ class CityScene extends Phaser.Scene {
 
   showFeedback(msg) {
     if (!msg) return;
+    // FIX 6: bottom-left, solid dark background, measure text height first
     const fw = Math.min(500, W - 80);
-    const fx = (W - fw) / 2, fy = 20;
     const g = this.add.graphics().setDepth(30);
-    const t = this.add.text(fx + 16, fy + 14, msg, {
+    const t = this.add.text(36, 0, msg, {
       fontSize: '12px', fontFamily: 'Inter, sans-serif',
       color: '#ede8f5', wordWrap: { width: fw - 32 }, lineSpacing: 3
     }).setDepth(31);
     const fh = t.height + 32;
-    g.fillStyle(0x1e1530, 0.97);
+    const fx = 20, fy = H - 100 - fh - 14;
+    g.fillStyle(0x0d0618, 0.97);
     g.fillRoundedRect(fx, fy, fw, fh, 10);
-    g.lineStyle(2, 0xd946ef, 0.6);
+    g.lineStyle(2, 0xd946ef, 0.65);
     g.strokeRoundedRect(fx, fy, fw, fh, 10);
     g.fillStyle(0xd946ef);
     g.fillRect(fx, fy, fw, 3);
-    t.setY(fy + 14);
+    t.setPosition(fx + 16, fy + 14);
     const dismiss = () => { g.destroy(); t.destroy(); zone.destroy(); };
     const zone = this.add.zone(fx, fy, fw, fh).setOrigin(0).setInteractive({ cursor: 'pointer' }).setDepth(32);
     zone.on('pointerdown', dismiss);
@@ -1090,16 +1187,19 @@ class CityScene extends Phaser.Scene {
   }
 
   showToast(msg) {
+    // FIX 6: bottom-left corner, solid background
     const tw = Math.min(380, W - 40);
-    const tx = (W - tw) / 2, ty = H * 0.45;
+    const tx = 20, ty = H - 100 - 44 - 14;
     const g = this.add.graphics().setDepth(30);
-    g.fillStyle(0x1e1530, 0.95);
+    g.fillStyle(0x0d0618, 0.97);
     g.fillRoundedRect(tx, ty, tw, 44, 8);
-    g.lineStyle(1, 0xf59e0b, 0.5);
+    g.lineStyle(2, 0xf59e0b, 0.65);
     g.strokeRoundedRect(tx, ty, tw, 44, 8);
-    const t = this.add.text(tx + tw / 2, ty + 22, msg, {
+    g.fillStyle(0xf59e0b);
+    g.fillRect(tx, ty, tw, 3);
+    const t = this.add.text(tx + 14, ty + 22, msg, {
       fontSize: '12px', fontFamily: 'Inter, sans-serif', color: '#f59e0b'
-    }).setOrigin(0.5).setDepth(31);
+    }).setOrigin(0, 0.5).setDepth(31);
     this.time.delayedCall(2500, () => { g.destroy(); t.destroy(); });
   }
 }
@@ -1138,8 +1238,9 @@ class DecisionScene extends Phaser.Scene {
       fontSize: '10px', fontFamily: 'Inter, sans-serif', color: '#8b7fa8'
     });
 
-    this.drawBarMini(g, W - 210, 14, 190, 'DEAL', STATE.dealHealth, 0xd946ef, 0xa78bfa);
-    this.drawBarMini(g, W - 210, 36, 190, 'CHAMPION', STATE.championStrength, 0x22c55e, 0x86efac);
+    // FIX 5: push bars left for 24px+ right padding, widen label area
+    this.drawBarMini(g, W - 248, 14, 200, 'DEAL', STATE.dealHealth, 0xd946ef, 0xa78bfa);
+    this.drawBarMini(g, W - 248, 36, 200, 'CHAMPION', STATE.championStrength, 0x22c55e, 0x86efac);
 
     const cx = W / 2;
     let curY = 80;
@@ -1279,11 +1380,12 @@ class DecisionScene extends Phaser.Scene {
   }
 
   drawBarMini(g, x, y, width, label, pct, c1, c2) {
+    // FIX 5: wider label area (96px), right-edge safe value position
     this.add.text(x, y, label, {
-      fontSize: '9px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold', color: '#8b7fa8', letterSpacing: 1
+      fontSize: '10px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold', color: '#a895c0', letterSpacing: 1
     });
-    const barX = x + 80;
-    const barW = width - 80;
+    const barX = x + 96;
+    const barW = width - 96;
     g.fillStyle(0x1e1530);
     g.fillRoundedRect(barX, y + 1, barW, 7, 3);
     const fillW = Math.max(0, Math.min(1, pct / 100)) * barW;
@@ -1291,7 +1393,8 @@ class DecisionScene extends Phaser.Scene {
       g.fillGradientStyle(c1, c2, c1, c2, 1);
       g.fillRoundedRect(barX, y + 1, fillW, 7, 3);
     }
-    this.add.text(x + width + 4, y - 1, Math.round(pct).toString(), {
+    const valX = Math.min(x + width + 4, W - 28);
+    this.add.text(valX, y - 1, Math.round(pct).toString(), {
       fontSize: '10px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold', color: '#ede8f5'
     });
   }
@@ -1752,6 +1855,316 @@ function clamp(min, max, val) {
 }
 
 // ============================================================
+// SCENE: ONBOARDING  (FIX 3)
+// ============================================================
+class OnboardingScene extends Phaser.Scene {
+  constructor() { super({ key: 'OnboardingScene' }); }
+
+  create() {
+    this.panel = 0;
+    AudioSystem.init();
+    AudioSystem.startAmbient();
+    this.showPanel(0);
+  }
+
+  showPanel(idx) {
+    this.children.removeAll(true);
+    const cx = W / 2;
+    const g = this.add.graphics();
+    const panels = [this.renderPanel1, this.renderPanel2, this.renderPanel3, this.renderPanel4, this.renderPanel5];
+
+    // Background
+    g.fillStyle(0x0a0612);
+    g.fillRect(0, 0, W, H);
+    for (let i = 0; i < 80; i++) {
+      g.fillStyle(0xffffff, Math.random() * 0.35 + 0.05);
+      g.fillCircle(Math.random() * W, Math.random() * H, Math.random() + 0.3);
+    }
+
+    panels[idx].call(this, g, cx);
+
+    // Panel dots
+    for (let i = 0; i < panels.length; i++) {
+      const dot = this.add.graphics();
+      dot.fillStyle(i === idx ? 0xd946ef : 0x2e2249);
+      dot.fillCircle(cx - (panels.length - 1) * 14 + i * 28, H - 42, i === idx ? 7 : 5);
+    }
+
+    // Next / Start button
+    const isLast = idx === panels.length - 1;
+    const btnLabel = isLast ? 'Start Your Quarter \u2192' : 'Next \u2192';
+    const btnW = isLast ? 240 : 150, btnH = 48;
+    const btnX = cx - btnW / 2, btnY = H - 88;
+    const btnG = this.add.graphics();
+    const drawBtn = (hover) => {
+      btnG.clear();
+      btnG.fillStyle(hover ? 0xd946ef : 0x1e1530);
+      btnG.fillRoundedRect(btnX, btnY, btnW, btnH, 10);
+      btnG.lineStyle(2, 0xd946ef);
+      btnG.strokeRoundedRect(btnX, btnY, btnW, btnH, 10);
+    };
+    drawBtn(false);
+    this.add.text(cx, btnY + btnH / 2, btnLabel, {
+      fontSize: '15px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold', color: '#ede8f5'
+    }).setOrigin(0.5);
+    const zone = this.add.zone(btnX, btnY, btnW, btnH).setOrigin(0).setInteractive({ cursor: 'pointer' });
+    zone.on('pointerover', () => { AudioSystem.playHover(); drawBtn(true); });
+    zone.on('pointerout', () => drawBtn(false));
+    zone.on('pointerdown', () => {
+      AudioSystem.playClick();
+      if (isLast) {
+        AudioSystem.playTransition();
+        this.cameras.main.flash(400, 13, 6, 24);
+        this.time.delayedCall(500, () => this.scene.start('CityScene'));
+      } else {
+        this.panel++;
+        this.showPanel(this.panel);
+      }
+    });
+
+    // Skip link
+    this.add.text(W - 20, H - 18, 'Skip \u2192', {
+      fontSize: '11px', fontFamily: 'Inter, sans-serif', color: '#4a3860'
+    }).setOrigin(1).setInteractive({ cursor: 'pointer' })
+      .on('pointerdown', () => {
+        AudioSystem.playClick();
+        this.cameras.main.flash(300, 13, 6, 24);
+        this.time.delayedCall(400, () => this.scene.start('CityScene'));
+      })
+      .on('pointerover', function() { this.setColor('#8b7fa8'); })
+      .on('pointerout', function() { this.setColor('#4a3860'); });
+  }
+
+  renderPanel1(g, cx) {
+    this.add.text(cx, H * 0.12, '1 / 5', {
+      fontSize: '10px', fontFamily: 'Inter, sans-serif', color: '#4a3860', letterSpacing: 2
+    }).setOrigin(0.5);
+    this.add.text(cx, H * 0.22, 'Your First 90 Days', {
+      fontSize: clamp(22, 34, W / 24) + 'px', fontFamily: 'Georgia, serif', fontStyle: 'italic', color: '#ede8f5'
+    }).setOrigin(0.5);
+
+    const bw = Math.min(520, W - 80), bh = 186;
+    const bx = cx - bw / 2, by = H * 0.33;
+    g.fillStyle(0x1e1530);
+    g.fillRoundedRect(bx, by, bw, bh, 12);
+    g.lineStyle(2, 0xd946ef, 0.5);
+    g.strokeRoundedRect(bx, by, bw, bh, 12);
+    g.fillStyle(0xd946ef);
+    g.fillRect(bx, by, bw, 3);
+
+    this.add.text(cx, by + 34, 'You are a new Sales Engineer.', {
+      fontSize: '15px', fontFamily: 'Inter, sans-serif', color: '#ede8f5', align: 'center'
+    }).setOrigin(0.5);
+    this.add.text(cx, by + 68, 'First deal: Axiom Systems.\nAE Alex Torres is ready. You have 90 days.\nYour choices determine the outcome.', {
+      fontSize: '12px', fontFamily: 'Inter, sans-serif', color: '#a895c0',
+      align: 'center', lineSpacing: 5
+    }).setOrigin(0.5);
+
+    const barY = by + 142;
+    const barW = bw - 60;
+    this.add.text(bx + 30, barY, 'DAY 1 / 90', {
+      fontSize: '9px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold', color: '#d946ef', letterSpacing: 1
+    });
+    g.fillStyle(0x0d0618);
+    g.fillRoundedRect(bx + 30, barY + 16, barW, 8, 4);
+    g.fillStyle(0xd946ef, 0.9);
+    g.fillRoundedRect(bx + 30, barY + 16, Math.max(6, barW / 90), 8, 4);
+  }
+
+  renderPanel2(g, cx) {
+    this.add.text(cx, H * 0.12, '2 / 5', {
+      fontSize: '10px', fontFamily: 'Inter, sans-serif', color: '#4a3860', letterSpacing: 2
+    }).setOrigin(0.5);
+    this.add.text(cx, H * 0.22, 'Three Acts. One Deal.', {
+      fontSize: clamp(22, 34, W / 24) + 'px', fontFamily: 'Georgia, serif', fontStyle: 'italic', color: '#ede8f5'
+    }).setOrigin(0.5);
+
+    const acts = [
+      { n: 1, days: 'Days 1\u201330', name: 'Discovery', desc: 'Understand the real\nproblem. Build trust.', color: 0xd946ef },
+      { n: 2, days: 'Days 31\u201360', name: 'The Proof', desc: 'Demo on their terms.\nHandle the competitor.', color: 0x60a5fa },
+      { n: 3, days: 'Days 61\u201390', name: 'The Close', desc: 'Navigate objections.\nActivate your champion.', color: 0x22c55e },
+    ];
+    const cw = Math.min(172, (W - 80) / 3 - 14);
+    const ch = 164;
+    const totalW = acts.length * (cw + 14) - 14;
+    let cx2 = cx - totalW / 2;
+    const cy = H * 0.36;
+
+    acts.forEach(a => {
+      g.fillStyle(0x1e1530);
+      g.fillRoundedRect(cx2, cy, cw, ch, 10);
+      g.lineStyle(2, a.color, 0.7);
+      g.strokeRoundedRect(cx2, cy, cw, ch, 10);
+      g.fillStyle(a.color);
+      g.fillRect(cx2, cy, cw, 3);
+      const acx = cx2 + cw / 2;
+      this.add.text(acx, cy + 20, 'ACT ' + a.n, {
+        fontSize: '9px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold',
+        color: '#' + a.color.toString(16).padStart(6, '0'), letterSpacing: 2
+      }).setOrigin(0.5);
+      this.add.text(acx, cy + 38, a.days, {
+        fontSize: '9px', fontFamily: 'Inter, sans-serif', color: '#8b7fa8'
+      }).setOrigin(0.5);
+      this.add.text(acx, cy + 60, a.name, {
+        fontSize: '16px', fontFamily: 'Georgia, serif', fontStyle: 'italic', color: '#ede8f5'
+      }).setOrigin(0.5);
+      this.add.text(acx, cy + 96, a.desc, {
+        fontSize: '10px', fontFamily: 'Inter, sans-serif', color: '#a895c0',
+        align: 'center', wordWrap: { width: cw - 16 }, lineSpacing: 3
+      }).setOrigin(0.5);
+      cx2 += cw + 14;
+    });
+
+    this.add.text(cx, cy + ch + 22, 'Your choices determine the ending.', {
+      fontSize: '12px', fontFamily: 'Inter, sans-serif', fontStyle: 'italic', color: '#8b7fa8'
+    }).setOrigin(0.5);
+  }
+
+  renderPanel3(g, cx) {
+    this.add.text(cx, H * 0.09, '3 / 5', {
+      fontSize: '10px', fontFamily: 'Inter, sans-serif', color: '#4a3860', letterSpacing: 2
+    }).setOrigin(0.5);
+    this.add.text(cx, H * 0.17, 'Your World', {
+      fontSize: clamp(22, 34, W / 24) + 'px', fontFamily: 'Georgia, serif', fontStyle: 'italic', color: '#ede8f5'
+    }).setOrigin(0.5);
+
+    const mapW = Math.min(480, W - 80), mapH = Math.min(200, H * 0.33);
+    const mapX = cx - mapW / 2, mapY = H * 0.27;
+    g.fillStyle(0x1a3a2a);
+    g.fillRoundedRect(mapX, mapY, mapW, mapH, 8);
+    g.lineStyle(1, 0x2e4a3a);
+    g.strokeRoundedRect(mapX, mapY, mapW, mapH, 8);
+
+    const rY1 = mapY + mapH * 0.52, rX1 = mapX + mapW * 0.38, rX2 = mapX + mapW * 0.72;
+    g.fillStyle(0x2e2448, 0.85);
+    g.fillRect(mapX, rY1 - 4, mapW, 8);
+    g.fillRect(rX1 - 4, mapY, 8, mapH);
+    g.fillRect(rX2 - 4, mapY, 7, mapH);
+
+    const buildings = [
+      { label: 'Your HQ', bx: mapX + mapW * 0.06, by: mapY + mapH * 0.12, bw: 44, bh: 26, color: 0xd946ef, note: 'Prep & debrief' },
+      { label: 'Axiom Systems', bx: mapX + mapW * 0.76, by: mapY + mapH * 0.08, bw: 52, bh: 30, color: 0x60a5fa, note: 'Your customer' },
+      { label: 'The Corner', bx: mapX + mapW * 0.44, by: mapY + mapH * 0.60, bw: 30, bh: 20, color: 0xf59e0b, note: 'Meet Alex here' },
+      { label: 'Vertex HQ', bx: mapX + mapW * 0.57, by: mapY + mapH * 0.73, bw: 34, bh: 18, color: 0xef4444, note: 'Watch for their car' },
+    ];
+    buildings.forEach(b => {
+      g.fillStyle(b.color, 0.25);
+      g.fillRect(b.bx, b.by, b.bw, b.bh);
+      g.lineStyle(1.5, b.color, 0.9);
+      g.strokeRect(b.bx, b.by, b.bw, b.bh);
+      this.add.text(b.bx + b.bw / 2, b.by - 10, b.label, {
+        fontSize: '7px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold',
+        color: '#' + b.color.toString(16).padStart(6, '0')
+      }).setOrigin(0.5);
+    });
+
+    const descY = mapY + mapH + 14;
+    const colW = mapW / 4;
+    buildings.forEach((b, i) => {
+      const dx = mapX + i * colW + colW / 2;
+      this.add.text(dx, descY, b.label, {
+        fontSize: '9px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold',
+        color: '#' + b.color.toString(16).padStart(6, '0')
+      }).setOrigin(0.5);
+      this.add.text(dx, descY + 14, b.note, {
+        fontSize: '9px', fontFamily: 'Inter, sans-serif', color: '#4a3860', align: 'center'
+      }).setOrigin(0.5);
+    });
+
+    this.add.text(cx, descY + 46, 'Click buildings to visit. Each visit costs energy.', {
+      fontSize: '11px', fontFamily: 'Inter, sans-serif', fontStyle: 'italic', color: '#8b7fa8'
+    }).setOrigin(0.5);
+  }
+
+  renderPanel4(g, cx) {
+    this.add.text(cx, H * 0.12, '4 / 5', {
+      fontSize: '10px', fontFamily: 'Inter, sans-serif', color: '#4a3860', letterSpacing: 2
+    }).setOrigin(0.5);
+    this.add.text(cx, H * 0.22, 'Your Team', {
+      fontSize: clamp(22, 34, W / 24) + 'px', fontFamily: 'Georgia, serif', fontStyle: 'italic', color: '#ede8f5'
+    }).setOrigin(0.5);
+
+    const chars = [
+      { name: 'Alex Torres', role: 'Your AE', emoji: '🤝', color: '#22c55e', note: 'Enthusiastic.\nMoves fast.' },
+      { name: 'Marcus Reid', role: 'VP Eng, Axiom', emoji: '🧑‍💼', color: '#f59e0b', note: 'Skeptical.\nPotential champion.' },
+      { name: 'Sarah Chen', role: 'Your Manager', emoji: '👩‍💼', color: '#d946ef', note: 'Straight-talking.\nHas your back.' },
+      { name: 'Priya Sharma', role: 'Sr. Eng, Axiom', emoji: '🧑‍💻', color: '#60a5fa', note: 'Detail-oriented.\nEarns trust.' },
+    ];
+    const cw = Math.min(152, (W - 80) / 4 - 12);
+    const ch = 150;
+    const totalW = chars.length * (cw + 12) - 12;
+    let cx2 = cx - totalW / 2;
+    const cy = H * 0.34;
+
+    chars.forEach(c => {
+      g.fillStyle(0x1e1530);
+      g.fillRoundedRect(cx2, cy, cw, ch, 10);
+      g.lineStyle(1, 0x2e2249);
+      g.strokeRoundedRect(cx2, cy, cw, ch, 10);
+      const ccx = cx2 + cw / 2;
+      this.add.text(ccx, cy + 28, c.emoji, { fontSize: '26px' }).setOrigin(0.5);
+      this.add.text(ccx, cy + 60, c.name, {
+        fontSize: '10px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold', color: c.color,
+        align: 'center', wordWrap: { width: cw - 12 }
+      }).setOrigin(0.5);
+      this.add.text(ccx, cy + 82, c.role, {
+        fontSize: '9px', fontFamily: 'Inter, sans-serif', color: '#8b7fa8', align: 'center'
+      }).setOrigin(0.5);
+      this.add.text(ccx, cy + 104, c.note, {
+        fontSize: '9px', fontFamily: 'Inter, sans-serif', color: '#4a3860',
+        align: 'center', lineSpacing: 3, wordWrap: { width: cw - 12 }
+      }).setOrigin(0.5);
+      cx2 += cw + 12;
+    });
+  }
+
+  renderPanel5(g, cx) {
+    this.add.text(cx, H * 0.09, '5 / 5', {
+      fontSize: '10px', fontFamily: 'Inter, sans-serif', color: '#4a3860', letterSpacing: 2
+    }).setOrigin(0.5);
+    this.add.text(cx, H * 0.17, 'What to Watch', {
+      fontSize: clamp(22, 34, W / 24) + 'px', fontFamily: 'Georgia, serif', fontStyle: 'italic', color: '#ede8f5'
+    }).setOrigin(0.5);
+
+    const meters = [
+      { name: 'Deal Health', hex: '#d946ef', color: 0xd946ef, pct: 60, desc: 'Make smart moves to raise it. Hits zero and the deal dies.' },
+      { name: 'Energy', hex: '#f59e0b', color: 0xf59e0b, pct: 80, desc: 'Actions cost energy. Rest at HQ to restore.' },
+      { name: 'Champion', hex: '#22c55e', color: 0x22c55e, pct: 35, desc: 'Internal advocate strength. Deals without champions rarely close.' },
+    ];
+    const mw = Math.min(440, W - 80);
+    const mx = cx - mw / 2;
+    let my = H * 0.31;
+
+    meters.forEach(m => {
+      g.fillStyle(0x1e1530);
+      g.fillRoundedRect(mx, my, mw, 70, 8);
+      g.lineStyle(1, m.color, 0.35);
+      g.strokeRoundedRect(mx, my, mw, 70, 8);
+      g.fillStyle(m.color);
+      g.fillRect(mx, my, mw, 3);
+
+      this.add.text(mx + 14, my + 14, m.name.toUpperCase(), {
+        fontSize: '10px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold', color: m.hex, letterSpacing: 1
+      });
+      const bx = mx + 14, by2 = my + 38, bw = mw / 2 - 24;
+      g.fillStyle(0x0d0618);
+      g.fillRoundedRect(bx, by2, bw, 9, 4);
+      g.fillStyle(m.color, 0.85);
+      g.fillRoundedRect(bx, by2, Math.max(6, bw * m.pct / 100), 9, 4);
+      this.add.text(bx + bw + 8, by2, m.pct + '', {
+        fontSize: '11px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold', color: m.hex
+      });
+      this.add.text(mx + mw / 2 + 8, my + 14, m.desc, {
+        fontSize: '10px', fontFamily: 'Inter, sans-serif', color: '#8b7fa8',
+        wordWrap: { width: mw / 2 - 20 }, lineSpacing: 3
+      });
+
+      my += 84;
+    });
+  }
+}
+
+// ============================================================
 // LAUNCH
 // ============================================================
 const config = {
@@ -1760,7 +2173,7 @@ const config = {
   height: H,
   parent: 'game-container',
   backgroundColor: '#0a0612',
-  scene: [TitleScene, CityScene, DecisionScene, ScrambleScene, OutcomeScene],
+  scene: [TitleScene, OnboardingScene, CityScene, DecisionScene, ScrambleScene, OutcomeScene],
   scale: {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH
