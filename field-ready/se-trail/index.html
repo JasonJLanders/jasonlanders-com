@@ -1342,43 +1342,12 @@ class CityScene extends Phaser.Scene {
 
   showFeedback(msg) {
     if (!msg) return;
-    // FIX 6: bottom-left, solid dark background, measure text height first
-    const fw = Math.min(500, W - 80);
-    const g = this.add.graphics().setDepth(30);
-    const t = this.add.text(36, 0, msg, {
-      fontSize: '12px', fontFamily: 'Inter, sans-serif',
-      color: '#ede8f5', wordWrap: { width: fw - 32 }, lineSpacing: 3
-    }).setDepth(31);
-    const fh = t.height + 32;
-    const fx = 20, fy = H - 100 - fh - 14;
-    g.fillStyle(0x0d0618, 0.97);
-    g.fillRoundedRect(fx, fy, fw, fh, 10);
-    g.lineStyle(2, 0xd946ef, 0.65);
-    g.strokeRoundedRect(fx, fy, fw, fh, 10);
-    g.fillStyle(0xd946ef);
-    g.fillRect(fx, fy, fw, 3);
-    t.setPosition(fx + 16, fy + 14);
-    const dismiss = () => { g.destroy(); t.destroy(); zone.destroy(); };
-    const zone = this.add.zone(fx, fy, fw, fh).setOrigin(0).setInteractive({ cursor: 'pointer' }).setDepth(32);
-    zone.on('pointerdown', dismiss);
-    this.time.delayedCall(4500, dismiss);
+    // Route through stacked notification system so it sits above hint text and doesn't overlap
+    this.showStackedNotif('OUTCOME', msg, 0xd946ef);
   }
 
   showToast(msg) {
-    // FIX 6: bottom-left corner, solid background
-    const tw = Math.min(380, W - 40);
-    const tx = 20, ty = H - 100 - 44 - 14;
-    const g = this.add.graphics().setDepth(30);
-    g.fillStyle(0x0d0618, 0.97);
-    g.fillRoundedRect(tx, ty, tw, 44, 8);
-    g.lineStyle(2, 0xf59e0b, 0.65);
-    g.strokeRoundedRect(tx, ty, tw, 44, 8);
-    g.fillStyle(0xf59e0b);
-    g.fillRect(tx, ty, tw, 3);
-    const t = this.add.text(tx + 14, ty + 22, msg, {
-      fontSize: '12px', fontFamily: 'Inter, sans-serif', color: '#f59e0b'
-    }).setOrigin(0, 0.5).setDepth(31);
-    this.time.delayedCall(2500, () => { g.destroy(); t.destroy(); });
+    this.showStackedNotif('NOTICE', msg, 0xf59e0b);
   }
 }
 
