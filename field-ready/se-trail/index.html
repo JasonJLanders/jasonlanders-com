@@ -2193,15 +2193,17 @@ class OnboardingScene extends Phaser.Scene {
   }
 
   renderPanel3(g, cx) {
-    this.add.text(cx, H * 0.09, '3 / 5', {
+    this.add.text(cx, H * 0.06, '3 / 5', {
       fontSize: '12px', fontFamily: 'Inter, sans-serif', color: '#8b7fa8', letterSpacing: 2
     }).setOrigin(0.5);
-    this.add.text(cx, H * 0.17, 'Your World', {
+    this.add.text(cx, H * 0.13, 'Your World', {
       fontSize: clamp(22, 34, W / 24) + 'px', fontFamily: 'Georgia, serif', fontStyle: 'italic', color: '#ede8f5'
     }).setOrigin(0.5);
 
-    const mapW = Math.min(480, W - 80), mapH = Math.min(200, H * 0.33);
-    const mapX = cx - mapW / 2, mapY = H * 0.27;
+    // Map — uses most of the available width
+    const mapW = clamp(400, W * 0.82, 860);
+    const mapH = clamp(160, H * 0.35, 260);
+    const mapX = cx - mapW / 2, mapY = H * 0.21;
     g.fillStyle(0x1a3a2a);
     g.fillRoundedRect(mapX, mapY, mapW, mapH, 8);
     g.lineStyle(1, 0x2e4a3a);
@@ -2214,38 +2216,62 @@ class OnboardingScene extends Phaser.Scene {
     g.fillRect(rX2 - 4, mapY, 7, mapH);
 
     const buildings = [
-      { label: 'Your HQ', bx: mapX + mapW * 0.06, by: mapY + mapH * 0.12, bw: 44, bh: 26, color: 0xd946ef, note: 'Prep & debrief' },
-      { label: 'Axiom Systems', bx: mapX + mapW * 0.76, by: mapY + mapH * 0.08, bw: 52, bh: 30, color: 0x60a5fa, note: 'Your customer' },
-      { label: 'The Corner', bx: mapX + mapW * 0.44, by: mapY + mapH * 0.60, bw: 30, bh: 20, color: 0xf59e0b, note: 'Meet your AE for coffee to debrief and strategize. Restores energy.' },
-      { label: 'Vertex Solutions', bx: mapX + mapW * 0.57, by: mapY + mapH * 0.73, bw: 34, bh: 18, color: 0xef4444, note: 'Your competition for the Axiom deal. If their car heads to Axiom, they are making a move on your customer.' },
+      { label: 'Your HQ',        bx: mapX + mapW * 0.06, by: mapY + mapH * 0.12, bw: 54, bh: 30, color: 0xd946ef },
+      { label: 'Axiom Systems',  bx: mapX + mapW * 0.76, by: mapY + mapH * 0.08, bw: 62, bh: 34, color: 0x60a5fa },
+      { label: 'The Corner',     bx: mapX + mapW * 0.44, by: mapY + mapH * 0.60, bw: 36, bh: 24, color: 0xf59e0b },
+      { label: 'Vertex Solutions',bx: mapX + mapW * 0.57, by: mapY + mapH * 0.73, bw: 40, bh: 22, color: 0xef4444 },
     ];
     buildings.forEach(b => {
-      g.fillStyle(b.color, 0.25);
+      g.fillStyle(b.color, 0.22);
       g.fillRect(b.bx, b.by, b.bw, b.bh);
       g.lineStyle(1.5, b.color, 0.9);
       g.strokeRect(b.bx, b.by, b.bw, b.bh);
-      this.add.text(b.bx + b.bw / 2, b.by - 10, b.label, {
-        fontSize: '7px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold',
-        color: '#' + b.color.toString(16).padStart(6, '0')
-      }).setOrigin(0.5);
-    });
-
-    const descY = mapY + mapH + 14;
-    const colW = mapW / 4;
-    buildings.forEach((b, i) => {
-      const dx = mapX + i * colW + colW / 2;
-      this.add.text(dx, descY, b.label, {
+      this.add.text(b.bx + b.bw / 2, b.by - 11, b.label, {
         fontSize: '9px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold',
         color: '#' + b.color.toString(16).padStart(6, '0')
       }).setOrigin(0.5);
-      this.add.text(dx, descY + 14, b.note, {
-        fontSize: '10px', fontFamily: 'Inter, sans-serif', color: '#a895c0', align: 'center',
-        wordWrap: { width: colW - 8 }
-      }).setOrigin(0.5);
     });
 
-    this.add.text(cx, descY + 46, 'Click buildings to visit. Each choice costs energy.', {
-      fontSize: '16px', fontFamily: 'Inter, sans-serif', fontStyle: 'italic', color: '#ede8f5'
+    // Location cards — 2x2 grid below the map
+    const cards = [
+      { label: 'Your HQ',         color: 0xd946ef, hex: '#d946ef', note: 'Your base. Prep before meetings, debrief after.' },
+      { label: 'Axiom Systems',   color: 0x60a5fa, hex: '#60a5fa', note: 'Your customer. Every visit moves the deal forward or back.' },
+      { label: 'The Corner',      color: 0xf59e0b, hex: '#f59e0b', note: 'Coffee with your AE. Strategize, debrief, restore energy.' },
+      { label: 'Vertex Solutions', color: 0xef4444, hex: '#ef4444', note: 'Your competition. Their car heading to Axiom means they are making a move.' },
+    ];
+
+    const gridTop = mapY + mapH + 18;
+    const colGap = 16;
+    const cardW = (mapW - colGap) / 2;
+    const cardH = clamp(52, 68, H * 0.09);
+    const rowGap = 10;
+
+    cards.forEach((c, i) => {
+      const col = i % 2;
+      const row = Math.floor(i / 2);
+      const cx2 = mapX + col * (cardW + colGap);
+      const cy2 = gridTop + row * (cardH + rowGap);
+
+      g.fillStyle(0x1e1530);
+      g.fillRoundedRect(cx2, cy2, cardW, cardH, 6);
+      g.lineStyle(1.5, c.color, 0.5);
+      g.strokeRoundedRect(cx2, cy2, cardW, cardH, 6);
+      g.fillStyle(c.color);
+      g.fillRect(cx2, cy2, cardW, 3);
+
+      this.add.text(cx2 + 14, cy2 + 12, c.label.toUpperCase(), {
+        fontSize: '10px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold',
+        color: c.hex, letterSpacing: 1
+      });
+      this.add.text(cx2 + 14, cy2 + 28, c.note, {
+        fontSize: '11px', fontFamily: 'Inter, sans-serif', color: '#ede8f5',
+        wordWrap: { width: cardW - 28 }, lineSpacing: 2
+      });
+    });
+
+    const footerY = gridTop + 2 * (cardH + rowGap) + 14;
+    this.add.text(cx, footerY, 'Click a building to visit. Each scenario costs energy.', {
+      fontSize: '12px', fontFamily: 'Inter, sans-serif', fontStyle: 'italic', color: '#8b7fa8'
     }).setOrigin(0.5);
   }
 
