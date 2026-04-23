@@ -1047,12 +1047,14 @@ class CityScene extends Phaser.Scene {
           targets: glow, alpha: 0.25, duration: 1400,
           ease: 'Sine.easeInOut', yoyo: true, repeat: -1
         });
-        // FIX 5: pulsing dot badge at building top-right corner, red
+        // Badge offset outside corner like a mobile app notification badge
         const dot = this.add.graphics().setDepth(3);
+        const badgeX = b.x + b.w + 2;
+        const badgeY = b.y - 2;
         dot.fillStyle(0xff3333, 1);
-        dot.fillCircle(b.x + b.w - 8, b.y + 8, 7);
+        dot.fillCircle(badgeX, badgeY, 8);
         dot.lineStyle(2, 0x0d0618);
-        dot.strokeCircle(b.x + b.w - 8, b.y + 8, 7);
+        dot.strokeCircle(badgeX, badgeY, 8);
         this.tweens.add({
           targets: dot, alpha: 0.2, duration: 850,
           ease: 'Sine.easeInOut', yoyo: true, repeat: -1
@@ -1128,7 +1130,7 @@ class CityScene extends Phaser.Scene {
     accentColor = accentColor || 0xd946ef;
     const nw = 270, nh = 66;
     const nx = 20;
-    const baseY = H - 160;
+    const baseY = H - 210;
 
     // FIFO: remove oldest if already at max 3
     if (this.notifQueue.length >= 3) {
@@ -2106,7 +2108,7 @@ class OnboardingScene extends Phaser.Scene {
 
   renderPanel1(g, cx) {
     this.add.text(cx, H * 0.12, '1 / 5', {
-      fontSize: '10px', fontFamily: 'Inter, sans-serif', color: '#4a3860', letterSpacing: 2
+      fontSize: '12px', fontFamily: 'Inter, sans-serif', color: '#8b7fa8', letterSpacing: 2
     }).setOrigin(0.5);
     this.add.text(cx, H * 0.22, 'Your First 90 Days', {
       fontSize: clamp(22, 34, W / 24) + 'px', fontFamily: 'Georgia, serif', fontStyle: 'italic', color: '#ede8f5'
@@ -2142,7 +2144,7 @@ class OnboardingScene extends Phaser.Scene {
 
   renderPanel2(g, cx) {
     this.add.text(cx, H * 0.12, '2 / 5', {
-      fontSize: '10px', fontFamily: 'Inter, sans-serif', color: '#4a3860', letterSpacing: 2
+      fontSize: '12px', fontFamily: 'Inter, sans-serif', color: '#8b7fa8', letterSpacing: 2
     }).setOrigin(0.5);
     this.add.text(cx, H * 0.22, 'Three Acts. One Deal.', {
       fontSize: clamp(22, 34, W / 24) + 'px', fontFamily: 'Georgia, serif', fontStyle: 'italic', color: '#ede8f5'
@@ -2168,17 +2170,17 @@ class OnboardingScene extends Phaser.Scene {
       g.fillRect(cx2, cy, cw, 3);
       const acx = cx2 + cw / 2;
       this.add.text(acx, cy + 20, 'ACT ' + a.n, {
-        fontSize: '9px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold',
+        fontSize: '11px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold',
         color: '#' + a.color.toString(16).padStart(6, '0'), letterSpacing: 2
       }).setOrigin(0.5);
       this.add.text(acx, cy + 38, a.days, {
-        fontSize: '9px', fontFamily: 'Inter, sans-serif', color: '#8b7fa8'
+        fontSize: '11px', fontFamily: 'Inter, sans-serif', color: '#a895c0'
       }).setOrigin(0.5);
       this.add.text(acx, cy + 60, a.name, {
         fontSize: '16px', fontFamily: 'Georgia, serif', fontStyle: 'italic', color: '#ede8f5'
       }).setOrigin(0.5);
       this.add.text(acx, cy + 96, a.desc, {
-        fontSize: '10px', fontFamily: 'Inter, sans-serif', color: '#a895c0',
+        fontSize: '12px', fontFamily: 'Inter, sans-serif', color: '#ede8f5',
         align: 'center', wordWrap: { width: cw - 16 }, lineSpacing: 3
       }).setOrigin(0.5);
       cx2 += cw + 14;
@@ -2191,7 +2193,7 @@ class OnboardingScene extends Phaser.Scene {
 
   renderPanel3(g, cx) {
     this.add.text(cx, H * 0.09, '3 / 5', {
-      fontSize: '10px', fontFamily: 'Inter, sans-serif', color: '#4a3860', letterSpacing: 2
+      fontSize: '12px', fontFamily: 'Inter, sans-serif', color: '#8b7fa8', letterSpacing: 2
     }).setOrigin(0.5);
     this.add.text(cx, H * 0.17, 'Your World', {
       fontSize: clamp(22, 34, W / 24) + 'px', fontFamily: 'Georgia, serif', fontStyle: 'italic', color: '#ede8f5'
@@ -2236,7 +2238,8 @@ class OnboardingScene extends Phaser.Scene {
         color: '#' + b.color.toString(16).padStart(6, '0')
       }).setOrigin(0.5);
       this.add.text(dx, descY + 14, b.note, {
-        fontSize: '9px', fontFamily: 'Inter, sans-serif', color: '#4a3860', align: 'center'
+        fontSize: '10px', fontFamily: 'Inter, sans-serif', color: '#a895c0', align: 'center',
+        wordWrap: { width: colW - 8 }
       }).setOrigin(0.5);
     });
 
@@ -2247,7 +2250,7 @@ class OnboardingScene extends Phaser.Scene {
 
   renderPanel4(g, cx) {
     this.add.text(cx, H * 0.12, '4 / 5', {
-      fontSize: '10px', fontFamily: 'Inter, sans-serif', color: '#4a3860', letterSpacing: 2
+      fontSize: '12px', fontFamily: 'Inter, sans-serif', color: '#8b7fa8', letterSpacing: 2
     }).setOrigin(0.5);
     this.add.text(cx, H * 0.22, 'Your Team', {
       fontSize: clamp(22, 34, W / 24) + 'px', fontFamily: 'Georgia, serif', fontStyle: 'italic', color: '#ede8f5'
@@ -2273,14 +2276,14 @@ class OnboardingScene extends Phaser.Scene {
       const ccx = cx2 + cw / 2;
       this.add.text(ccx, cy + 28, c.emoji, { fontSize: '26px' }).setOrigin(0.5);
       this.add.text(ccx, cy + 60, c.name, {
-        fontSize: '10px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold', color: c.color,
+        fontSize: '13px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold', color: c.color,
         align: 'center', wordWrap: { width: cw - 12 }
       }).setOrigin(0.5);
-      this.add.text(ccx, cy + 82, c.role, {
-        fontSize: '9px', fontFamily: 'Inter, sans-serif', color: '#8b7fa8', align: 'center'
+      this.add.text(ccx, cy + 80, c.role, {
+        fontSize: '11px', fontFamily: 'Inter, sans-serif', color: '#a895c0', align: 'center'
       }).setOrigin(0.5);
-      this.add.text(ccx, cy + 104, c.note, {
-        fontSize: '9px', fontFamily: 'Inter, sans-serif', color: '#4a3860',
+      this.add.text(ccx, cy + 100, c.note, {
+        fontSize: '11px', fontFamily: 'Inter, sans-serif', color: '#ede8f5',
         align: 'center', lineSpacing: 3, wordWrap: { width: cw - 12 }
       }).setOrigin(0.5);
       cx2 += cw + 12;
@@ -2289,7 +2292,7 @@ class OnboardingScene extends Phaser.Scene {
 
   renderPanel5(g, cx) {
     this.add.text(cx, H * 0.09, '5 / 5', {
-      fontSize: '10px', fontFamily: 'Inter, sans-serif', color: '#4a3860', letterSpacing: 2
+      fontSize: '12px', fontFamily: 'Inter, sans-serif', color: '#8b7fa8', letterSpacing: 2
     }).setOrigin(0.5);
     this.add.text(cx, H * 0.17, 'What to Watch', {
       fontSize: clamp(22, 34, W / 24) + 'px', fontFamily: 'Georgia, serif', fontStyle: 'italic', color: '#ede8f5'
@@ -2313,19 +2316,19 @@ class OnboardingScene extends Phaser.Scene {
       g.fillRect(mx, my, mw, 3);
 
       this.add.text(mx + 14, my + 14, m.name.toUpperCase(), {
-        fontSize: '10px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold', color: m.hex, letterSpacing: 1
+        fontSize: '12px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold', color: m.hex, letterSpacing: 1
       });
       const bx = mx + 14, by2 = my + 38, bw = mw / 2 - 24;
       g.fillStyle(0x0d0618);
       g.fillRoundedRect(bx, by2, bw, 9, 4);
       g.fillStyle(m.color, 0.85);
       g.fillRoundedRect(bx, by2, Math.max(6, bw * m.pct / 100), 9, 4);
-      this.add.text(bx + bw + 8, by2, m.pct + '', {
-        fontSize: '11px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold', color: m.hex
+      this.add.text(bx + bw + 12, by2 - 2, m.pct + '', {
+        fontSize: '13px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold', color: m.hex
       });
-      this.add.text(mx + mw / 2 + 8, my + 14, m.desc, {
-        fontSize: '10px', fontFamily: 'Inter, sans-serif', color: '#8b7fa8',
-        wordWrap: { width: mw / 2 - 100 }, lineSpacing: 3
+      this.add.text(mx + mw / 2 + 52, my + 10, m.desc, {
+        fontSize: '12px', fontFamily: 'Inter, sans-serif', color: '#ede8f5',
+        wordWrap: { width: mw / 2 - 80 }, lineSpacing: 4
       });
 
       my += 84;
