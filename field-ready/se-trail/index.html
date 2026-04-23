@@ -250,7 +250,7 @@ const SCRAMBLE_QS = [
 ];
 
 // ============================================================
-// AUDIO SYSTEM — procedural sounds via Web Audio API
+// AUDIO SYSTEM | procedural sounds via Web Audio API
 // No external assets required. All sounds are synthesized.
 // Call AudioSystem.init() on first user gesture (browser req).
 // ============================================================
@@ -990,7 +990,7 @@ class CityScene extends Phaser.Scene {
       muteBtn.setText(nowMuted ? '🔇' : '🔊');
     });
 
-    // Next destination hint — FIX 4: context-aware hint text
+    // Next destination hint | FIX 4: context-aware hint text
     const hint = this.nextScenario();
     const hintMap = {
       'disc_1': 'Priya is ready to meet \u2014 head to Axiom Systems',
@@ -1610,7 +1610,7 @@ class ScrambleScene extends Phaser.Scene {
     const accentHex = correct ? '#22c55e' : '#ef4444';
     const icon = correct ? '\u2713' : '\u2717';
     const title = correct ? 'Strong Move' : (chosenIdx === null ? 'Time\'s Up' : 'Missed It');
-    // Timeout path hasn't played any sound yet — play wrong
+    // Timeout path hasn't played any sound yet | play wrong
     if (chosenIdx === null) AudioSystem.playWrong();
 
     g.fillStyle(0x1e1530);
