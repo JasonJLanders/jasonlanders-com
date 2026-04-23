@@ -1391,17 +1391,17 @@ class DecisionScene extends Phaser.Scene {
     this.answered = false;
     AudioSystem.fadeAmbient(0.3, 1.2);
     this.cameras.main.setBackgroundColor('#130d1c');
-    // Layer 1: location silhouette background (depth 0)
-    const bgG = this.add.graphics().setDepth(0);
+    // Layer 1: location silhouette background (depth -2, behind everything)
+    const bgG = this.add.graphics().setDepth(-2);
     this.drawLocationBg(bgG, sc.location);
 
-    // Layer 2: semi-transparent overlay (depth 1) — no opaque fill so bgG shows through
-    const overlayG = this.add.graphics().setDepth(1);
-    overlayG.fillStyle(0x0a0612, 0.55); overlayG.fillRect(0, 0, W, H);
+    // Layer 2: semi-transparent overlay (depth -1)
+    const overlayG = this.add.graphics().setDepth(-1);
+    overlayG.fillStyle(0x0a0612, 0.50); overlayG.fillRect(0, 0, W, H);
 
-    // Layer 3: grid + UI chrome (depth 2)
-    const g = this.add.graphics().setDepth(2);
-    g.lineStyle(1, 0x1a1228, 0.35);
+    // Layer 3: grid + UI chrome (depth 0, all text/UI defaults above this)
+    const g = this.add.graphics();
+    g.lineStyle(1, 0x1a1228, 0.3);
     for (let x = 0; x < W; x += 44) g.lineBetween(x, 0, x, H);
     for (let y = 0; y < H; y += 44) g.lineBetween(0, y, W, y);
 
