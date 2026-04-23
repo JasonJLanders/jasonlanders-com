@@ -1393,7 +1393,11 @@ class DecisionScene extends Phaser.Scene {
     this.cameras.main.setBackgroundColor('#130d1c');
     const g = this.add.graphics();
 
-    g.fillStyle(0x130d1c); g.fillRect(0, 0, W, H);
+    // Location silhouette background
+    this.drawLocationBg(g, sc.location);
+
+    // Dark overlay over silhouette
+    g.fillStyle(0x0a0612, 0.78); g.fillRect(0, 0, W, H);
     g.lineStyle(1, 0x1a1228);
     for (let x = 0; x < W; x += 44) g.lineBetween(x, 0, x, H);
     for (let y = 0; y < H; y += 44) g.lineBetween(0, y, W, y);
@@ -1484,15 +1488,15 @@ class DecisionScene extends Phaser.Scene {
       g.strokeRoundedRect(choiceX, cy2, choiceW, ch2, 8);
 
       g.fillStyle(0x271c3d);
-      g.fillRoundedRect(choiceX + 10, cy2 + 12, 26, 26, 5);
-      this.add.text(choiceX + 23, cy2 + 25, letters[i], {
-        fontSize: '11px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold', color: '#d946ef'
+      g.fillRoundedRect(choiceX + 12, cy2 + 12, 26, 26, 5);
+      this.add.text(choiceX + 25, cy2 + 25, letters[i], {
+        fontSize: '12px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold', color: '#d946ef'
       }).setOrigin(0.5);
 
-      this.add.text(choiceX + 46, cy2 + 11, choice.text, {
+      this.add.text(choiceX + 50, cy2 + 25, choice.text, {
         fontSize: '12px', fontFamily: 'Inter, sans-serif',
-        color: '#ede8f5', wordWrap: { width: choiceW - 60 }
-      });
+        color: '#ede8f5', wordWrap: { width: choiceW - 66 }
+      }).setOrigin(0, 0.5);
 
       const zone = this.add.zone(choiceX, cy2, choiceW, ch2).setOrigin(0).setInteractive({ cursor: 'pointer' });
       const hl = this.add.graphics();
@@ -1524,6 +1528,126 @@ class DecisionScene extends Phaser.Scene {
       })
       .on('pointerover', function() { this.setColor('#d946ef'); })
       .on('pointerout', function() { this.setColor('#8b7fa8'); });
+  }
+
+  drawLocationBg(g, location) {
+    // Draw a silhouetted scene appropriate to the location
+    // All scenes share the same dark palette — silhouettes are very dark fills
+    const S = 0x0d0820; // silhouette dark
+    const SA = 0x12102a; // silhouette slightly lighter
+    const WC = 0xfde68a; // warm window light
+    const CL = 0x60a5fa; // cool window light
+
+    if (location === 'The Corner') {
+      // Coffee shop: counter, stools, window with street outside
+      g.fillStyle(0x0e0c1a); g.fillRect(0, 0, W, H);
+      // Floor
+      g.fillStyle(0x100e20); g.fillRect(0, H * 0.72, W, H * 0.28);
+      // Back wall windows
+      const winY = H * 0.18, winH = H * 0.38;
+      for (let i = 0; i < 4; i++) {
+        const wx = W * 0.08 + i * (W * 0.23);
+        g.fillStyle(WC, 0.06); g.fillRect(wx, winY, W * 0.16, winH);
+        g.lineStyle(1, WC, 0.12); g.strokeRect(wx, winY, W * 0.16, winH);
+        // Window cross
+        g.lineStyle(1, WC, 0.08);
+        g.lineBetween(wx + W * 0.08, winY, wx + W * 0.08, winY + winH);
+        g.lineBetween(wx, winY + winH * 0.5, wx + W * 0.16, winY + winH * 0.5);
+        // Street silhouette through window
+        g.fillStyle(S, 1); g.fillRect(wx + 2, winY + winH * 0.62, W * 0.16 - 4, winH * 0.38 - 2);
+      }
+      // Counter bar
+      g.fillStyle(SA); g.fillRect(0, H * 0.62, W * 0.38, H * 0.1);
+      g.fillStyle(S); g.fillRect(0, H * 0.62, W * 0.38, 4);
+      // Stools at counter
+      for (let i = 0; i < 4; i++) {
+        const sx = W * 0.05 + i * W * 0.085;
+        g.fillStyle(S); g.fillEllipse(sx, H * 0.63, 28, 8);
+        g.fillRect(sx - 3, H * 0.63, 6, H * 0.09);
+      }
+      // Seated person silhouettes at tables
+      [[W * 0.55, H * 0.56], [W * 0.62, H * 0.56], [W * 0.78, H * 0.52], [W * 0.84, H * 0.52]].forEach(([px, py]) => {
+        g.fillStyle(S); g.fillCircle(px, py - 22, 12); // head
+        g.fillStyle(SA); g.fillRoundedRect(px - 14, py - 12, 28, 28, 4); // body
+      });
+      // Small round tables
+      [[W * 0.585, H * 0.65], [W * 0.81, H * 0.62]].forEach(([tx, ty]) => {
+        g.fillStyle(SA); g.fillEllipse(tx, ty, 60, 14);
+        g.fillStyle(S); g.fillRect(tx - 3, ty, 6, H * 0.07);
+      });
+      // Pendant lights
+      for (let i = 0; i < 5; i++) {
+        const lx = W * 0.12 + i * W * 0.19;
+        g.fillStyle(WC, 0.18); g.fillCircle(lx, H * 0.08, 16);
+        g.lineStyle(1, WC, 0.15); g.lineBetween(lx, 0, lx, H * 0.08);
+      }
+
+    } else if (location === 'Axiom Systems') {
+      // Corporate meeting room: long table, chairs, city view window wall
+      g.fillStyle(0x080c18); g.fillRect(0, 0, W, H);
+      // Floor
+      g.fillStyle(0x0c1020); g.fillRect(0, H * 0.70, W, H * 0.30);
+      // Full width window wall (city view)
+      g.fillStyle(CL, 0.04); g.fillRect(0, H * 0.08, W, H * 0.54);
+      // City skyline through glass
+      const skyY = H * 0.42;
+      const cityBldgs = [[0,60,80],[80,44,60],[150,90,110],[260,55,75],[340,110,130],[480,48,68],[560,80,100],[660,70,90],[760,95,115],[880,55,75],[960,88,108],[W-80,65,85]];
+      cityBldgs.forEach(([bx, bw, bh]) => {
+        g.fillStyle(S, 0.7); g.fillRect(bx, skyY - bh, bw, bh + H * 0.2);
+        // Lit windows in city buildings
+        for (let wy = skyY - bh + 8; wy < skyY - 4; wy += 14) {
+          for (let wx = bx + 6; wx < bx + bw - 10; wx += 12) {
+            if (Math.random() > 0.5) { g.fillStyle(CL, 0.08); g.fillRect(wx, wy, 6, 8); }
+          }
+        }
+      });
+      // Window frame verticals
+      for (let i = 1; i < 5; i++) {
+        g.lineStyle(2, CL, 0.08); g.lineBetween(W * i / 5, H * 0.08, W * i / 5, H * 0.62);
+      }
+      // Conference table
+      g.fillStyle(SA); g.fillRoundedRect(W * 0.15, H * 0.60, W * 0.70, H * 0.08, 6);
+      g.fillStyle(S); g.fillRoundedRect(W * 0.15, H * 0.60, W * 0.70, 4, 3);
+      // Chairs around table
+      for (let i = 0; i < 6; i++) {
+        const cx2 = W * 0.18 + i * W * 0.11;
+        // Chair above table
+        g.fillStyle(S); g.fillRoundedRect(cx2 - 14, H * 0.52, 28, 30, 4);
+        g.fillStyle(S); g.fillEllipse(cx2, H * 0.52 - 14, 22, 8);
+        // Chair below table
+        g.fillStyle(S); g.fillRoundedRect(cx2 - 14, H * 0.70, 28, 30, 4);
+      }
+      // Presentation screen
+      g.fillStyle(SA); g.fillRoundedRect(W * 0.35, H * 0.12, W * 0.30, H * 0.22, 4);
+      g.lineStyle(1, CL, 0.15); g.strokeRoundedRect(W * 0.35, H * 0.12, W * 0.30, H * 0.22, 4);
+      g.fillStyle(CL, 0.04); g.fillRoundedRect(W * 0.36, H * 0.13, W * 0.28, H * 0.20, 3);
+
+    } else {
+      // Your HQ / default: open office, desks, monitors
+      g.fillStyle(0x0a0818); g.fillRect(0, 0, W, H);
+      g.fillStyle(0x0e0c1e); g.fillRect(0, H * 0.68, W, H * 0.32);
+      // Back wall with windows
+      for (let i = 0; i < 5; i++) {
+        const wx = W * 0.04 + i * W * 0.19;
+        g.fillStyle(0x6366f1, 0.05); g.fillRect(wx, H * 0.10, W * 0.13, H * 0.44);
+        g.lineStyle(1, 0x6366f1, 0.10); g.strokeRect(wx, H * 0.10, W * 0.13, H * 0.44);
+      }
+      // Desks
+      for (let i = 0; i < 4; i++) {
+        const dx = W * 0.06 + i * W * 0.23;
+        g.fillStyle(SA); g.fillRect(dx, H * 0.60, W * 0.18, H * 0.06);
+        // Monitor
+        g.fillStyle(S); g.fillRoundedRect(dx + W * 0.04, H * 0.52, W * 0.10, H * 0.08, 3);
+        g.fillStyle(0x6366f1, 0.08); g.fillRoundedRect(dx + W * 0.04 + 3, H * 0.52 + 3, W * 0.10 - 6, H * 0.08 - 6, 2);
+        // Person at desk
+        g.fillStyle(S); g.fillCircle(dx + W * 0.09, H * 0.57, 10);
+        g.fillStyle(SA); g.fillRoundedRect(dx + W * 0.06, H * 0.59, W * 0.06, H * 0.04, 3);
+      }
+      // Overhead lights
+      for (let i = 0; i < 4; i++) {
+        g.fillStyle(0xd946ef, 0.06); g.fillRect(W * 0.05 + i * W * 0.24, 0, W * 0.14, H * 0.04);
+      }
+    }
   }
 
   handleChoice(choice) {
