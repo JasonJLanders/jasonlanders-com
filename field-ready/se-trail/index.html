@@ -2227,44 +2227,69 @@ class OnboardingScene extends Phaser.Scene {
         this.cameras.main.flash(300, 13, 6, 24);
         this.time.delayedCall(400, () => this.scene.start('CityScene'));
       })
-      .on('pointerover', function() { this.setColor('#8b7fa8'); })
-      .on('pointerout', function() { this.setColor('#4a3860'); });
+      .on('pointerover', function() { this.setColor('#d946ef'); })
+      .on('pointerout', function() { this.setColor('#8b7fa8'); });
   }
 
   renderPanel1(g, cx) {
-    this.add.text(cx, H * 0.12, '1 / 5', {
-      fontSize: '12px', fontFamily: 'Inter, sans-serif', color: '#8b7fa8', letterSpacing: 2
-    }).setOrigin(0.5);
-    this.add.text(cx, H * 0.22, 'Your First 90 Days', {
-      fontSize: clamp(22, 34, W / 24) + 'px', fontFamily: 'Georgia, serif', fontStyle: 'italic', color: '#ede8f5'
+    // Panel counter
+    this.add.text(cx, 28, '1 / 5', {
+      fontSize: '13px', fontFamily: 'Inter, sans-serif', color: '#8b7fa8', letterSpacing: 3
     }).setOrigin(0.5);
 
-    const bw = Math.min(520, W - 80), bh = 186;
-    const bx = cx - bw / 2, by = H * 0.33;
+    // Title
+    this.add.text(cx, H * 0.16, 'Your First 90 Days', {
+      fontSize: clamp(26, 42, W / 20) + 'px', fontFamily: 'Georgia, serif', fontStyle: 'italic', color: '#ede8f5'
+    }).setOrigin(0.5);
+
+    // Main card — wide and centered, fills most of the screen
+    const bw = clamp(480, W * 0.78, 860);
+    const bh = clamp(220, H * 0.48, 360);
+    const bx = cx - bw / 2;
+    const by = H * 0.28;
+    const brad = 14;
+
     g.fillStyle(0x1e1530);
-    g.fillRoundedRect(bx, by, bw, bh, 12);
+    g.fillRoundedRect(bx, by, bw, bh, brad);
     g.lineStyle(2, 0xd946ef, 0.5);
-    g.strokeRoundedRect(bx, by, bw, bh, 12);
+    g.strokeRoundedRect(bx, by, bw, bh, brad);
+    // Accent bar — use fillRoundedRect with only top corners rounded to avoid sticking out
     g.fillStyle(0xd946ef);
-    g.fillRect(bx, by, bw, 3);
+    g.fillRoundedRect(bx, by, bw, 4, { tl: brad, tr: brad, bl: 0, br: 0 });
 
-    this.add.text(cx, by + 34, 'You are a new Sales Engineer.', {
-      fontSize: '16px', fontFamily: 'Inter, sans-serif', color: '#ede8f5', align: 'center'
-    }).setOrigin(0.5);
-    this.add.text(cx, by + 68, 'First deal: Axiom Systems.\nAE Alex Torres is ready. You have 90 days.\nYour choices determine the outcome.', {
-      fontSize: '16px', fontFamily: 'Inter, sans-serif', color: '#ede8f5',
-      align: 'center', lineSpacing: 5
+    // Content inside card
+    const pad = 36;
+    this.add.text(cx, by + 44, 'You are a new Sales Engineer.', {
+      fontSize: clamp(15, 20, W / 55) + 'px', fontFamily: 'Inter, sans-serif',
+      fontStyle: 'bold', color: '#ede8f5', align: 'center'
     }).setOrigin(0.5);
 
-    const barY = by + 142;
-    const barW = bw - 60;
-    this.add.text(bx + 30, barY, 'DAY 1 / 90', {
-      fontSize: '9px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold', color: '#d946ef', letterSpacing: 1
+    this.add.text(cx, by + 88, 'Your first enterprise deal: Axiom Systems.', {
+      fontSize: clamp(13, 16, W / 68) + 'px', fontFamily: 'Inter, sans-serif',
+      color: '#a895c0', align: 'center'
+    }).setOrigin(0.5);
+
+    this.add.text(cx, by + 118, 'AE Alex Torres has your back. You have 90 days.', {
+      fontSize: clamp(13, 16, W / 68) + 'px', fontFamily: 'Inter, sans-serif',
+      color: '#a895c0', align: 'center'
+    }).setOrigin(0.5);
+
+    this.add.text(cx, by + 152, 'Every choice you make moves the deal forward or back.', {
+      fontSize: clamp(13, 16, W / 68) + 'px', fontFamily: 'Inter, sans-serif',
+      fontStyle: 'italic', color: '#8b7fa8', align: 'center'
+    }).setOrigin(0.5);
+
+    // Day progress bar
+    const barY = by + bh - 54;
+    const barW = bw - pad * 2;
+    this.add.text(bx + pad, barY, 'DAY 1 / 90', {
+      fontSize: '11px', fontFamily: 'Inter, sans-serif', fontStyle: 'bold',
+      color: '#d946ef', letterSpacing: 1
     });
     g.fillStyle(0x0d0618);
-    g.fillRoundedRect(bx + 30, barY + 16, barW, 8, 4);
+    g.fillRoundedRect(bx + pad, barY + 18, barW, 8, 4);
     g.fillStyle(0xd946ef, 0.9);
-    g.fillRoundedRect(bx + 30, barY + 16, Math.max(6, barW / 90), 8, 4);
+    g.fillRoundedRect(bx + pad, barY + 18, Math.max(6, barW / 90), 8, 4);
   }
 
   renderPanel2(g, cx) {
