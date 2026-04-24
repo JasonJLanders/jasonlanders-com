@@ -1,0 +1,127 @@
+import { workload } from './stats.js';
+import { getPersonByName } from './roster.js';
+
+function esc(str) {
+  return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+export function renderDiffBanner(viewMode, scenarioB, getDiff) {
+  const diffBanner = document.getElementById('diffBanner');
+  if (viewMode === 'proposed' && scenarioB) {
+    const diffs = getDiff();
+    if (diffs.length) {
+      diffBanner.style.display = 'block';
+      diffBanner.innerHTML = `<div class="diff-banner">
+        <div class="diff-banner-title">Scenario Changes vs Current</div>
+        <div class="diff-list">${diffs.map(d => `<div class="diff-item">
+          <strong>${esc(d.se)}</strong>
+          ${d.gained.length ? `<span class="diff-gained">+${d.gained.length}</span>` : ''}
+          ${d.lost.length   ? `<span class="diff-lost">&#8722;${d.lost.length}</span>` : ''}
+        </div>`).join('')}</div>
+      </div>`;
+    } else {
+      diffBanner.innerHTML = `<div class="diff-banner"><div class="diff-banner-title">No changes vs Current</div></div>`;
+      diffBanner.style.display = 'block';
+    }
+  } else {
+    diffBanner.style.display = 'none';
+  }
+}
+
+export function renderSETable(seList, data, seNames, rebalanceMode, viewMode, changedSet) {
+  const tbody = document.getElementById('seTableBody');
+  tbody.innerHTML = '';
+
+  seList.forEach((se, i) => {
+    const wl = workload(se);
+    const seRow = document.createElement('tr');
+    seRow.className = 'se-row' + (se.isTBH ? ' tbh' : '') + (se.isUnassigned ? ' unassigned' : '');
+    seRow.dataset.sename = se.se;
+
+    const canRemove = rebalanceMode && !se.isTBH && !se.isUnassigned && viewMode !== 'proposed';
+    const removeBtnHtml = canRemove
+      ? `<button class="remove-se-btn" onclick="event.stopPropagation();removeSE(this.dataset.sename)" data-sename="${esc(se.se)}">&#x2715;</button>`
+      : '';
+
+    // SE name cell: clickable to edit if the person exists in PEOPLE
+    let seNameCell;
+    if (se.isUnassigned) {
+      seNameCell = `<span class="needs-assign-badge">&#9888; UNASSIGNED</span>`;
+    } else {
+      const sePerson = getPersonByName(se.se, 'SE');
+      const seNameContent = sePerson
+        ? `<span class="person-link" data-person-id="${sePerson.id}" title="Click to edit ${esc(se.se)}">${esc(se.se)}</span>`
+        : esc(se.se);
+      seNameCell = seNameContent + removeBtnHtml;
+    }
+
+    seRow.innerHTML = `
+      <td><span class="chevron">&#9654;</span>${seNameCell}</td>
+      <td>${se.isUnassigned ? '—' : esc(se.se_leader)}</td>
+      <td>${se.isUnassigned ? '—' : esc(se.segment)}</td>
+      <td>${se.accountCount}</td><td>${se.aeCount}</td><td>${se.rdCount}</td>
+      <td><span class="badge ${wl.cls}">${wl.label}</span></td>`;
+
+    seRow.onclick = e => {
+      // Don't toggle row when clicking a person-link (handled separately)
+      if (e.target.closest('.person-link') || e.target.closest('.remove-se-btn')) return;
+      seRow.classList.toggle('open');
+      document.getElementById('exp-' + i).classList.toggle('open');
+    };
+    tbody.appendChild(seRow);
+
+    // Expand panel — accounts with optional reassignment dropdowns
+    const acctHtml = [...se.accounts.entries()].map(([a, p]) => {
+      const isChanged = changedSet.has(a);
+      const cls = (isChanged ? ' changed' : '') + (se.isUnassigned ? ' unassigned-acct' : '');
+      if (rebalanceMode && viewMode !== 'proposed') {
+        const defaultOpt = se.isUnassigned
+          ? `<option value="" disabled selected>— assign to SE —</option>`
+          : '';
+        const opts = defaultOpt + seNames.map(n =>
+          `<option value="${n}"${!se.isUnassigned && n === se.se ? ' selected' : ''}>${esc(n)}</option>`
+        ).join('');
+        return `<div class="expand-item${cls}">
+          <span>${esc(a)}</span>
+          <span style="display:flex;align-items:center;gap:6px">
+            <span class="pri pri-${p}">P${p}</span>
+            <select class="se-select" data-account="${esc(a)}"
+              onchange="if(this.value)reassignAccount(this.dataset.account,this.value)">${opts}</select>
+          </span>
+        </div>`;
+      }
+      return `<div class="expand-item${cls}">${esc(a)}<span class="pri pri-${p}">P${p}</span></div>`;
+    }).join('');
+
+    // AE list — clickable if person exists in PEOPLE; orphan values shown in red
+    const aeHtml = [...se.aes].map(a => {
+      if (a.startsWith('UNASSIGNED')) {
+        return `<div class="expand-item unassigned-acct"><span class="needs-assign-badge">&#9888; ${esc(a)}</span></div>`;
+      }
+      const aePerson = getPersonByName(a, 'AE');
+      if (aePerson) {
+        return `<div class="expand-item ae-clickable" data-person-id="${aePerson.id}" title="Click to edit ${esc(a)}">${esc(a)}</div>`;
+      }
+      return `<div class="expand-item">${esc(a)}</div>`;
+    }).join('');
+
+    const expandRow = document.createElement('tr');
+    expandRow.className = 'expand-row';
+    expandRow.innerHTML = `<td colspan="7"><div class="expand-inner" id="exp-${i}">
+      <div><div class="expand-col-title">Accounts</div>${acctHtml || '<div style="color:var(--muted);font-size:12px">No accounts assigned</div>'}</div>
+      <div><div class="expand-col-title">AEs</div>${aeHtml || '<div style="color:var(--muted);font-size:12px">—</div>'}</div>
+    </div></td>`;
+    tbody.appendChild(expandRow);
+  });
+
+  // Delegate clicks for person-link (SE name) and ae-clickable (AE name in expand panel)
+  tbody.addEventListener('click', e => {
+    const link = e.target.closest('.person-link, .ae-clickable');
+    if (!link) return;
+    e.stopPropagation();
+    const personId = link.dataset.personId;
+    if (personId) {
+      document.dispatchEvent(new CustomEvent('edit-person', { detail: { personId } }));
+    }
+  });
+}

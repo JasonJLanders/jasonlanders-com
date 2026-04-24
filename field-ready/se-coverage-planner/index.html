@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SE Coverage Planner</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+<header class="header">
+  <div class="header-brand">
+    <span>SE Coverage Planner</span>
+    <span class="header-tag">Beta</span>
+  </div>
+  <div class="header-actions">
+    <div id="scenarioControls" style="display:none; gap:8px; align-items:center;">
+      <button class="btn btn-ghost" id="btnResetChanges">Reset Changes</button>
+      <button class="btn btn-primary" id="btnSaveScenario">Save as Scenario</button>
+    </div>
+    <div id="viewToggleWrap" style="display:none">
+      <div class="view-toggle">
+        <button id="btnViewCurrent" class="active">Current</button>
+        <button id="btnViewProposed">Proposed</button>
+      </div>
+    </div>
+    <div class="vsep"></div>
+    <button class="btn btn-ghost" id="btnImport">Import Data</button>
+    <button class="btn btn-primary" id="btnExport">Export CSV</button>
+  </div>
+</header>
+
+<!-- REBALANCE BANNER (shows globally when rebalance mode is active) -->
+<div id="rebalanceBanner" class="rebalance-banner" style="display:none">
+  <span class="banner-dot"></span>
+  <span>Edit Alignments Mode is active. Click a region to modify SE/AE assignments.</span>
+  <button class="btn btn-ghost" id="btnExitRebalance">Exit Edit Mode</button>
+</div>
+
+<div class="app-body">
+
+  <!-- LEFT SIDEBAR: org stats + controls -->
+  <aside class="sidebar">
+    <div class="stats-bar">
+      <div class="stat-card"><div class="stat-val" id="statSEs">—</div><div class="stat-label">Total SEs</div></div>
+      <div class="stat-card"><div class="stat-val" id="statAEs">—</div><div class="stat-label">Total AEs</div></div>
+      <div class="stat-card"><div class="stat-val" id="statRatio">—</div><div class="stat-label">Avg AE:SE Ratio</div></div>
+    </div>
+    <div class="sidebar-controls">
+      <button class="btn btn-ghost sidebar-btn" id="btnRebalance">Edit Alignments Mode</button>
+      <button class="btn btn-ghost sidebar-btn" id="btnEditRegions">Edit Map Regions</button>
+      <button class="btn btn-ghost sidebar-btn" id="btnManageData">&#9776; Manage Data</button>
+      <button class="btn btn-ghost sidebar-btn" id="btnSettings">&#9881; Settings</button>
+    </div>
+    <div class="section-title">Regional Summary</div>
+    <div class="region-grid" id="regionGrid"></div>
+
+    <div class="section-title" style="margin-top:16px">Show on Map</div>
+    <div class="layer-toggles">
+      <label><input type="checkbox" data-role="SE" checked> SE</label>
+      <label><input type="checkbox" data-role="AE" checked> AE</label>
+      <label><input type="checkbox" data-role="RD"> RD</label>
+      <label><input type="checkbox" data-role="RVP"> RVP</label>
+      <label><input type="checkbox" data-role="SELeader"> SE Leader</label>
+    </div>
+  </aside>
+
+  <!-- CENTER: Map -->
+  <div class="map-area" id="mapArea">
+    <div id="map"></div>
+    <div class="map-legend" id="mapLegend">
+      <span class="legend-title">Coverage Health</span>
+      <span class="legend-item"><span class="legend-swatch" style="border-color:#22c55e"></span>Healthy</span>
+      <span class="legend-item"><span class="legend-swatch" style="border-color:#eab308"></span>Stretched</span>
+      <span class="legend-item"><span class="legend-swatch" style="border-color:#ef4444"></span>Overloaded</span>
+    </div>
+    <div class="map-hint" id="mapHint">Click a region to view SE assignments</div>
+  </div>
+
+  <!-- RIGHT PANEL: regional SE table (slides in) -->
+  <div class="right-panel" id="rightPanel">
+    <div class="right-panel-header">
+      <div class="right-panel-title" id="rightPanelTitle">—</div>
+      <div class="right-panel-actions">
+        <button class="map-collapse-btn" id="btnCollapseMap" title="Hide map (expand panel)" style="display:none">&#x25C0;</button>
+        <button class="map-expand-btn" id="btnExpandMap" title="Show map" style="display:none">&#x25B6;</button>
+        <button class="icon-btn" id="btnClosePanel" title="Close">&#x2715;</button>
+      </div>
+    </div>
+    <div class="right-panel-body">
+
+      <div id="diffBanner" style="display:none"></div>
+
+      <div id="addSEBar" style="display:none; margin-bottom:12px;">
+        <button class="btn btn-ghost" id="btnAddSE" style="margin-bottom:8px">+ Add SE</button>
+        <div class="add-se-form-wrap" id="addSEForm" style="display:none">
+          <div class="section-title" style="margin-bottom:12px">New SE</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end">
+            <div>
+              <div style="font-size:10px;color:var(--muted);margin-bottom:3px">Name *</div>
+              <input class="add-se-input" id="newSEName" placeholder="Full Name" style="width:140px" />
+            </div>
+            <div>
+              <div style="font-size:10px;color:var(--muted);margin-bottom:3px">Home City</div>
+              <input class="add-se-input" id="newSECity" placeholder="City, ST" style="width:130px" />
+            </div>
+            <div>
+              <div style="font-size:10px;color:var(--muted);margin-bottom:3px">Segment</div>
+              <select class="add-se-input" id="newSESegment" style="width:110px"></select>
+            </div>
+            <div>
+              <div style="font-size:10px;color:var(--muted);margin-bottom:3px">Region</div>
+              <select class="add-se-input" id="newSERegion" style="width:110px"></select>
+            </div>
+            <div>
+              <div style="font-size:10px;color:var(--muted);margin-bottom:3px">SE Leader</div>
+              <select class="add-se-input" id="newSELeader" style="width:140px"></select>
+            </div>
+            <button class="btn btn-primary" id="btnSubmitAddSE">Add SE</button>
+            <button class="btn btn-ghost" id="btnCancelAddSE">Cancel</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-title" id="assignTitle">SE Assignments</div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>SE Name</th>
+              <th>Leader</th>
+              <th>Seg</th>
+              <th>Accounts</th>
+              <th>AEs</th>
+              <th>RDs</th>
+              <th>Workload</th>
+            </tr>
+          </thead>
+          <tbody id="seTableBody"></tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<!-- MANAGE DATA VIEW (full-screen, below header) -->
+<div id="manageDataView" class="manage-data-view" style="display:none">
+  <div class="manage-data-header">
+    <div class="manage-data-title">Manage Data</div>
+    <div class="manage-data-tabs">
+      <button class="md-tab active" data-tab="people"   onclick="mdSwitchTab('people')">People</button>
+      <button class="md-tab"         data-tab="accounts" onclick="mdSwitchTab('accounts')">Accounts</button>
+    </div>
+    <div class="manage-data-hdr-actions">
+      <button class="btn btn-primary" onclick="mdCloseView()">Save &amp; Close</button>
+      <button class="icon-btn" onclick="mdCloseView()" title="Close">&#x2715;</button>
+    </div>
+  </div>
+  <div class="manage-data-body" id="manageDataBody"></div>
+</div>
+
+<!-- SETTINGS PANEL -->
+<div id="settingsOverlay" style="display:none" class="settings-overlay">
+  <div class="settings-panel">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <div style="font-size:16px;font-weight:800;color:#fff">&#9881; Configuration</div>
+      <button class="icon-btn" id="btnCloseSettings">&#x2715;</button>
+    </div>
+
+    <!-- Tab bar -->
+    <div class="settings-tabs">
+      <button class="settings-tab active" data-tab="regions" onclick="switchSettingsTab('regions')">Regions</button>
+      <button class="settings-tab"         data-tab="teams"   onclick="switchSettingsTab('teams')">Teams</button>
+      <button class="settings-tab"         data-tab="quotas"  onclick="switchSettingsTab('quotas')">Quotas</button>
+    </div>
+
+    <!-- Regions tab -->
+    <div id="settings-tab-regions" class="settings-tab-panel">
+      <div class="settings-section" style="margin-top:16px">
+        <div class="section-title">Regions</div>
+        <div style="display:grid;grid-template-columns:32px 1fr;gap:4px 8px;margin-bottom:8px;padding:0 34px 0 0">
+          <div style="font-size:10px;color:var(--muted)">Color</div>
+          <div style="font-size:10px;color:var(--muted)">Name</div>
+        </div>
+        <div id="regionsList"></div>
+        <button class="btn btn-ghost" style="margin-top:8px;font-size:11px" id="btnAddRegion">+ Add Region</button>
+      </div>
+    </div>
+
+    <!-- Teams tab -->
+    <div id="settings-tab-teams" class="settings-tab-panel" style="display:none">
+      <div class="settings-section" style="margin-top:16px;margin-bottom:0">
+        <div class="section-title">Teams / Segments</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 26px;gap:4px 8px;margin-bottom:8px">
+          <div style="font-size:10px;color:var(--muted)">Team Name (= Segment)</div>
+          <div style="font-size:10px;color:var(--muted)">SE Leader (optional)</div>
+          <div></div>
+        </div>
+        <div id="teamsList"></div>
+        <button class="btn btn-ghost" style="margin-top:8px;font-size:11px" id="btnAddTeam">+ Add Team</button>
+      </div>
+    </div>
+
+    <!-- Quotas tab -->
+    <div id="settings-tab-quotas" class="settings-tab-panel" style="display:none">
+      <div class="settings-section" style="margin-top:16px">
+        <div class="section-title">Track Quotas At</div>
+        <div class="quota-levels">
+          <label class="quota-level-label">
+            <input type="checkbox" id="quotaLevelAccount" onchange="updateQuotaLevel('account',this.checked)">
+            Account level
+          </label>
+          <label class="quota-level-label">
+            <input type="checkbox" id="quotaLevelAE" onchange="updateQuotaLevel('ae',this.checked)">
+            AE level
+          </label>
+          <label class="quota-level-label">
+            <input type="checkbox" id="quotaLevelSE" onchange="updateQuotaLevel('se',this.checked)">
+            SE level
+          </label>
+        </div>
+      </div>
+      <div class="settings-section">
+        <div class="section-title">SE Quota Buffer</div>
+        <div class="settings-row" style="align-items:center;gap:10px">
+          <input type="number" class="add-se-input" id="quotaBuffer" min="0" max="100" style="width:70px"
+            onblur="updateQuotaBuffer(this.value)" onkeydown="if(event.key==='Enter')this.blur()">
+          <span style="font-size:12px;color:var(--muted)">%  (subtracted from SE rolled-up quota)</span>
+        </div>
+      </div>
+      <div class="settings-section">
+        <div class="section-title">Display Quota Totals As</div>
+        <select class="add-se-input" id="quotaDisplayPeriod" style="width:140px"
+          onchange="updateQuotaDisplayPeriod(this.value)">
+          <option value="monthly">Monthly</option>
+          <option value="quarterly">Quarterly</option>
+          <option value="annual">Annual</option>
+        </select>
+      </div>
+      <div style="font-size:11px;color:var(--muted);line-height:1.7;margin-top:4px;padding:10px 12px;background:var(--surface2);border-radius:8px;border:1px solid var(--border)">
+        <strong style="color:var(--text)">Rollup rules:</strong><br>
+        <em>Account level on</em> → AE quota = sum of their accounts' quotas. SE quota = sum of their accounts × (1&nbsp;−&nbsp;buffer).<br>
+        <em>AE level on (account off)</em> → SE quota = sum of their AEs' quotas × (1&nbsp;−&nbsp;buffer).<br>
+        Edit quotas on individual people and accounts in <strong style="color:var(--text)">Manage Data</strong>.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PERSON EDIT / ADD MODAL -->
+<div id="personEditOverlay" class="person-edit-overlay" style="display:none">
+  <div class="person-edit-panel">
+    <div class="pe-header">
+      <div id="peTitle" class="pe-title">Edit Person</div>
+      <button class="icon-btn" id="btnClosePerson">&#x2715;</button>
+    </div>
+    <div class="pe-body">
+      <label class="pe-label">
+        <span>Name</span>
+        <input class="add-se-input" id="peName" placeholder="Full name" style="width:100%" />
+      </label>
+      <label class="pe-label">
+        <span>City</span>
+        <input class="add-se-input" id="peCity" placeholder="City, ST" style="width:100%" />
+      </label>
+      <label class="pe-label">
+        <span>Region</span>
+        <select class="add-se-input" id="peRegion" style="width:100%"></select>
+      </label>
+      <label class="pe-label pe-label-inline">
+        <input type="checkbox" id="peActive" />
+        <span>Active</span>
+      </label>
+    </div>
+    <div class="pe-footer">
+      <button class="btn btn-ghost" id="btnPeCancel">Cancel</button>
+      <button class="btn btn-primary" id="btnPeSave">Save</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
