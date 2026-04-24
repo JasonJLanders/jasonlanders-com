@@ -47,6 +47,23 @@ if (!CONFIG.regionFeatures) {
   saveConfig();
 }
 
+// One-time migration: prefix bare names with 'state:' so US-only setups become unambiguous
+// when the user starts assigning world countries (Georgia state vs Georgia country, etc.).
+if (CONFIG.regionFeatures && !CONFIG._featureIdsNamespaced) {
+  let changed = false;
+  for (const r of Object.keys(CONFIG.regionFeatures)) {
+    CONFIG.regionFeatures[r] = (CONFIG.regionFeatures[r] || []).map(name => {
+      if (typeof name === 'string' && !name.includes(':')) {
+        changed = true;
+        return 'state:' + name; // pre-Run-7 setups were US-only
+      }
+      return name;
+    });
+  }
+  CONFIG._featureIdsNamespaced = true;
+  if (changed) saveConfig(); else saveConfig();
+}
+
 // Ensure mapScope exists
 if (!CONFIG.mapScope) {
   CONFIG.mapScope = 'us';

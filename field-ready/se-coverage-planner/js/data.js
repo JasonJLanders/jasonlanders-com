@@ -41,10 +41,12 @@ export const REGION_STATES = {
 };
 
 // Run 7: renamed export used by config.js (same content — existing US-state assignments still work)
+// Default mapping uses namespaced featureIds: 'state:Name' for US states, 'country:Name' for world countries.
+// This avoids name collisions like Georgia (US) vs Georgia (country).
 export const DEFAULT_REGION_FEATURES = {
-  West:    ['Washington','Oregon','California','Idaho','Nevada','Montana','Wyoming','Utah','Arizona','Colorado','New Mexico','Alaska','Hawaii'],
-  Central: ['North Dakota','South Dakota','Nebraska','Kansas','Oklahoma','Texas','Minnesota','Iowa','Missouri','Arkansas','Louisiana','Wisconsin','Illinois','Michigan','Indiana','Ohio','Kentucky','Tennessee','Mississippi','Alabama'],
-  East:    ['Maine','New Hampshire','Vermont','Massachusetts','Rhode Island','Connecticut','New York','Pennsylvania','New Jersey','Delaware','Maryland','Virginia','West Virginia','North Carolina','South Carolina','Georgia','Florida','District of Columbia']
+  West:    ['Washington','Oregon','California','Idaho','Nevada','Montana','Wyoming','Utah','Arizona','Colorado','New Mexico','Alaska','Hawaii'].map(s => 'state:' + s),
+  Central: ['North Dakota','South Dakota','Nebraska','Kansas','Oklahoma','Texas','Minnesota','Iowa','Missouri','Arkansas','Louisiana','Wisconsin','Illinois','Michigan','Indiana','Ohio','Kentucky','Tennessee','Mississippi','Alabama'].map(s => 'state:' + s),
+  East:    ['Maine','New Hampshire','Vermont','Massachusetts','Rhode Island','Connecticut','New York','Pennsylvania','New Jersey','Delaware','Maryland','Virginia','West Virginia','North Carolina','South Carolina','Georgia','Florida','District of Columbia'].map(s => 'state:' + s)
 };
 
 // Regions — geometry is built from REGION_STATES + US_STATES GeoJSON in map-view.js

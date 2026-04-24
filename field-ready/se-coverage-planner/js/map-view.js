@@ -83,9 +83,32 @@ async function loadWorldFeatures() {
   return _worldFeaturesCache;
 }
 
-// Returns feature name for a world-countries feature
-function worldFeatureId(f) {
+// Returns the bare display name for a world-countries feature
+function worldFeatureName(f) {
   return f.properties.ADMIN || f.properties.NAME || '';
+}
+
+// Build a namespaced featureId so US Georgia and country Georgia don't collide.
+function makeFeatureId(kind, name) {
+  return kind + ':' + name;
+}
+
+// Parse a namespaced featureId into { kind, name }. Falls back to legacy bare names as state.
+function parseFeatureId(featureId) {
+  if (typeof featureId !== 'string') return { kind: 'state', name: '' };
+  const idx = featureId.indexOf(':');
+  if (idx === -1) return { kind: 'state', name: featureId };
+  return { kind: featureId.slice(0, idx), name: featureId.slice(idx + 1) };
+}
+
+// Human-readable label for a featureId (used in popup titles + tooltips).
+// Adds a kind suffix only in scopes where the kind is otherwise ambiguous (hybrid).
+function featureLabel(featureId, scope) {
+  const { kind, name } = parseFeatureId(featureId);
+  if (scope === 'hybrid') {
+    return kind === 'country' ? `${name} (Country)` : `${name} (State)`;
+  }
+  return name;
 }
 
 // ── getMapFeatures — unified feature set based on scope ───────────────────────
@@ -99,7 +122,7 @@ async function getMapFeatures(scope) {
       type: 'FeatureCollection',
       features: US_STATES.features.map(f => ({
         ...f,
-        properties: { ...f.properties, featureId: f.properties.name }
+        properties: { ...f.properties, featureId: makeFeatureId('state', f.properties.name) }
       }))
     };
   }
@@ -111,22 +134,22 @@ async function getMapFeatures(scope) {
       type: 'FeatureCollection',
       features: worldFeatures.map(f => ({
         ...f,
-        properties: { ...f.properties, featureId: worldFeatureId(f) }
+        properties: { ...f.properties, featureId: makeFeatureId('country', worldFeatureName(f)) }
       }))
     };
   }
 
   // hybrid: world countries except US + all US states
   const nonUsWorld = worldFeatures
-    .filter(f => worldFeatureId(f) !== 'United States of America')
+    .filter(f => worldFeatureName(f) !== 'United States of America')
     .map(f => ({
       ...f,
-      properties: { ...f.properties, featureId: worldFeatureId(f) }
+      properties: { ...f.properties, featureId: makeFeatureId('country', worldFeatureName(f)) }
     }));
 
   const usStates = US_STATES.features.map(f => ({
     ...f,
-    properties: { ...f.properties, featureId: f.properties.name }
+    properties: { ...f.properties, featureId: makeFeatureId('state', f.properties.name) }
   }));
 
   return {
@@ -171,7 +194,7 @@ function getRegionForPoint(lat, lng) {
   for (const [regionId, names] of Object.entries(regionFeatures)) {
     const nameSet = new Set(names);
     const hit = US_STATES.features
-      .filter(f => nameSet.has(f.properties.name))
+      .filter(f => nameSet.has(makeFeatureId('state', f.properties.name)) || nameSet.has(f.properties.name))
       .some(f => pointInFeature(lat, lng, f));
     if (hit) return regionId;
   }
@@ -298,8 +321,9 @@ async function renderFeatureEditLayer() {
       }
     }).addTo(featureEditLayer);
 
+    const labelText = featureLabel(featureId, scope);
     fLayer.bindTooltip(
-      `<strong>${featureId}</strong><br>${assignedRegion ? `Assigned: ${assignedRegion}` : '<em>Unassigned</em>'}<br><span style="color:#a78bfa">Click to change region</span>`,
+      `<strong>${labelText}</strong><br>${assignedRegion ? `Assigned: ${assignedRegion}` : '<em>Unassigned</em>'}<br><span style="color:#a78bfa">Click to change region</span>`,
       { direction: 'top' }
     );
 
@@ -315,6 +339,8 @@ async function renderFeatureEditLayer() {
 function showFeatureAssignPopup(latlng, featureId) {
   const currentRegion = getRegionForFeature(featureId);
   const regionList = (CONFIG.regions && CONFIG.regions.length) ? CONFIG.regions : REGIONS;
+  const scope = CONFIG.mapScope || 'us';
+  const titleText = featureLabel(featureId, scope);
 
   // Filter input for orgs with many regions
   const filterInput = regionList.length > 8
@@ -330,7 +356,7 @@ function showFeatureAssignPopup(latlng, featureId) {
 
   const html = `
     <div class="state-assign-popup">
-      <div class="state-assign-title">${featureId}</div>
+      <div class="state-assign-title">${titleText}</div>
       ${filterInput}
       <div class="state-assign-buttons" id="featureAssignBtns">
         ${buttons}
