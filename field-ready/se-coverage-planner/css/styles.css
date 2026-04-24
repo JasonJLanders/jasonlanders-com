@@ -289,6 +289,15 @@ thead th { padding: 10px 14px; text-align: left; font-size: 11px; font-weight: 7
 .data-table tbody tr:hover { background: var(--surface2); }
 .dt-row td { padding: 3px 6px; border-bottom: 1px solid rgba(53,42,77,0.3); vertical-align: middle; }
 .dt-row-inactive { opacity: 0.4; }
+
+/* NEW ROW FLASH — when a row is just added via + Add Person / + Add Account */
+@keyframes dtRowFlash {
+  0%   { background: rgba(217,70,239,0.35); box-shadow: inset 3px 0 0 var(--accent); }
+  60%  { background: rgba(217,70,239,0.18); box-shadow: inset 3px 0 0 var(--accent); }
+  100% { background: transparent; box-shadow: inset 3px 0 0 transparent; }
+}
+.data-table tbody tr.dt-row-new,
+.data-table tbody tr.dt-row-new:nth-child(even) { animation: dtRowFlash 2.2s ease-out forwards; }
 .dt-input { font-size: 12px; font-family: var(--font); background: transparent; color: var(--text); border: 1px solid transparent; border-radius: 4px; padding: 3px 6px; width: 100%; min-width: 80px; box-sizing: border-box; transition: border-color 0.1s, background 0.1s; }
 .dt-input:hover { border-color: var(--border); }
 .dt-input:focus { border-color: var(--accent); background: var(--surface2); outline: none; }

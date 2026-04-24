@@ -135,7 +135,7 @@ function _renderPeopleTable() {
     const inactiveCls = p.active === false ? ' dt-row-inactive' : '';
     const depCount    = countDependencies(p);
 
-    return `<tr class="dt-row${inactiveCls}">
+    return `<tr class="dt-row${inactiveCls}" data-entity-id="${p.id}">
       <td><input type="text" class="dt-input" value="${esc(p.name)}"
         onblur="mdSavePersonName('${p.id}',this.value)"
         onkeydown="mdDtKeydown(event,this)"></td>
@@ -182,7 +182,7 @@ function _renderAccountsTable() {
     const depCount    = countAccountDependencies(a);
     const inactiveCls = a.active === false ? ' dt-row-inactive' : '';
 
-    return `<tr class="dt-row${inactiveCls}">
+    return `<tr class="dt-row${inactiveCls}" data-entity-id="${a.id}">
       <td><input type="text" class="dt-input" value="${esc(a.name)}"
         onblur="mdSaveAccountName('${a.id}',this.value)"
         onkeydown="mdDtKeydown(event,this)"></td>
@@ -227,11 +227,28 @@ window.mdCloseView = () => closeManageData();
 
 window.mdDtKeydown = (e, el) => { if (e.key === 'Enter') el.blur(); };
 
+// Scroll to newly added row, flash it, select the name input for immediate editing.
+function _highlightRow(entityId) {
+  if (!entityId) return;
+  requestAnimationFrame(() => {
+    const row = document.querySelector(`.data-table tr[data-entity-id="${entityId}"]`);
+    if (!row) return;
+    row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    row.classList.remove('dt-row-new');
+    // Force reflow so the animation restarts if user spam-clicks Add
+    void row.offsetWidth;
+    row.classList.add('dt-row-new');
+    const firstInput = row.querySelector('input[type="text"]');
+    if (firstInput) { firstInput.focus(); firstInput.select(); }
+  });
+}
+
 // People
 window.mdAddPerson = () => {
   const defaultRegion = CONFIG.regions[0]?.name || '';
-  addPerson({ name: 'New Person', role: 'SE', city: '', region: defaultRegion });
+  const created = addPerson({ name: 'New Person', role: 'SE', city: '', region: defaultRegion });
   _renderBody();
+  _highlightRow(created?.id);
 };
 
 window.mdRemovePerson = id => {
@@ -270,13 +287,14 @@ window.mdSavePersonPeriod = (id, val) => {
 
 // Accounts
 window.mdAddAccount = () => {
-  addAccount({
+  const created = addAccount({
     name: 'New Account',
     segment:     CONFIG.teams[0]?.name   || '',
     region:      CONFIG.regions[0]?.name || '',
     ae: '', se: '', priority: 1, quota: 0, quotaPeriod: 'annual'
   });
   _renderBody();
+  _highlightRow(created?.id);
 };
 
 window.mdRemoveAccount = id => {
