@@ -2,12 +2,14 @@ import { workload } from './stats.js';
 import { getPersonByName } from './roster.js';
 import { getAccountByName } from './accounts.js';
 
-/** Returns an HTML note-indicator icon for an account, or '' if no notes. */
+/** Returns an HTML note-indicator button for an account, or '' if no notes. */
 function _noteIcon(accountName) {
   const acct = getAccountByName(accountName);
   const notes = acct?.notes || '';
   if (!notes) return '';
-  return `<span class="note-icon" title="${esc(notes)}">&#x1F4DD;</span>`;
+  const preview = notes.length > 80 ? notes.slice(0, 77) + '…' : notes;
+  return `<button type="button" class="note-icon" title="${esc(preview)} — click to open"
+    onclick="event.stopPropagation();openNotesModal('${esc(accountName).replace(/'/g, "\\'")}')">&#x1F4DD;</button>`;
 }
 
 function esc(str) {

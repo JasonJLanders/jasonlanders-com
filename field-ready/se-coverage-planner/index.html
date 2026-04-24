@@ -290,6 +290,25 @@
   </div>
 </div>
 
+<!-- ACCOUNT NOTES MODAL -->
+<div id="notesOverlay" class="notes-overlay" style="display:none">
+  <div class="notes-panel">
+    <div class="notes-header">
+      <div class="notes-title">
+        <span style="font-size:16px">&#x1F4DD;</span>
+        <span id="notesAccountName">Notes</span>
+      </div>
+      <button class="icon-btn" id="btnCloseNotes" title="Close">&#x2715;</button>
+    </div>
+    <div class="notes-body" id="notesBody"></div>
+    <div class="notes-footer">
+      <button class="btn btn-ghost" id="btnCopyNotes">Copy</button>
+      <button class="btn btn-ghost" id="btnEditNotes">Edit in Manage Data</button>
+      <button class="btn btn-primary" id="btnDoneNotes">Done</button>
+    </div>
+  </div>
+</div>
+
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script type="module" src="js/app.js"></script>
 </body>

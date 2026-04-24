@@ -8,6 +8,7 @@ import {
   updatePersonName, updatePersonCity, updatePersonRegion, updatePersonActive
 } from './roster.js';
 import { openManageData } from './manage-data.js';
+import { getAccountByName } from './accounts.js';
 import { computeStats, renderRegionGrid } from './stats.js';
 import { renderDiffBanner, renderSETable } from './table-view.js';
 import { initMap, updateRegionShading, renderRoleMarkers, enterStateEditMode, exitStateEditMode, invalidateMapSize } from './map-view.js';
@@ -17,6 +18,75 @@ import { geocodeCities } from './geocode.js';
 // (region/team helpers are exposed by config.js; personnel helpers by config.js)
 window.removeSE        = removeSE;
 window.reassignAccount = reassignAccount;
+
+// ── Notes modal ────────────────────────────────────────────────────────────────────────────────
+let _notesAccountName = null;
+
+function _esc(str) {
+  return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+// Turn any http(s) URLs in the notes text into clickable anchors, preserving the rest as escaped text.
+function _linkify(text) {
+  const urlRe = /(https?:\/\/[^\s<>"')]+)/g;
+  let result = '';
+  let lastIdx = 0;
+  let match;
+  while ((match = urlRe.exec(text)) !== null) {
+    result += _esc(text.slice(lastIdx, match.index));
+    const url = match[0];
+    result += `<a href="${_esc(url)}" target="_blank" rel="noopener noreferrer">${_esc(url)}</a>`;
+    lastIdx = match.index + url.length;
+  }
+  result += _esc(text.slice(lastIdx));
+  return result;
+}
+
+function closeNotesModal() {
+  document.getElementById('notesOverlay').style.display = 'none';
+  _notesAccountName = null;
+}
+
+window.openNotesModal = (accountName) => {
+  const acct = getAccountByName(accountName);
+  const notes = acct?.notes || '';
+  _notesAccountName = accountName;
+  document.getElementById('notesAccountName').textContent = accountName;
+  const body = document.getElementById('notesBody');
+  body.innerHTML = notes
+    ? _linkify(notes)
+    : '<span class="notes-empty">No notes yet.</span>';
+  document.getElementById('notesOverlay').style.display = 'flex';
+};
+
+document.getElementById('btnCloseNotes').addEventListener('click', closeNotesModal);
+document.getElementById('btnDoneNotes').addEventListener('click', closeNotesModal);
+document.getElementById('notesOverlay').addEventListener('click', e => {
+  if (e.target.id === 'notesOverlay') closeNotesModal();
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && document.getElementById('notesOverlay').style.display === 'flex') {
+    closeNotesModal();
+  }
+});
+document.getElementById('btnCopyNotes').addEventListener('click', async () => {
+  const acct = getAccountByName(_notesAccountName);
+  const notes = acct?.notes || '';
+  if (!notes) return;
+  try {
+    await navigator.clipboard.writeText(notes);
+    const btn = document.getElementById('btnCopyNotes');
+    const orig = btn.textContent;
+    btn.textContent = 'Copied!';
+    setTimeout(() => { btn.textContent = orig; }, 1200);
+  } catch {}
+});
+document.getElementById('btnEditNotes').addEventListener('click', () => {
+  closeNotesModal();
+  openManageData(() => render());
+  // Switch to accounts tab
+  if (typeof window.mdSwitchTab === 'function') window.mdSwitchTab('accounts');
+});
 
 // ── Local state ───────────────────────────────────────────────────────────────
 let selectedRegion = null;
