@@ -45,7 +45,7 @@ export function buildPeopleFromData(data) {
     const key = role + '|' + name;
     if (seen[key]) return;
     seen[key] = true;
-    people.push({ id: genId(), name, role, city: city || '', region: region || '', active: true });
+    people.push({ id: genId(), name, role, city: city || '', region: region || '', notes: '', active: true });
   }
 
   data.forEach(row => {
@@ -173,10 +173,10 @@ export function updatePersonField(id, field, value) {
 }
 
 /** Add a brand-new person to PEOPLE. Returns the created record. */
-export function addPerson({ name, role, city, region }) {
+export function addPerson({ name, role, city, region, notes }) {
   if (!name || !role) return null;
   const id     = genId();
-  const person = { id, name, role, city: city || '', region: region || '', active: true };
+  const person = { id, name, role, city: city || '', region: region || '', notes: notes || '', active: true };
   PEOPLE.push(person);
   savePeople();
   return person;

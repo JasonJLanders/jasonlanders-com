@@ -141,6 +141,10 @@ function _renderPeopleTable() {
         onblur="mdSavePersonCity('${p.id}',this.value)"
         onkeydown="mdDtKeydown(event,this)"></td>
       <td><select class="dt-select" onchange="mdSavePersonRegion('${p.id}',this.value)">${_regionOpts(p.region)}</select></td>
+      <td><input type="text" class="dt-input dt-notes" value="${esc(p.notes||'')}"
+        placeholder="Notes, links, context…"
+        onblur="mdSavePersonNotes('${p.id}',this.value)"
+        onkeydown="mdDtKeydown(event,this)"></td>
       ${qCells}
       <td class="dt-center"><input type="checkbox" ${p.active!==false?'checked':''}
         onchange="mdSavePersonActive('${p.id}',this.checked)"></td>
@@ -151,7 +155,7 @@ function _renderPeopleTable() {
 
   return `<table class="data-table">
     <thead><tr>
-      <th>Name</th><th>Role</th><th>City</th><th>Region</th>
+      <th>Name</th><th>Role</th><th>City</th><th>Region</th><th>Notes</th>
       ${hdrQ}
       <th>Active</th>
       <th class="dt-actions">
@@ -283,6 +287,10 @@ window.mdSavePersonQuota = (id, val) => {
 
 window.mdSavePersonPeriod = (id, val) => {
   updatePersonField(id, 'quotaPeriod', val);
+};
+
+window.mdSavePersonNotes = (id, val) => {
+  updatePersonField(id, 'notes', val);
 };
 
 // Accounts

@@ -12,6 +12,16 @@ function _noteIcon(accountName) {
     onclick="event.stopPropagation();openNotesModal('${esc(accountName).replace(/'/g, "\\'")}')">&#x1F4DD;</button>`;
 }
 
+/** Returns an HTML note-indicator button for a person (by id), or '' if no notes. */
+function _personNoteIcon(person) {
+  if (!person) return '';
+  const notes = person.notes || '';
+  if (!notes) return '';
+  const preview = notes.length > 80 ? notes.slice(0, 77) + '…' : notes;
+  return `<button type="button" class="note-icon" title="${esc(preview)} — click to open"
+    onclick="event.stopPropagation();openPersonNotesModal('${person.id}')">&#x1F4DD;</button>`;
+}
+
 function esc(str) {
   return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
@@ -63,7 +73,8 @@ export function renderSETable(seList, data, seNames, rebalanceMode, viewMode, ch
       const seNameContent = sePerson
         ? `<span class="person-link" data-person-id="${sePerson.id}" title="Click to edit ${esc(se.se)}">${esc(se.se)}</span>`
         : esc(se.se);
-      seNameCell = seNameContent + removeBtnHtml;
+      const seNote = _personNoteIcon(sePerson);
+      seNameCell = seNameContent + (seNote ? ' ' + seNote : '') + removeBtnHtml;
     }
 
     seRow.innerHTML = `
@@ -110,8 +121,9 @@ export function renderSETable(seList, data, seNames, rebalanceMode, viewMode, ch
         return `<div class="expand-item unassigned-acct"><span class="needs-assign-badge">&#9888; ${esc(a)}</span></div>`;
       }
       const aePerson = getPersonByName(a, 'AE');
+      const note = _personNoteIcon(aePerson);
       if (aePerson) {
-        return `<div class="expand-item ae-clickable" data-person-id="${aePerson.id}" title="Click to edit ${esc(a)}">${esc(a)}</div>`;
+        return `<div class="expand-item"><span class="ae-clickable" data-person-id="${aePerson.id}" title="Click to edit ${esc(a)}">${esc(a)}</span>${note ? ' ' + note : ''}</div>`;
       }
       return `<div class="expand-item">${esc(a)}</div>`;
     }).join('');

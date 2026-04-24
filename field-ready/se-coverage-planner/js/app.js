@@ -20,7 +20,8 @@ window.removeSE        = removeSE;
 window.reassignAccount = reassignAccount;
 
 // ── Notes modal ────────────────────────────────────────────────────────────────────────────────
-let _notesAccountName = null;
+// _notesTarget = { kind: 'account'|'person', key: accountName | personId }
+let _notesTarget = null;
 
 function _esc(str) {
   return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -44,19 +45,41 @@ function _linkify(text) {
 
 function closeNotesModal() {
   document.getElementById('notesOverlay').style.display = 'none';
-  _notesAccountName = null;
+  _notesTarget = null;
 }
 
-window.openNotesModal = (accountName) => {
-  const acct = getAccountByName(accountName);
-  const notes = acct?.notes || '';
-  _notesAccountName = accountName;
-  document.getElementById('notesAccountName').textContent = accountName;
+function _resolveNotesTarget() {
+  if (!_notesTarget) return { title: '', notes: '', editTab: null };
+  if (_notesTarget.kind === 'account') {
+    const acct = getAccountByName(_notesTarget.key);
+    return { title: _notesTarget.key, notes: acct?.notes || '', editTab: 'accounts' };
+  }
+  if (_notesTarget.kind === 'person') {
+    const p = PEOPLE.find(pp => pp.id === _notesTarget.key);
+    const label = p ? `${p.name}${p.role ? ' · ' + p.role : ''}` : 'Person';
+    return { title: label, notes: p?.notes || '', editTab: 'people' };
+  }
+  return { title: '', notes: '', editTab: null };
+}
+
+function _showNotesModal() {
+  const { title, notes } = _resolveNotesTarget();
+  document.getElementById('notesAccountName').textContent = title;
   const body = document.getElementById('notesBody');
   body.innerHTML = notes
     ? _linkify(notes)
     : '<span class="notes-empty">No notes yet.</span>';
   document.getElementById('notesOverlay').style.display = 'flex';
+}
+
+window.openNotesModal = (accountName) => {
+  _notesTarget = { kind: 'account', key: accountName };
+  _showNotesModal();
+};
+
+window.openPersonNotesModal = (personId) => {
+  _notesTarget = { kind: 'person', key: personId };
+  _showNotesModal();
 };
 
 document.getElementById('btnCloseNotes').addEventListener('click', closeNotesModal);
@@ -70,8 +93,7 @@ document.addEventListener('keydown', e => {
   }
 });
 document.getElementById('btnCopyNotes').addEventListener('click', async () => {
-  const acct = getAccountByName(_notesAccountName);
-  const notes = acct?.notes || '';
+  const { notes } = _resolveNotesTarget();
   if (!notes) return;
   try {
     await navigator.clipboard.writeText(notes);
@@ -82,10 +104,10 @@ document.getElementById('btnCopyNotes').addEventListener('click', async () => {
   } catch {}
 });
 document.getElementById('btnEditNotes').addEventListener('click', () => {
+  const { editTab } = _resolveNotesTarget();
   closeNotesModal();
   openManageData(() => render());
-  // Switch to accounts tab
-  if (typeof window.mdSwitchTab === 'function') window.mdSwitchTab('accounts');
+  if (editTab && typeof window.mdSwitchTab === 'function') window.mdSwitchTab(editTab);
 });
 
 // ── Local state ───────────────────────────────────────────────────────────────
