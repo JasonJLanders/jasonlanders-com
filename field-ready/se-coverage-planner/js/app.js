@@ -11,7 +11,7 @@ import { openManageData } from './manage-data.js';
 import { getAccountByName } from './accounts.js';
 import { computeStats, renderRegionGrid } from './stats.js';
 import { renderDiffBanner, renderSETable } from './table-view.js';
-import { initMap, updateRegionShading, renderRoleMarkers, enterStateEditMode, exitStateEditMode, invalidateMapSize } from './map-view.js';
+import { initMap, updateRegionShading, renderRoleMarkers, enterStateEditMode, exitStateEditMode, invalidateMapSize, reloadMapScope } from './map-view.js';
 import { geocodeCities } from './geocode.js';
 
 // ── Expose globals required by dynamically-generated inline onclick/oninput HTML ──
@@ -470,6 +470,12 @@ document.getElementById('settingsOverlay').addEventListener('click', e => {
 });
 document.getElementById('btnAddRegion').addEventListener('click', addRegion);
 document.getElementById('btnAddTeam').addEventListener('click', addTeam);
+
+// Map scope change — reload map, close settings so user sees the new view
+document.addEventListener('map-scope-changed', async () => {
+  await reloadMapScope();
+  closeSettings();
+});
 
 // Person modal buttons
 document.getElementById('btnClosePerson').addEventListener('click', closePersonModal);

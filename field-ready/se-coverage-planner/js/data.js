@@ -33,8 +33,15 @@ export const BENCH = {
   Key:    { healthy: 3, stretched: 4 }
 };
 
-// US state name → region mapping
+// US state name → region mapping (kept for backward compat; new code uses DEFAULT_REGION_FEATURES)
 export const REGION_STATES = {
+  West:    ['Washington','Oregon','California','Idaho','Nevada','Montana','Wyoming','Utah','Arizona','Colorado','New Mexico','Alaska','Hawaii'],
+  Central: ['North Dakota','South Dakota','Nebraska','Kansas','Oklahoma','Texas','Minnesota','Iowa','Missouri','Arkansas','Louisiana','Wisconsin','Illinois','Michigan','Indiana','Ohio','Kentucky','Tennessee','Mississippi','Alabama'],
+  East:    ['Maine','New Hampshire','Vermont','Massachusetts','Rhode Island','Connecticut','New York','Pennsylvania','New Jersey','Delaware','Maryland','Virginia','West Virginia','North Carolina','South Carolina','Georgia','Florida','District of Columbia']
+};
+
+// Run 7: renamed export used by config.js (same content — existing US-state assignments still work)
+export const DEFAULT_REGION_FEATURES = {
   West:    ['Washington','Oregon','California','Idaho','Nevada','Montana','Wyoming','Utah','Arizona','Colorado','New Mexico','Alaska','Hawaii'],
   Central: ['North Dakota','South Dakota','Nebraska','Kansas','Oklahoma','Texas','Minnesota','Iowa','Missouri','Arkansas','Louisiana','Wisconsin','Illinois','Michigan','Indiana','Ohio','Kentucky','Tennessee','Mississippi','Alabama'],
   East:    ['Maine','New Hampshire','Vermont','Massachusetts','Rhode Island','Connecticut','New York','Pennsylvania','New Jersey','Delaware','Maryland','Virginia','West Virginia','North Carolina','South Carolina','Georgia','Florida','District of Columbia']

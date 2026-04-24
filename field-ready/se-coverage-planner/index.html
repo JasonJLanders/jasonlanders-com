@@ -188,6 +188,27 @@
     <!-- Regions tab -->
     <div id="settings-tab-regions" class="settings-tab-panel">
       <div class="settings-section" style="margin-top:16px">
+        <div class="section-title">Map Scope</div>
+        <div id="mapScopeRadios" style="display:flex;flex-direction:column;gap:6px;margin-bottom:4px">
+          <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
+            <input type="radio" name="mapScope" value="us" onchange="setMapScope('us')" />
+            US States only (default)
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
+            <input type="radio" name="mapScope" value="world" onchange="setMapScope('world')" />
+            World Countries
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
+            <input type="radio" name="mapScope" value="hybrid" onchange="setMapScope('hybrid')" />
+            World + US States (hybrid)
+          </label>
+        </div>
+        <button class="btn btn-ghost" style="margin-top:8px;font-size:11px"
+          onclick="if(confirm('Reset all feature assignments to US defaults?')){resetFeatureAssignments();}">
+          Reset Feature Assignments to Default
+        </button>
+      </div>
+      <div class="settings-section" style="margin-top:16px">
         <div class="section-title">Regions</div>
         <div style="display:grid;grid-template-columns:32px 1fr;gap:4px 8px;margin-bottom:8px;padding:0 34px 0 0">
           <div style="font-size:10px;color:var(--muted)">Color</div>

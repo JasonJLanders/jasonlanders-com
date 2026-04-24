@@ -1,65 +1,47 @@
 import { REGIONS, BENCH } from './data.js';
 import { US_STATES } from './us-states.js';
 import { regionHealth } from './stats.js';
-import { CONFIG, assignStateToRegion, getRegionForState } from './config.js';
+import { CONFIG, assignFeatureToRegion, getRegionForFeature } from './config.js';
 import { seIcon, aeIcon, rdIcon, rvpIcon, seLeaderIcon } from './markers.js';
 
-// Always read the current state mapping from config (which is mutable + persisted)
-function currentRegionStates() {
-  return CONFIG.regionStates || {};
+// Always read current feature mapping from config
+function currentRegionFeatures() {
+  return CONFIG.regionFeatures || {};
 }
 
 /* global L */
 
 let map = null;
-const regionLayers = {};    // regionId → L.geoJSON layer (combined shape)
-const regionStyles = {};    // regionId → last-committed non-hover style
-let roleMarkerLayer = null; // L.layerGroup holding all role markers
-let stateEditLayer = null;  // L.layerGroup of individual state polygons for edit mode
+const regionLayers = {};     // regionId → L.geoJSON layer (combined shape)
+const regionStyles = {};     // regionId → last-committed non-hover style
+let roleMarkerLayer = null;  // L.layerGroup holding all role markers
+let featureEditLayer = null; // L.layerGroup of individual polygons for edit mode
 let regionLabelMarkers = []; // tooltip markers for region labels
 let editMode = false;
 
-// Health = BORDER color only (fill comes from region's configured color)
-const HEALTH_STROKE = {
-  healthy:    '#22c55e',   // green
-  stretched:  '#eab308',   // amber
-  overloaded: '#ef4444'    // red
-};
-const HEALTH_WEIGHT = {
-  healthy:    2,
-  stretched:  3,
-  overloaded: 4
-};
+// Cached world countries features (populated on first use)
+let _worldFeaturesCache = null;
 
-// Nicer default palette for regions (muted, distinct, map-friendly)
-const DEFAULT_REGION_COLORS = [
-  '#7c6bf2',  // indigo
-  '#14b8a6',  // teal
-  '#ec4899',  // pink
-  '#f97316',  // orange
-  '#06b6d4',  // cyan
-  '#a78bfa',  // lavender
-  '#84cc16',  // lime
-  '#f43f5e'   // rose
-];
+// Health = BORDER color only (fill comes from region's configured color)
+const HEALTH_STROKE = { healthy: '#22c55e', stretched: '#eab308', overloaded: '#ef4444' };
+const HEALTH_WEIGHT = { healthy: 2, stretched: 3, overloaded: 4 };
+
+const DEFAULT_REGION_COLORS = ['#7c6bf2','#14b8a6','#ec4899','#f97316','#06b6d4','#a78bfa','#84cc16','#f43f5e'];
+
+// Map center/zoom per scope
+const SCOPE_VIEWS = {
+  us:     { center: [39.5, -98.35], zoom: 4 },
+  world:  { center: [20, 10],       zoom: 2 },
+  hybrid: { center: [25, -30],      zoom: 3 }
+};
 
 function regionBaseColor(regionId) {
-  // Prefer user's CONFIG choice; fall back to default palette by index
   const cfg = CONFIG.regions.find(r => r.name === regionId || r.id === regionId);
   if (cfg && cfg.color) return cfg.color;
   const idx = REGIONS.findIndex(r => r.id === regionId);
   return DEFAULT_REGION_COLORS[idx % DEFAULT_REGION_COLORS.length];
 }
 
-function hexToRgba(hex, alpha) {
-  const h = hex.replace('#', '');
-  const r = parseInt(h.substring(0, 2), 16);
-  const g = parseInt(h.substring(2, 4), 16);
-  const b = parseInt(h.substring(4, 6), 16);
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-}
-
-// Fallback home city when an SE is drag-moved to a new region
 const REGION_CENTROIDS = {
   West:    'San Francisco, CA',
   Central: 'Chicago, IL',
@@ -67,14 +49,6 @@ const REGION_CENTROIDS = {
 };
 
 // ── Geo helpers ───────────────────────────────────────────────────────────────
-
-function stateFeatureCollection(stateNames) {
-  const nameSet = new Set(stateNames);
-  return {
-    type: 'FeatureCollection',
-    features: US_STATES.features.filter(f => nameSet.has(f.properties.name))
-  };
-}
 
 function featureCollectionCenter(fc) {
   let minLat = Infinity, maxLat = -Infinity, minLng = Infinity, maxLng = -Infinity;
@@ -100,13 +74,82 @@ function flatCoords(geometry) {
   return out;
 }
 
-// ── Point-in-polygon (ray-casting) ────────────────────────────────────────────
-// GeoJSON coords are [longitude, latitude].
+// ── World countries loader (dynamic import, cached) ───────────────────────────
+
+async function loadWorldFeatures() {
+  if (_worldFeaturesCache) return _worldFeaturesCache;
+  const mod = await import('./world-countries.js');
+  _worldFeaturesCache = mod.WORLD_COUNTRIES.features;
+  return _worldFeaturesCache;
+}
+
+// Returns feature name for a world-countries feature
+function worldFeatureId(f) {
+  return f.properties.ADMIN || f.properties.NAME || '';
+}
+
+// ── getMapFeatures — unified feature set based on scope ───────────────────────
+//
+// Returns a Promise<FeatureCollection> with each feature having a normalized
+// `featureId` property for region-assignment lookups.
+
+async function getMapFeatures(scope) {
+  if (scope === 'us') {
+    return {
+      type: 'FeatureCollection',
+      features: US_STATES.features.map(f => ({
+        ...f,
+        properties: { ...f.properties, featureId: f.properties.name }
+      }))
+    };
+  }
+
+  const worldFeatures = await loadWorldFeatures();
+
+  if (scope === 'world') {
+    return {
+      type: 'FeatureCollection',
+      features: worldFeatures.map(f => ({
+        ...f,
+        properties: { ...f.properties, featureId: worldFeatureId(f) }
+      }))
+    };
+  }
+
+  // hybrid: world countries except US + all US states
+  const nonUsWorld = worldFeatures
+    .filter(f => worldFeatureId(f) !== 'United States of America')
+    .map(f => ({
+      ...f,
+      properties: { ...f.properties, featureId: worldFeatureId(f) }
+    }));
+
+  const usStates = US_STATES.features.map(f => ({
+    ...f,
+    properties: { ...f.properties, featureId: f.properties.name }
+  }));
+
+  return {
+    type: 'FeatureCollection',
+    features: [...nonUsWorld, ...usStates]
+  };
+}
+
+// ── Feature collection by name set ───────────────────────────────────────────
+
+function subsetByNames(features, nameSet) {
+  return {
+    type: 'FeatureCollection',
+    features: features.filter(f => nameSet.has(f.properties.featureId))
+  };
+}
+
+// ── Point-in-polygon (ray-casting) ───────────────────────────────────────────
 
 function raycast(lat, lng, ring) {
   let inside = false;
   for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
-    const [xi, yi] = ring[i]; // [lon, lat]
+    const [xi, yi] = ring[i];
     const [xj, yj] = ring[j];
     if ((yi > lat) !== (yj > lat) &&
         lng < (xj - xi) * (lat - yi) / (yj - yi) + xi) {
@@ -124,9 +167,9 @@ function pointInFeature(lat, lng, feature) {
 }
 
 function getRegionForPoint(lat, lng) {
-  const regionStates = currentRegionStates();
-  for (const [regionId, stateNames] of Object.entries(regionStates)) {
-    const nameSet = new Set(stateNames);
+  const regionFeatures = currentRegionFeatures();
+  for (const [regionId, names] of Object.entries(regionFeatures)) {
+    const nameSet = new Set(names);
     const hit = US_STATES.features
       .filter(f => nameSet.has(f.properties.name))
       .some(f => pointInFeature(lat, lng, f));
@@ -138,7 +181,10 @@ function getRegionForPoint(lat, lng) {
 // ── Init ──────────────────────────────────────────────────────────────────────
 
 export function initMap(containerId) {
-  map = L.map(containerId, { zoomControl: false }).setView([39.5, -98.35], 4);
+  const scope = CONFIG.mapScope || 'us';
+  const view  = SCOPE_VIEWS[scope] || SCOPE_VIEWS.us;
+
+  map = L.map(containerId, { zoomControl: false }).setView(view.center, view.zoom);
   L.control.zoom({ position: 'topright' }).addTo(map);
 
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -155,19 +201,23 @@ export function invalidateMapSize() {
   if (map) map.invalidateSize();
 }
 
-// Draws (or redraws) region polygons as combined state shapes.
-// Called on init and after state mapping edits.
-function renderRegionShapes() {
-  // Tear down any existing region layers + labels
+// ── renderRegionShapes (async) ────────────────────────────────────────────────
+
+async function renderRegionShapes() {
+  // Tear down existing region layers + labels
   Object.values(regionLayers).forEach(l => map.removeLayer(l));
   Object.keys(regionLayers).forEach(k => delete regionLayers[k]);
   regionLabelMarkers.forEach(l => map.removeLayer(l));
   regionLabelMarkers = [];
 
-  const regionStates = currentRegionStates();
+  const scope = CONFIG.mapScope || 'us';
+  const allFeatures = (await getMapFeatures(scope)).features;
+  const regionFeatures = currentRegionFeatures();
 
   REGIONS.forEach(region => {
-    const fc = stateFeatureCollection(regionStates[region.id] || []);
+    const names = regionFeatures[region.id] || [];
+    const nameSet = new Set(names);
+    const fc = subsetByNames(allFeatures, nameSet);
     if (!fc.features.length) return;
 
     const base = regionBaseColor(region.id);
@@ -192,7 +242,6 @@ function renderRegionShapes() {
     layer.on('click', () => {
       document.dispatchEvent(new CustomEvent('region-selected', { detail: { regionId: region.id } }));
     });
-    // Hover pulse: slightly thicker border, stronger fill
     layer.on('mouseover', () => {
       const base = regionStyles[region.id];
       layer.setStyle({ weight: base.weight + 1, fillOpacity: 0.32 });
@@ -206,46 +255,73 @@ function renderRegionShapes() {
   });
 }
 
-// Render individual state polygons for edit mode.
-function renderStateEditLayer() {
-  if (stateEditLayer) {
-    map.removeLayer(stateEditLayer);
-    stateEditLayer = null;
-  }
-  stateEditLayer = L.layerGroup().addTo(map);
+// ── Reload map scope (called when user changes scope in settings) ─────────────
 
-  US_STATES.features.forEach(feature => {
-    const stateName = feature.properties.name;
-    const assignedRegion = getRegionForState(stateName);
+export async function reloadMapScope() {
+  if (!map) return;
+
+  // Fly to new scope center/zoom
+  const scope = CONFIG.mapScope || 'us';
+  const view = SCOPE_VIEWS[scope] || SCOPE_VIEWS.us;
+  map.flyTo(view.center, view.zoom, { duration: 1.2 });
+
+  // Re-render shapes (layers are torn down and rebuilt)
+  await renderRegionShapes();
+
+  // Re-add role markers if not in edit mode
+  if (!editMode && roleMarkerLayer) roleMarkerLayer.addTo(map);
+}
+
+// ── Feature edit layer ────────────────────────────────────────────────────────
+
+async function renderFeatureEditLayer() {
+  if (featureEditLayer) {
+    map.removeLayer(featureEditLayer);
+    featureEditLayer = null;
+  }
+  featureEditLayer = L.layerGroup().addTo(map);
+
+  const scope = CONFIG.mapScope || 'us';
+  const allFeatures = (await getMapFeatures(scope)).features;
+
+  allFeatures.forEach(feature => {
+    const featureId = feature.properties.featureId;
+    const assignedRegion = getRegionForFeature(featureId);
     const fillColor = assignedRegion ? regionBaseColor(assignedRegion) : '#4b5563';
 
-    const stateLayer = L.geoJSON(feature, {
+    const fLayer = L.geoJSON(feature, {
       style: {
         color:       '#fff',
         weight:      1,
         fillColor,
         fillOpacity: assignedRegion ? 0.45 : 0.2
       }
-    }).addTo(stateEditLayer);
+    }).addTo(featureEditLayer);
 
-    stateLayer.bindTooltip(
-      `<strong>${stateName}</strong><br>${assignedRegion ? `Assigned: ${assignedRegion}` : '<em>Unassigned</em>'}<br><span style="color:#a78bfa">Click to change region</span>`,
+    fLayer.bindTooltip(
+      `<strong>${featureId}</strong><br>${assignedRegion ? `Assigned: ${assignedRegion}` : '<em>Unassigned</em>'}<br><span style="color:#a78bfa">Click to change region</span>`,
       { direction: 'top' }
     );
 
-    stateLayer.on('mouseover', () => stateLayer.setStyle({ weight: 2, fillOpacity: 0.65 }));
-    stateLayer.on('mouseout',  () => stateLayer.setStyle({ weight: 1, fillOpacity: assignedRegion ? 0.45 : 0.2 }));
+    fLayer.on('mouseover', () => fLayer.setStyle({ weight: 2, fillOpacity: 0.65 }));
+    fLayer.on('mouseout',  () => fLayer.setStyle({ weight: 1, fillOpacity: assignedRegion ? 0.45 : 0.2 }));
 
-    stateLayer.on('click', (e) => {
-      showStateAssignPopup(e.latlng, stateName);
+    fLayer.on('click', (e) => {
+      showFeatureAssignPopup(e.latlng, featureId);
     });
   });
 }
 
-function showStateAssignPopup(latlng, stateName) {
-  const currentRegion = getRegionForState(stateName);
-  // Use user-configured regions (includes any custom-added ones), fall back to defaults
+function showFeatureAssignPopup(latlng, featureId) {
+  const currentRegion = getRegionForFeature(featureId);
   const regionList = (CONFIG.regions && CONFIG.regions.length) ? CONFIG.regions : REGIONS;
+
+  // Filter input for orgs with many regions
+  const filterInput = regionList.length > 8
+    ? `<input id="regionFilterInput" class="add-se-input" placeholder="Filter regions..." style="width:100%;margin-bottom:6px;font-size:11px"
+        oninput="filterRegionButtons(this.value)" />`
+    : '';
+
   const buttons = regionList.map(r => {
     const regionId = r.name || r.id;
     const isCurrent = regionId === currentRegion;
@@ -254,8 +330,9 @@ function showStateAssignPopup(latlng, stateName) {
 
   const html = `
     <div class="state-assign-popup">
-      <div class="state-assign-title">${stateName}</div>
-      <div class="state-assign-buttons">
+      <div class="state-assign-title">${featureId}</div>
+      ${filterInput}
+      <div class="state-assign-buttons" id="featureAssignBtns">
         ${buttons}
         <button class="state-assign-btn unassign" data-region="">Unassign</button>
       </div>
@@ -267,43 +344,49 @@ function showStateAssignPopup(latlng, stateName) {
     .setContent(html)
     .openOn(map);
 
-  // Wire up buttons after the popup renders
   setTimeout(() => {
     document.querySelectorAll('.state-assign-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const regionId = btn.dataset.region || null;
-        assignStateToRegion(stateName, regionId);
+        assignFeatureToRegion(featureId, regionId);
         map.closePopup();
-        renderStateEditLayer();  // re-render with new color
+        renderFeatureEditLayer();
       });
     });
   }, 0);
 }
 
-export function enterStateEditMode() {
+// Exposed globally for inline oninput in popup
+window.filterRegionButtons = (query) => {
+  const q = query.toLowerCase();
+  document.querySelectorAll('#featureAssignBtns .state-assign-btn').forEach(btn => {
+    const text = btn.textContent.toLowerCase();
+    btn.style.display = (!q || text.includes(q)) ? '' : 'none';
+  });
+};
+
+// ── Enter / exit feature edit mode ────────────────────────────────────────────
+
+export function enterFeatureEditMode() {
   if (editMode) return;
   editMode = true;
-
-  // Hide combined region shapes + labels + markers
   Object.values(regionLayers).forEach(l => map.removeLayer(l));
   regionLabelMarkers.forEach(l => map.removeLayer(l));
   if (roleMarkerLayer) map.removeLayer(roleMarkerLayer);
-
-  renderStateEditLayer();
+  renderFeatureEditLayer();
 }
 
-export function exitStateEditMode() {
+export function exitFeatureEditMode() {
   if (!editMode) return;
   editMode = false;
-
-  if (stateEditLayer) {
-    map.removeLayer(stateEditLayer);
-    stateEditLayer = null;
-  }
-
+  if (featureEditLayer) { map.removeLayer(featureEditLayer); featureEditLayer = null; }
   renderRegionShapes();
   if (roleMarkerLayer) roleMarkerLayer.addTo(map);
 }
+
+// Backward-compat aliases used by app.js
+export const enterStateEditMode = enterFeatureEditMode;
+export const exitStateEditMode  = exitFeatureEditMode;
 
 // ── Region shading ────────────────────────────────────────────────────────────
 
@@ -340,31 +423,18 @@ function seColor(person) {
 function tooltipFor(person) {
   const { name, role, city, region, relatedStats: rs } = person;
   const loc = city || region;
-  switch (role) {
-    case 'SE':
-      return `<strong>${name}</strong><br>${loc}<br>Accounts: ${rs.accountCount} &nbsp;|&nbsp; AEs: ${rs.aeCount}`;
-    case 'AE':
-      return `<strong>${name}</strong><br>${loc}<br>Accounts: ${rs.accountCount}`;
-    case 'RD':
-      return `<strong>${name}</strong> <span style="color:var(--muted);font-size:10px">RD</span><br>${loc}<br>AEs: ${rs.aeCount}`;
-    case 'RVP':
-      return `<strong>${name}</strong> <span style="color:var(--muted);font-size:10px">RVP</span><br>${loc}<br>RDs: ${rs.rdCount}`;
-    case 'SELeader':
-      return `<strong>${name}</strong> <span style="color:var(--muted);font-size:10px">SE Leader</span><br>${loc}<br>SEs: ${rs.seCount}`;
-    default:
-      return `<strong>${name}</strong>`;
-  }
+  const b = `<strong>${name}</strong>`;
+  const muted = s => `<span style="color:var(--muted);font-size:10px">${s}</span>`;
+  if (role === 'SE')       return `${b}<br>${loc}<br>Accounts: ${rs.accountCount} &nbsp;|&nbsp; AEs: ${rs.aeCount}`;
+  if (role === 'AE')       return `${b}<br>${loc}<br>Accounts: ${rs.accountCount}`;
+  if (role === 'RD')       return `${b} ${muted('RD')}<br>${loc}<br>AEs: ${rs.aeCount}`;
+  if (role === 'RVP')      return `${b} ${muted('RVP')}<br>${loc}<br>RDs: ${rs.rdCount}`;
+  if (role === 'SELeader') return `${b} ${muted('SE Leader')}<br>${loc}<br>SEs: ${rs.seCount}`;
+  return b;
 }
 
 // ── Role markers ──────────────────────────────────────────────────────────────
 
-/**
- * Render markers for all roles.
- * @param {Array}  roster        - from getRoster()
- * @param {Object} geocache      - { 'City, ST': { lat, lng } | null }
- * @param {Set}    visibleLayers - Set of role strings to show
- * @param {boolean} rebalanceMode - if true, SE markers become draggable
- */
 export function renderRoleMarkers(roster, geocache, visibleLayers, rebalanceMode) {
   if (!map || !roleMarkerLayer) return;
   roleMarkerLayer.clearLayers();
@@ -430,5 +500,5 @@ export function renderRoleMarkers(roster, geocache, visibleLayers, rebalanceMode
   });
 }
 
-// ── Backwards-compat shim (used nowhere after Run 3, kept so old imports don't crash) ──
+// Backward-compat shim
 export { renderRoleMarkers as renderSEMarkers };

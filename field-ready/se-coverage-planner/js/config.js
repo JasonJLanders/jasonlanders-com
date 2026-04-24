@@ -1,5 +1,5 @@
 import { PEOPLE, getPerson, countDependencies, removePerson, ORPHAN_VALUE } from './roster.js';
-import { REGION_STATES as DEFAULT_REGION_STATES } from './data.js';
+import { DEFAULT_REGION_FEATURES } from './data.js';
 
 const DEFAULT_CONFIG = {
   regions: [
@@ -12,7 +12,8 @@ const DEFAULT_CONFIG = {
     {name:'Key',       leader:'Lisa Park'},
     {name:'Strategic', leader:'Dan Cross'}
   ],
-  regionStates: null,  // lazily initialized from DEFAULT_REGION_STATES
+  regionFeatures: null,  // lazily initialized from DEFAULT_REGION_FEATURES
+  mapScope: 'us',        // 'us' | 'world' | 'hybrid'
   quotas: {
     levels: { account: false, ae: false, se: false },
     buffer: 0.20,
@@ -33,9 +34,22 @@ export function saveConfig() {
 
 export let CONFIG = loadConfig();
 
-// Ensure regionStates exists (backfill for existing users who have older config in localStorage)
-if (!CONFIG.regionStates) {
-  CONFIG.regionStates = JSON.parse(JSON.stringify(DEFAULT_REGION_STATES));
+// ── Run 7 migration: regionStates → regionFeatures ────────────────────────────
+if (CONFIG.regionStates && !CONFIG.regionFeatures) {
+  CONFIG.regionFeatures = CONFIG.regionStates;
+  delete CONFIG.regionStates;
+  saveConfig();
+}
+
+// Ensure regionFeatures exists (backfill for existing users with older config)
+if (!CONFIG.regionFeatures) {
+  CONFIG.regionFeatures = JSON.parse(JSON.stringify(DEFAULT_REGION_FEATURES));
+  saveConfig();
+}
+
+// Ensure mapScope exists
+if (!CONFIG.mapScope) {
+  CONFIG.mapScope = 'us';
   saveConfig();
 }
 
@@ -49,33 +63,42 @@ if (!CONFIG.quotas.levels) {
   saveConfig();
 }
 
-// ── State ↔ region mapping helpers ─────────────────────────────────────────────
+// ── Feature ↔ region mapping helpers ─────────────────────────────────────────
 
-export function getRegionForState(stateName) {
-  for (const [regionId, stateList] of Object.entries(CONFIG.regionStates)) {
-    if (stateList.includes(stateName)) return regionId;
+export function getRegionForFeature(featureName) {
+  for (const [regionId, list] of Object.entries(CONFIG.regionFeatures)) {
+    if (list.includes(featureName)) return regionId;
   }
   return null;
 }
 
-export function assignStateToRegion(stateName, regionId) {
-  // Remove state from any existing region
-  Object.keys(CONFIG.regionStates).forEach(r => {
-    CONFIG.regionStates[r] = CONFIG.regionStates[r].filter(s => s !== stateName);
+// Backward compat alias
+export const getRegionForState = getRegionForFeature;
+
+export function assignFeatureToRegion(featureName, regionId) {
+  // Remove feature from any existing region
+  Object.keys(CONFIG.regionFeatures).forEach(r => {
+    CONFIG.regionFeatures[r] = CONFIG.regionFeatures[r].filter(s => s !== featureName);
   });
   // Assign to new region (null = unassign)
-  if (regionId && CONFIG.regionStates[regionId]) {
-    CONFIG.regionStates[regionId].push(stateName);
+  if (regionId && CONFIG.regionFeatures[regionId]) {
+    CONFIG.regionFeatures[regionId].push(featureName);
   } else if (regionId) {
-    CONFIG.regionStates[regionId] = [stateName];
+    CONFIG.regionFeatures[regionId] = [featureName];
   }
   saveConfig();
 }
 
-export function resetStateMappingToDefault() {
-  CONFIG.regionStates = JSON.parse(JSON.stringify(DEFAULT_REGION_STATES));
+// Backward compat alias
+export const assignStateToRegion = assignFeatureToRegion;
+
+export function resetFeatureMappingToDefault() {
+  CONFIG.regionFeatures = JSON.parse(JSON.stringify(DEFAULT_REGION_FEATURES));
   saveConfig();
 }
+
+// Backward compat alias
+export const resetStateMappingToDefault = resetFeatureMappingToDefault;
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -99,6 +122,15 @@ export function renderSettings() {
       <input type="text" class="add-se-input" value="${esc(t.leader||'')}" oninput="updateTeamLeader(${i}, this.value)" style="flex:1" placeholder="Optional" />
       <button class="del-btn" onclick="deleteTeam(${i})">&#x2715;</button>
     </div>`).join('');
+
+  // Map scope radio buttons
+  const scopeEl = document.getElementById('mapScopeRadios');
+  if (scopeEl) {
+    const scope = CONFIG.mapScope || 'us';
+    scopeEl.querySelectorAll('input[name="mapScope"]').forEach(radio => {
+      radio.checked = radio.value === scope;
+    });
+  }
 }
 
 export function updateRegionColor(i, val) { CONFIG.regions[i].color  = val; }
@@ -234,4 +266,17 @@ window.removePersonSetting = id => {
   removePerson(id);
   renderPersonnelSettings();
   document.dispatchEvent(new CustomEvent('personnel-changed'));
+};
+
+// Map scope radio handler (called from inline HTML)
+window.setMapScope = scope => {
+  CONFIG.mapScope = scope;
+  saveConfig();
+  document.dispatchEvent(new CustomEvent('map-scope-changed', { detail: { scope } }));
+};
+
+// Reset feature assignments to US defaults (called from inline HTML)
+window.resetFeatureAssignments = () => {
+  resetFeatureMappingToDefault();
+  document.dispatchEvent(new CustomEvent('map-scope-changed', { detail: { scope: CONFIG.mapScope } }));
 };
