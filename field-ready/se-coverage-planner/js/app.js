@@ -477,6 +477,19 @@ function saveSidebarState(s) {
   try { localStorage.setItem(SIDEBAR_KEY, JSON.stringify(s)); } catch {}
 }
 
+// Repeatedly invalidate map size during the sidebar CSS width transition
+// so Leaflet tiles reflow smoothly instead of exposing dead space.
+function invalidateMapSizeDuringTransition() {
+  invalidateMapSize();
+  const start = performance.now();
+  const duration = 220; // slightly longer than the 0.18s CSS transition
+  function tick(now) {
+    invalidateMapSize();
+    if (now - start < duration) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+
 function applySidebarState() {
   const sidebar = document.getElementById('sidebar');
   const expandBtn = document.getElementById('btnSidebarExpand');
@@ -494,7 +507,7 @@ function applySidebarState() {
     if (expandBtn) expandBtn.style.display = 'none';
     if (collapseBtn) collapseBtn.style.display = 'flex';
   }
-  invalidateMapSize();
+  invalidateMapSizeDuringTransition();
 }
 
 function setSidebarCollapsed(collapsed) {
@@ -562,6 +575,10 @@ function initSidebarControls() {
     document.body.style.cursor = '';
     invalidateMapSize();
   });
+
+  // Also invalidate on every drag tick so map tiles reflow while resizing
+  const origHandler = document.onmousemove;
+  document.addEventListener('mousemove', () => { if (dragging) invalidateMapSize(); });
 
   // Double-click the resizer to toggle collapsed
   resizer.addEventListener('dblclick', () => {
