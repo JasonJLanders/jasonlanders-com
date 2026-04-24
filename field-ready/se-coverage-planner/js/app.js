@@ -10,7 +10,7 @@ import {
 import { openManageData } from './manage-data.js';
 import { computeStats, renderRegionGrid } from './stats.js';
 import { renderDiffBanner, renderSETable } from './table-view.js';
-import { initMap, updateRegionShading, renderRoleMarkers, enterStateEditMode, exitStateEditMode } from './map-view.js';
+import { initMap, updateRegionShading, renderRoleMarkers, enterStateEditMode, exitStateEditMode, invalidateMapSize } from './map-view.js';
 import { geocodeCities } from './geocode.js';
 
 // ── Expose globals required by dynamically-generated inline onclick/oninput HTML ──
