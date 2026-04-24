@@ -1,5 +1,14 @@
 import { workload } from './stats.js';
 import { getPersonByName } from './roster.js';
+import { getAccountByName } from './accounts.js';
+
+/** Returns an HTML note-indicator icon for an account, or '' if no notes. */
+function _noteIcon(accountName) {
+  const acct = getAccountByName(accountName);
+  const notes = acct?.notes || '';
+  if (!notes) return '';
+  return `<span class="note-icon" title="${esc(notes)}">&#x1F4DD;</span>`;
+}
 
 function esc(str) {
   return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -71,9 +80,10 @@ export function renderSETable(seList, data, seNames, rebalanceMode, viewMode, ch
     tbody.appendChild(seRow);
 
     // Expand panel — accounts with optional reassignment dropdowns
-    const acctHtml = [...se.accounts.entries()].map(([a, p]) => {
+    const acctHtml = [...se.accounts.keys()].map(a => {
       const isChanged = changedSet.has(a);
       const cls = (isChanged ? ' changed' : '') + (se.isUnassigned ? ' unassigned-acct' : '');
+      const note = _noteIcon(a);
       if (rebalanceMode && viewMode !== 'proposed') {
         const defaultOpt = se.isUnassigned
           ? `<option value="" disabled selected>— assign to SE —</option>`
@@ -82,15 +92,14 @@ export function renderSETable(seList, data, seNames, rebalanceMode, viewMode, ch
           `<option value="${n}"${!se.isUnassigned && n === se.se ? ' selected' : ''}>${esc(n)}</option>`
         ).join('');
         return `<div class="expand-item${cls}">
-          <span>${esc(a)}</span>
+          <span>${esc(a)}${note ? ' ' + note : ''}</span>
           <span style="display:flex;align-items:center;gap:6px">
-            <span class="pri pri-${p}">P${p}</span>
             <select class="se-select" data-account="${esc(a)}"
               onchange="if(this.value)reassignAccount(this.dataset.account,this.value)">${opts}</select>
           </span>
         </div>`;
       }
-      return `<div class="expand-item${cls}">${esc(a)}<span class="pri pri-${p}">P${p}</span></div>`;
+      return `<div class="expand-item${cls}"><span>${esc(a)}${note ? ' ' + note : ''}</span></div>`;
     }).join('');
 
     // AE list — clickable if person exists in PEOPLE; orphan values shown in red

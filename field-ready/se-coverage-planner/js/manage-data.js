@@ -91,9 +91,6 @@ function _seOpts(sel) {
     `<option value="${esc(p.name)}"${p.name===sel?' selected':''}>${esc(p.name)}</option>`
   ).join('');
 }
-function _priOpts(sel) {
-  return [1,2].map(v => `<option value="${v}"${v===Number(sel)?' selected':''}>${v}</option>`).join('');
-}
 function _perOpts(sel) {
   return ['monthly','quarterly','annual'].map(v =>
     `<option value="${v}"${v===(sel||'annual')?' selected':''}>${v.charAt(0).toUpperCase()+v.slice(1)}</option>`
@@ -192,7 +189,10 @@ function _renderAccountsTable() {
         <option value="">—</option>${_aeOpts(a.ae)}</select></td>
       <td><select class="dt-select" onchange="mdSaveAccountField('${a.id}','se',this.value)">
         <option value="">—</option>${_seOpts(a.se)}</select></td>
-      <td><select class="dt-select" onchange="mdSaveAccountField('${a.id}','priority',parseInt(this.value))">${_priOpts(a.priority)}</select></td>
+      <td><input type="text" class="dt-input dt-notes" value="${esc(a.notes||'')}"
+        placeholder="Notes, SFDC link, context…"
+        onblur="mdSaveAccountField('${a.id}','notes',this.value)"
+        onkeydown="mdDtKeydown(event,this)"></td>
       ${qCells}
       <td class="dt-center"><input type="checkbox" ${a.active!==false?'checked':''}
         onchange="mdSaveAccountField('${a.id}','active',this.checked)"></td>
@@ -203,7 +203,7 @@ function _renderAccountsTable() {
 
   return `<table class="data-table">
     <thead><tr>
-      <th>Name</th><th>Segment</th><th>Region</th><th>AE</th><th>SE</th><th>Priority</th>
+      <th>Name</th><th>Segment</th><th>Region</th><th>AE</th><th>SE</th><th>Notes</th>
       ${hdrQ}
       <th>Active</th>
       <th class="dt-actions">
@@ -291,7 +291,7 @@ window.mdAddAccount = () => {
     name: 'New Account',
     segment:     CONFIG.teams[0]?.name   || '',
     region:      CONFIG.regions[0]?.name || '',
-    ae: '', se: '', priority: 1, quota: 0, quotaPeriod: 'annual'
+    ae: '', se: '', notes: '', quota: 0, quotaPeriod: 'annual'
   });
   _renderBody();
   _highlightRow(created?.id);
@@ -315,7 +315,6 @@ window.mdSaveAccountName = (id, val) => {
 };
 
 window.mdSaveAccountField = (id, field, val) => {
-  if (field === 'priority') val = parseInt(val) || 1;
   updateAccountField(id, field, val);
 };
 

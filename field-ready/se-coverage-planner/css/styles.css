@@ -170,9 +170,12 @@ thead th { padding: 10px 14px; text-align: left; font-size: 11px; font-weight: 7
 .expand-item:last-child { border-bottom: none; }
 .expand-item.changed { border-left: 2px solid var(--amber); padding-left: 6px; margin-left: -8px; }
 .expand-item.unassigned-acct { color: var(--red); }
-.pri { font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 100px; }
-.pri-1 { background: rgba(217,70,239,0.15); color: var(--accent); }
-.pri-2 { background: rgba(124,111,153,0.1); color: var(--muted); }
+/* Note indicator icon in account drill-down lists */
+.note-icon { display: inline-block; font-size: 12px; margin-left: 6px; cursor: help; opacity: 0.85; transition: opacity 0.15s, transform 0.15s; }
+.note-icon:hover { opacity: 1; transform: scale(1.15); }
+
+/* Notes input in Manage Data accounts table */
+.dt-input.dt-notes { min-width: 180px; max-width: 320px; }
 .se-select { font-size: 11px; font-family: var(--font); background: var(--surface2); color: var(--text); border: 1px solid var(--border); border-radius: 4px; padding: 2px 6px; cursor: pointer; max-width: 130px; }
 .se-select:focus { outline: 1px solid var(--accent); border-color: var(--accent); }
 

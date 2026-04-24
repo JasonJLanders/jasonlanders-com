@@ -20,7 +20,7 @@ export function computeStats(data, extraSEs) {
       ae_region: r.ae_region, home_city: r.home_city || '',
       accounts: new Map(), aes: new Set(), rds: new Set()
     };
-    map[r.se].accounts.set(r.account, r.priority);
+    map[r.se].accounts.set(r.account, r.account); // value unused now; kept for Map API compat
     map[r.se].aes.add(r.ae);
     map[r.se].rds.add(r.rd);
   });

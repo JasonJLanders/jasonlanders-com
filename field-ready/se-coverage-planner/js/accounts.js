@@ -23,7 +23,7 @@ function buildAccountsFromData(data) {
       region:      row.ae_region  || '',
       ae:          row.ae         || '',
       se:          row.se         || '',
-      priority:    row.priority   || 1,
+      notes:       row.notes       || '',
       quota:       0,
       quotaPeriod: 'annual',
       active:      true,
@@ -83,20 +83,19 @@ export function updateAccountName(id, newName) {
   saveAccounts();
 }
 
-/** Update segment/region/ae/se/priority/quota/quotaPeriod/active */
+/** Update segment/region/ae/se/notes/quota/quotaPeriod/active */
 export function updateAccountField(id, field, value) {
   const account = getAccount(id);
   if (!account) return;
   account[field] = value;
   // Propagate fields that live in DATA rows
-  if (['segment', 'ae', 'se', 'priority', 'region'].includes(field)) {
+  if (['segment', 'ae', 'se', 'region'].includes(field)) {
     const propagate = rows => rows.forEach(r => {
       if (r.account !== account.name) return;
-      if (field === 'segment')       r.segment   = value;
-      else if (field === 'ae')       r.ae        = value;
-      else if (field === 'se')       r.se        = value;
-      else if (field === 'priority') r.priority  = value;
-      else if (field === 'region')   r.ae_region = value;
+      if (field === 'segment')     r.segment   = value;
+      else if (field === 'ae')     r.ae        = value;
+      else if (field === 'se')     r.se        = value;
+      else if (field === 'region') r.ae_region = value;
     });
     propagate(state.workingData);
     if (state.scenarioB) propagate(state.scenarioB);
@@ -104,7 +103,7 @@ export function updateAccountField(id, field, value) {
   saveAccounts();
 }
 
-export function addAccount({ name, segment, region, ae, se, priority, quota, quotaPeriod }) {
+export function addAccount({ name, segment, region, ae, se, notes, quota, quotaPeriod }) {
   if (!name) return null;
   const id = genId();
   const account = {
@@ -113,7 +112,7 @@ export function addAccount({ name, segment, region, ae, se, priority, quota, quo
     region:      region      || '',
     ae:          ae          || '',
     se:          se          || '',
-    priority:    priority    || 1,
+    notes:       notes       || '',
     quota:       quota       || 0,
     quotaPeriod: quotaPeriod || 'annual',
     active:      true,
@@ -124,7 +123,7 @@ export function addAccount({ name, segment, region, ae, se, priority, quota, quo
     segment: account.segment, avp: '', rvp: '', rvp_city: '',
     rd: '', rd_city: '', ae: account.ae, ae_city: '',
     ae_region: account.region, account: account.name,
-    se: account.se, se_leader: '', home_city: '', priority: account.priority,
+    se: account.se, se_leader: '', home_city: '',
   });
   saveAccounts();
   return account;
