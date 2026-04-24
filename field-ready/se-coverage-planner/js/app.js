@@ -139,7 +139,7 @@ function toggleRebalance() {
   state.rebalanceMode = !state.rebalanceMode;
   const btn = document.getElementById('btnRebalance');
   btn.textContent = state.rebalanceMode ? 'Exit Edit Mode' : 'Edit Alignments Mode';
-  btn.className   = state.rebalanceMode ? 'btn btn-amber sidebar-btn' : 'btn btn-ghost sidebar-btn';
+  btn.className   = state.rebalanceMode ? 'btn btn-amber toolbar-btn' : 'btn btn-ghost toolbar-btn';
   document.getElementById('rebalanceBanner').style.display = state.rebalanceMode ? 'flex' : 'none';
   document.querySelector('.app-body').classList.toggle('rebalance-active', state.rebalanceMode);
   if (!state.rebalanceMode) hideAddSEForm();
@@ -151,7 +151,7 @@ function toggleRegionEdit() {
   regionEditMode = !regionEditMode;
   const btn = document.getElementById('btnEditRegions');
   btn.textContent = regionEditMode ? 'Done Editing Regions' : 'Edit Map Regions';
-  btn.className   = regionEditMode ? 'btn btn-amber sidebar-btn' : 'btn btn-ghost sidebar-btn';
+  btn.className   = regionEditMode ? 'btn btn-amber toolbar-btn' : 'btn btn-ghost toolbar-btn';
 
   if (regionEditMode) {
     if (selectedRegion) closePanel();
