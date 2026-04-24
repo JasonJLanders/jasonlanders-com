@@ -464,7 +464,114 @@ document.addEventListener('edit-person',      e => openPersonEditModal(e.detail.
 document.addEventListener('personnel-changed', () => render());
 
 // ── Boot ──────────────────────────────────────────────────────────────────────
+// ── Sidebar resize / collapse ────────────────────────────────────────────────
+const SIDEBAR_KEY = 'se-planner-sidebar';
+const SIDEBAR_MIN = 200;
+const SIDEBAR_MAX = 520;
+const SIDEBAR_DEFAULT = 320;
+
+function loadSidebarState() {
+  try { return JSON.parse(localStorage.getItem(SIDEBAR_KEY) || '{}'); } catch { return {}; }
+}
+function saveSidebarState(s) {
+  try { localStorage.setItem(SIDEBAR_KEY, JSON.stringify(s)); } catch {}
+}
+
+function applySidebarState() {
+  const sidebar = document.getElementById('sidebar');
+  const expandBtn = document.getElementById('btnSidebarExpand');
+  const collapseBtn = document.getElementById('btnSidebarCollapse');
+  if (!sidebar) return;
+  const s = loadSidebarState();
+  const width = Math.max(SIDEBAR_MIN, Math.min(SIDEBAR_MAX, s.width || SIDEBAR_DEFAULT));
+  sidebar.style.width = width + 'px';
+  if (s.collapsed) {
+    sidebar.classList.add('collapsed');
+    if (expandBtn) expandBtn.style.display = 'flex';
+    if (collapseBtn) collapseBtn.style.display = 'none';
+  } else {
+    sidebar.classList.remove('collapsed');
+    if (expandBtn) expandBtn.style.display = 'none';
+    if (collapseBtn) collapseBtn.style.display = 'flex';
+  }
+  invalidateMapSize();
+}
+
+function setSidebarCollapsed(collapsed) {
+  const s = loadSidebarState();
+  s.collapsed = !!collapsed;
+  saveSidebarState(s);
+  applySidebarState();
+}
+
+function setSidebarWidth(width) {
+  const w = Math.max(SIDEBAR_MIN, Math.min(SIDEBAR_MAX, width));
+  const s = loadSidebarState();
+  s.width = w;
+  s.collapsed = false;
+  saveSidebarState(s);
+  const sidebar = document.getElementById('sidebar');
+  if (sidebar) {
+    sidebar.classList.remove('collapsed');
+    sidebar.style.width = w + 'px';
+  }
+}
+
+function initSidebarControls() {
+  const sidebar = document.getElementById('sidebar');
+  const resizer = document.getElementById('sidebarResizer');
+  const collapseBtn = document.getElementById('btnSidebarCollapse');
+  const expandBtn = document.getElementById('btnSidebarExpand');
+  if (!sidebar || !resizer) return;
+
+  applySidebarState();
+
+  if (collapseBtn) collapseBtn.addEventListener('click', () => setSidebarCollapsed(true));
+  if (expandBtn) expandBtn.addEventListener('click', () => setSidebarCollapsed(false));
+
+  // Drag-to-resize
+  let dragging = false;
+  let rafId = null;
+  resizer.addEventListener('mousedown', e => {
+    e.preventDefault();
+    dragging = true;
+    sidebar.classList.add('resizing');
+    document.body.style.cursor = 'col-resize';
+  });
+  document.addEventListener('mousemove', e => {
+    if (!dragging) return;
+    const rect = sidebar.getBoundingClientRect();
+    const newWidth = e.clientX - rect.left;
+    if (rafId) cancelAnimationFrame(rafId);
+    rafId = requestAnimationFrame(() => {
+      if (newWidth < SIDEBAR_MIN - 40) {
+        // Drag well under minimum collapses the sidebar
+        setSidebarCollapsed(true);
+        dragging = false;
+        sidebar.classList.remove('resizing');
+        document.body.style.cursor = '';
+      } else {
+        setSidebarWidth(newWidth);
+      }
+    });
+  });
+  document.addEventListener('mouseup', () => {
+    if (!dragging) return;
+    dragging = false;
+    sidebar.classList.remove('resizing');
+    document.body.style.cursor = '';
+    invalidateMapSize();
+  });
+
+  // Double-click the resizer to toggle collapsed
+  resizer.addEventListener('dblclick', () => {
+    const isCollapsed = sidebar.classList.contains('collapsed');
+    setSidebarCollapsed(!isCollapsed);
+  });
+}
+
 initMap('map');
+initSidebarControls();
 render();
 
 // Async geocoding - collect all role cities then render markers

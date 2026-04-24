@@ -149,6 +149,11 @@ export function initMap(containerId) {
   roleMarkerLayer = L.layerGroup().addTo(map);
 }
 
+// Tell Leaflet the container size changed (e.g. after a sidebar resize/collapse).
+export function invalidateMapSize() {
+  if (map) map.invalidateSize();
+}
+
 // Draws (or redraws) region polygons as combined state shapes.
 // Called on init and after state mapping edits.
 function renderRegionShapes() {

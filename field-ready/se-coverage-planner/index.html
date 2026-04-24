@@ -43,7 +43,8 @@
 <div class="app-body">
 
   <!-- LEFT SIDEBAR: org stats + controls -->
-  <aside class="sidebar">
+  <aside class="sidebar" id="sidebar">
+    <button class="sidebar-toggle in-sidebar" id="btnSidebarCollapse" title="Collapse sidebar">&#x276E;</button>
     <div class="stats-bar">
       <div class="stat-card"><div class="stat-val" id="statSEs">—</div><div class="stat-label">Total SEs</div></div>
       <div class="stat-card"><div class="stat-val" id="statAEs">—</div><div class="stat-label">Total AEs</div></div>
@@ -66,7 +67,9 @@
       <label><input type="checkbox" data-role="RVP"> RVP</label>
       <label><input type="checkbox" data-role="SELeader"> SE Leader</label>
     </div>
+    <div class="sidebar-resizer" id="sidebarResizer" title="Drag to resize · double-click to collapse"></div>
   </aside>
+  <button class="sidebar-toggle" id="btnSidebarExpand" title="Show sidebar" style="display:none">&#x276F;</button>
 
   <!-- CENTER: Map -->
   <div class="map-area" id="mapArea">
