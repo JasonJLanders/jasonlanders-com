@@ -138,7 +138,8 @@ function getRegionForPoint(lat, lng) {
 // ── Init ──────────────────────────────────────────────────────────────────────
 
 export function initMap(containerId) {
-  map = L.map(containerId, { zoomControl: true }).setView([39.5, -98.35], 4);
+  map = L.map(containerId, { zoomControl: false }).setView([39.5, -98.35], 4);
+  L.control.zoom({ position: 'topright' }).addTo(map);
 
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
