@@ -36,9 +36,24 @@ html, body { font-family: var(--font); background: var(--bg); color: var(--text)
 .view-toggle button { font-size: 12px; font-weight: 600; padding: 5px 12px; border: none; cursor: pointer; background: transparent; color: var(--muted); font-family: var(--font); white-space: nowrap; }
 .view-toggle button.active { background: var(--accent); color: #fff; }
 
+/* TOOLBAR — mode controls + map layer toggles, sits below header */
+.toolbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; height: 44px; padding: 0 20px; background: var(--surface); border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+.toolbar-group { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.toolbar-btn { font-size: 12px; padding: 6px 12px; }
+.toolbar-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-right: 4px; }
+.toolbar-layers { gap: 4px; }
+.layer-pill { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; cursor: pointer; padding: 4px 10px; border-radius: 100px; border: 1px solid var(--border); color: var(--muted); transition: color 0.15s, border-color 0.15s, background 0.15s; user-select: none; white-space: nowrap; }
+.layer-pill:hover { color: var(--text); border-color: var(--muted); }
+.layer-pill input[type=checkbox] { display: none; }
+.toolbar-layers label:has(input[data-role="SE"]:checked)       { border-color: #22c55e; color: #22c55e; background: rgba(34,197,94,0.08); }
+.toolbar-layers label:has(input[data-role="AE"]:checked)       { border-color: #3b82f6; color: #3b82f6; background: rgba(59,130,246,0.08); }
+.toolbar-layers label:has(input[data-role="RD"]:checked)       { border-color: #f59e0b; color: #f59e0b; background: rgba(245,158,11,0.08); }
+.toolbar-layers label:has(input[data-role="RVP"]:checked)      { border-color: #a855f7; color: #a855f7; background: rgba(168,85,247,0.08); }
+.toolbar-layers label:has(input[data-role="SELeader"]:checked) { border-color: #d946ef; color: #d946ef; background: rgba(217,70,239,0.08); }
+
 /* APP BODY — three-panel flex layout */
-.app-body { display: flex; height: calc(100vh - 52px); overflow: hidden; position: relative; }
-.app-body.rebalance-active { height: calc(100vh - 52px - 40px); }
+.app-body { display: flex; height: calc(100vh - 52px - 44px); overflow: hidden; position: relative; }
+.app-body.rebalance-active { height: calc(100vh - 52px - 44px - 40px); }
 /* When map is collapsed, the right panel should stretch to fill the freed space */
 .app-body.map-collapsed .map-area { flex: 0 0 0; width: 0; overflow: hidden; }
 .app-body.map-collapsed .right-panel { width: 100%; max-width: none; left: 0; border-left: none; }

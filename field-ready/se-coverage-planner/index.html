@@ -33,6 +33,24 @@
   </div>
 </header>
 
+<!-- TOOLBAR (mode controls + map layer toggles) -->
+<div class="toolbar">
+  <div class="toolbar-group">
+    <button class="btn btn-ghost toolbar-btn" id="btnRebalance">Edit Alignments</button>
+    <button class="btn btn-ghost toolbar-btn" id="btnEditRegions">Edit Map Regions</button>
+    <button class="btn btn-ghost toolbar-btn" id="btnManageData">&#9776; Manage Data</button>
+    <button class="btn btn-ghost toolbar-btn" id="btnSettings">&#9881; Settings</button>
+  </div>
+  <div class="toolbar-group toolbar-layers" id="layerToggles">
+    <span class="toolbar-label">Show on Map</span>
+    <label class="layer-pill"><input type="checkbox" data-role="SE" checked> SE</label>
+    <label class="layer-pill"><input type="checkbox" data-role="AE" checked> AE</label>
+    <label class="layer-pill"><input type="checkbox" data-role="RD"> RD</label>
+    <label class="layer-pill"><input type="checkbox" data-role="RVP"> RVP</label>
+    <label class="layer-pill"><input type="checkbox" data-role="SELeader"> SE Leader</label>
+  </div>
+</div>
+
 <!-- REBALANCE BANNER (shows globally when rebalance mode is active) -->
 <div id="rebalanceBanner" class="rebalance-banner" style="display:none">
   <span class="banner-dot"></span>
@@ -50,23 +68,8 @@
       <div class="stat-card"><div class="stat-val" id="statAEs">—</div><div class="stat-label">Total AEs</div></div>
       <div class="stat-card"><div class="stat-val" id="statRatio">—</div><div class="stat-label">Avg AE:SE Ratio</div></div>
     </div>
-    <div class="sidebar-controls">
-      <button class="btn btn-ghost sidebar-btn" id="btnRebalance">Edit Alignments Mode</button>
-      <button class="btn btn-ghost sidebar-btn" id="btnEditRegions">Edit Map Regions</button>
-      <button class="btn btn-ghost sidebar-btn" id="btnManageData">&#9776; Manage Data</button>
-      <button class="btn btn-ghost sidebar-btn" id="btnSettings">&#9881; Settings</button>
-    </div>
     <div class="section-title">Regional Summary</div>
     <div class="region-grid" id="regionGrid"></div>
-
-    <div class="section-title" style="margin-top:16px">Show on Map</div>
-    <div class="layer-toggles">
-      <label><input type="checkbox" data-role="SE" checked> SE</label>
-      <label><input type="checkbox" data-role="AE" checked> AE</label>
-      <label><input type="checkbox" data-role="RD"> RD</label>
-      <label><input type="checkbox" data-role="RVP"> RVP</label>
-      <label><input type="checkbox" data-role="SELeader"> SE Leader</label>
-    </div>
     <div class="sidebar-resizer" id="sidebarResizer" title="Drag to resize · double-click to collapse"></div>
   </aside>
   <button class="sidebar-toggle" id="btnSidebarExpand" title="Show sidebar" style="display:none">&#x276F;</button>

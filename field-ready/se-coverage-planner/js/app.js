@@ -395,7 +395,7 @@ document.getElementById('personEditOverlay').addEventListener('keydown', e => {
 });
 
 // Layer toggle checkboxes
-document.querySelectorAll('.layer-toggles input[data-role]').forEach(cb => {
+document.querySelectorAll('#layerToggles input[data-role]').forEach(cb => {
   cb.addEventListener('change', () => {
     if (cb.checked) visibleLayers.add(cb.dataset.role);
     else visibleLayers.delete(cb.dataset.role);
