@@ -506,6 +506,14 @@ thead th { padding: 10px 14px; text-align: left; font-size: 11px; font-weight: 7
 .menu-item-desc { font-size: 11px; color: var(--muted); }
 .menu-divider { height: 1px; background: var(--border); margin: 4px 6px; }
 
+/* Menu-embedded toggle (used by Export menu for include-workload setting). */
+.menu-toggle { display: flex; align-items: flex-start; gap: 10px; padding: 8px 10px; cursor: pointer; border-radius: 6px; transition: background 0.1s; }
+.menu-toggle:hover { background: var(--surface2); }
+.menu-toggle input[type="checkbox"] { width: 14px; height: 14px; flex-shrink: 0; margin-top: 3px; cursor: pointer; accent-color: var(--accent); }
+.menu-toggle-body { display: flex; flex-direction: column; gap: 2px; }
+.menu-toggle-title { font-size: 13px; font-weight: 700; color: var(--text); }
+.menu-toggle-desc { font-size: 11px; color: var(--muted); }
+
 /* Sidebar section header (regional summary + collapse-all toggle) */
 .sidebar-section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; padding-top: 4px; }
 .sidebar-section-header .section-title { margin-bottom: 0; }

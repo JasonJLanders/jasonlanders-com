@@ -335,6 +335,7 @@ async function _buildPPT() {
     alert('PowerPoint export library is still loading. Try again in a moment.');
     return;
   }
+  const inclWorkload = !!(window.getExportInclWorkload && window.getExportInclWorkload());
   const data = (state.viewMode === 'proposed' && state.scenarioB) ? state.scenarioB : state.workingData;
   const agg = _aggregateForExport(data);
 
@@ -503,27 +504,28 @@ async function _buildPPT() {
         fontSize: 11, bold: true, color: '0F0A1F', fontFace: 'Inter', align: 'right', valign: 'middle'
       });
     });
-    // Workload tally bar at bottom
-    const wlY = cy + cardH - 0.42;
-    const totalSE = r.healthy + r.stretched + r.overloaded;
-    if (totalSE > 0) {
-      // Three-segment bar
-      const barX = cx + 0.15, barW = cardW - 0.3, barH = 0.16;
-      const hw = (r.healthy   / totalSE) * barW;
-      const sw = (r.stretched / totalSE) * barW;
-      const ow = (r.overloaded/ totalSE) * barW;
-      if (hw > 0) dash.addShape(pptx.ShapeType.rect, { x: barX,           y: wlY, w: hw, h: barH, fill: { color: '15803D' }, line: { color: '15803D', width: 0 } });
-      if (sw > 0) dash.addShape(pptx.ShapeType.rect, { x: barX + hw,      y: wlY, w: sw, h: barH, fill: { color: 'B45309' }, line: { color: 'B45309', width: 0 } });
-      if (ow > 0) dash.addShape(pptx.ShapeType.rect, { x: barX + hw + sw, y: wlY, w: ow, h: barH, fill: { color: 'B91C1C' }, line: { color: 'B91C1C', width: 0 } });
-      dash.addText(`${r.healthy} healthy \u00b7 ${r.stretched} stretched \u00b7 ${r.overloaded} overloaded`, {
-        x: cx + 0.15, y: wlY + 0.18, w: cardW - 0.3, h: 0.2,
-        fontSize: 8, color: '6B6584', fontFace: 'Inter'
-      });
-    } else {
-      dash.addText('No active SEs', {
-        x: cx + 0.15, y: wlY, w: cardW - 0.3, h: 0.2,
-        fontSize: 9, italic: true, color: '8A839E', fontFace: 'Inter'
-      });
+    // Workload tally bar at bottom (gated by user opt-in toggle)
+    if (inclWorkload) {
+      const wlY = cy + cardH - 0.42;
+      const totalSE = r.healthy + r.stretched + r.overloaded;
+      if (totalSE > 0) {
+        const barX = cx + 0.15, barW = cardW - 0.3, barH = 0.16;
+        const hw = (r.healthy   / totalSE) * barW;
+        const sw = (r.stretched / totalSE) * barW;
+        const ow = (r.overloaded/ totalSE) * barW;
+        if (hw > 0) dash.addShape(pptx.ShapeType.rect, { x: barX,           y: wlY, w: hw, h: barH, fill: { color: '15803D' }, line: { color: '15803D', width: 0 } });
+        if (sw > 0) dash.addShape(pptx.ShapeType.rect, { x: barX + hw,      y: wlY, w: sw, h: barH, fill: { color: 'B45309' }, line: { color: 'B45309', width: 0 } });
+        if (ow > 0) dash.addShape(pptx.ShapeType.rect, { x: barX + hw + sw, y: wlY, w: ow, h: barH, fill: { color: 'B91C1C' }, line: { color: 'B91C1C', width: 0 } });
+        dash.addText(`${r.healthy} healthy \u00b7 ${r.stretched} stretched \u00b7 ${r.overloaded} overloaded`, {
+          x: cx + 0.15, y: wlY + 0.18, w: cardW - 0.3, h: 0.2,
+          fontSize: 8, color: '6B6584', fontFace: 'Inter'
+        });
+      } else {
+        dash.addText('No active SEs', {
+          x: cx + 0.15, y: wlY, w: cardW - 0.3, h: 0.2,
+          fontSize: 9, italic: true, color: '8A839E', fontFace: 'Inter'
+        });
+      }
     }
   });
 
@@ -651,29 +653,37 @@ async function _buildPPT() {
       x: seTblX, y: seTblY - 0.05, w: seTblW, h: 0.3,
       fontSize: 11, bold: true, color: '6B6584', fontFace: 'Inter'
     });
-    const seHeaderCols = [
+    const seHeaderColsBase = [
       { text: roleLabel('se'),   options: { bold: true, color: 'FFFFFF', fill: { color: '1F1733' }, fontFace: 'Inter', fontSize: 9, align: 'left' } },
       { text: 'Accts',           options: { bold: true, color: 'FFFFFF', fill: { color: '1F1733' }, fontFace: 'Inter', fontSize: 9, align: 'right' } },
-      { text: roleLabel('ae') + 's', options: { bold: true, color: 'FFFFFF', fill: { color: '1F1733' }, fontFace: 'Inter', fontSize: 9, align: 'right' } },
-      { text: 'Workload',        options: { bold: true, color: 'FFFFFF', fill: { color: '1F1733' }, fontFace: 'Inter', fontSize: 9, align: 'left' } }
+      { text: roleLabel('ae') + 's', options: { bold: true, color: 'FFFFFF', fill: { color: '1F1733' }, fontFace: 'Inter', fontSize: 9, align: 'right' } }
     ];
+    if (inclWorkload) {
+      seHeaderColsBase.push({ text: 'Workload', options: { bold: true, color: 'FFFFFF', fill: { color: '1F1733' }, fontFace: 'Inter', fontSize: 9, align: 'left' } });
+    }
     const seRows = (r.ses && r.ses.length) ? r.ses.map(s => {
       const wlColor = s.workload === 'Overloaded' ? 'B91C1C' : s.workload === 'Stretched' ? 'B45309' : '15803D';
-      return [
+      const row = [
         { text: s.name, options: { fontFace: 'Inter', fontSize: 9, color: '1F1733', align: 'left' } },
         { text: String(s.accountCount), options: { fontFace: 'Inter', fontSize: 9, color: '1F1733', align: 'right' } },
-        { text: String(s.aeCount), options: { fontFace: 'Inter', fontSize: 9, color: '1F1733', align: 'right' } },
-        { text: s.workload, options: { fontFace: 'Inter', fontSize: 9, color: wlColor, bold: true, align: 'left' } }
+        { text: String(s.aeCount), options: { fontFace: 'Inter', fontSize: 9, color: '1F1733', align: 'right' } }
       ];
-    }) : [[
-      { text: 'No active SEs', options: { fontFace: 'Inter', fontSize: 10, color: '8A839E', italic: true } },
-      { text: '', options: { fontFace: 'Inter', fontSize: 9 } },
-      { text: '', options: { fontFace: 'Inter', fontSize: 9 } },
-      { text: '', options: { fontFace: 'Inter', fontSize: 9 } }
-    ]];
-    stat.addTable([seHeaderCols, ...seRows], {
+      if (inclWorkload) {
+        row.push({ text: s.workload, options: { fontFace: 'Inter', fontSize: 9, color: wlColor, bold: true, align: 'left' } });
+      }
+      return row;
+    }) : [(() => {
+      const row = [
+        { text: 'No active SEs', options: { fontFace: 'Inter', fontSize: 10, color: '8A839E', italic: true } },
+        { text: '', options: { fontFace: 'Inter', fontSize: 9 } },
+        { text: '', options: { fontFace: 'Inter', fontSize: 9 } }
+      ];
+      if (inclWorkload) row.push({ text: '', options: { fontFace: 'Inter', fontSize: 9 } });
+      return row;
+    })()];
+    stat.addTable([seHeaderColsBase, ...seRows], {
       x: seTblX, y: seTblY + 0.3, w: seTblW, h: 4.5,
-      colW: [2.6, 1.0, 1.0, 1.7],
+      colW: inclWorkload ? [2.6, 1.0, 1.0, 1.7] : [3.5, 1.2, 1.6],
       border: { type: 'solid', color: 'E5E2EC', pt: 0.5 }
     });
 
@@ -722,6 +732,7 @@ async function _buildPDF() {
     alert('PDF export library is still loading. Try again in a moment.');
     return;
   }
+  const inclWorkload = !!(window.getExportInclWorkload && window.getExportInclWorkload());
   const data = (state.viewMode === 'proposed' && state.scenarioB) ? state.scenarioB : state.workingData;
   const agg = _aggregateForExport(data);
 
@@ -867,23 +878,25 @@ async function _buildPDF() {
       pdf.text(pair[1], cx + dashCardW - 0.1, lineY, { align: 'right' });
       lineY += 0.22;
     });
-    // Workload bar
-    const totalSE = r.healthy + r.stretched + r.overloaded;
-    if (totalSE > 0) {
-      const barX = cx + 0.1;
-      const barW = dashCardW - 0.2;
-      const barY = cy + dashCardH - 0.42;
-      const barH = 0.14;
-      const hw = (r.healthy   / totalSE) * barW;
-      const sw = (r.stretched / totalSE) * barW;
-      const ow = (r.overloaded/ totalSE) * barW;
-      if (hw > 0) { pdf.setFillColor(21, 128, 61);  pdf.rect(barX,           barY, hw, barH, 'F'); }
-      if (sw > 0) { pdf.setFillColor(180, 83, 9);   pdf.rect(barX + hw,      barY, sw, barH, 'F'); }
-      if (ow > 0) { pdf.setFillColor(185, 28, 28);  pdf.rect(barX + hw + sw, barY, ow, barH, 'F'); }
-      pdf.setFont('helvetica', 'normal');
-      pdf.setFontSize(7);
-      pdf.setTextColor(107, 101, 132);
-      pdf.text(`${r.healthy} healthy \u00b7 ${r.stretched} stretched \u00b7 ${r.overloaded} overloaded`, barX, barY + 0.28);
+    // Workload bar (gated by user opt-in toggle)
+    if (inclWorkload) {
+      const totalSE = r.healthy + r.stretched + r.overloaded;
+      if (totalSE > 0) {
+        const barX = cx + 0.1;
+        const barW = dashCardW - 0.2;
+        const barY = cy + dashCardH - 0.42;
+        const barH = 0.14;
+        const hw = (r.healthy   / totalSE) * barW;
+        const sw = (r.stretched / totalSE) * barW;
+        const ow = (r.overloaded/ totalSE) * barW;
+        if (hw > 0) { pdf.setFillColor(21, 128, 61);  pdf.rect(barX,           barY, hw, barH, 'F'); }
+        if (sw > 0) { pdf.setFillColor(180, 83, 9);   pdf.rect(barX + hw,      barY, sw, barH, 'F'); }
+        if (ow > 0) { pdf.setFillColor(185, 28, 28);  pdf.rect(barX + hw + sw, barY, ow, barH, 'F'); }
+        pdf.setFont('helvetica', 'normal');
+        pdf.setFontSize(7);
+        pdf.setTextColor(107, 101, 132);
+        pdf.text(`${r.healthy} healthy \u00b7 ${r.stretched} stretched \u00b7 ${r.overloaded} overloaded`, barX, barY + 0.28);
+      }
     }
   });
 
@@ -1026,7 +1039,7 @@ async function _buildPDF() {
     pdf.text(roleLabel('se'),       seX + 0.08,        seY + 0.2);
     pdf.text('Accts',                seX + seW * 0.55,  seY + 0.2, { align: 'right' });
     pdf.text(roleLabel('ae') + 's',  seX + seW * 0.72,  seY + 0.2, { align: 'right' });
-    pdf.text('Workload',             seX + seW * 0.78,  seY + 0.2);
+    if (inclWorkload) pdf.text('Workload', seX + seW * 0.78, seY + 0.2);
     seY += 0.3;
     pdf.setFont('helvetica', 'normal');
     pdf.setFontSize(8);
@@ -1041,11 +1054,13 @@ async function _buildPDF() {
         pdf.text(_truncate(s.name, 22), seX + 0.08, seY + 0.16);
         pdf.text(String(s.accountCount), seX + seW * 0.55, seY + 0.16, { align: 'right' });
         pdf.text(String(s.aeCount),      seX + seW * 0.72, seY + 0.16, { align: 'right' });
-        const wlColor = s.workload === 'Overloaded' ? [185, 28, 28] : s.workload === 'Stretched' ? [180, 83, 9] : [21, 128, 61];
-        pdf.setTextColor(wlColor[0], wlColor[1], wlColor[2]);
-        pdf.setFont('helvetica', 'bold');
-        pdf.text(s.workload, seX + seW * 0.78, seY + 0.16);
-        pdf.setFont('helvetica', 'normal');
+        if (inclWorkload) {
+          const wlColor = s.workload === 'Overloaded' ? [185, 28, 28] : s.workload === 'Stretched' ? [180, 83, 9] : [21, 128, 61];
+          pdf.setTextColor(wlColor[0], wlColor[1], wlColor[2]);
+          pdf.setFont('helvetica', 'bold');
+          pdf.text(s.workload, seX + seW * 0.78, seY + 0.16);
+          pdf.setFont('helvetica', 'normal');
+        }
         seY += 0.24;
       });
     } else {

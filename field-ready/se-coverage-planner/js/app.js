@@ -714,6 +714,19 @@ const _btnExportPDF = document.getElementById('btnExportPDF');
 if (_btnExportXLS) _btnExportXLS.addEventListener('click', doExportXLS);
 if (_btnExportPPT) _btnExportPPT.addEventListener('click', doExportPPT);
 if (_btnExportPDF) _btnExportPDF.addEventListener('click', doExportPDF);
+
+// Persisted toggle: include workload health visualization on PPT/PDF exports.
+const _EXPORT_INCL_WORKLOAD_KEY = 'secp:exportInclWorkload';
+function _getExportInclWorkload() {
+  try { return localStorage.getItem(_EXPORT_INCL_WORKLOAD_KEY) === '1'; } catch { return false; }
+}
+window.setExportInclWorkload = (checked) => {
+  try { localStorage.setItem(_EXPORT_INCL_WORKLOAD_KEY, checked ? '1' : '0'); } catch {}
+};
+window.getExportInclWorkload = _getExportInclWorkload;
+// Restore checkbox state on boot
+const _exportInclEl = document.getElementById('exportInclWorkload');
+if (_exportInclEl) _exportInclEl.checked = _getExportInclWorkload();
 document.getElementById('btnViewCurrent').addEventListener('click',  () => setViewMode('current'));
 document.getElementById('btnViewProposed').addEventListener('click', () => setViewMode('proposed'));
 document.getElementById('btnResetChanges').addEventListener('click', resetChanges);
