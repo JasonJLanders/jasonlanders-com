@@ -3,7 +3,21 @@
 /**
  * Leaflet divIcon factories for each role.
  * All return L.DivIcon instances suitable for L.marker().
+ *
+ * Note: we read the live --marker-stroke value off :root and inline it as a literal
+ * color (hex/rgb) instead of leaving var(--marker-stroke) inside the icon HTML.
+ * Some browsers don't reliably re-resolve CSS custom properties inside Leaflet's
+ * divIcon DOM after a theme attribute flip, so we capture the current value here.
+ * Markers are re-built on theme-changed (see app.js render()) so they update on toggle.
  */
+function _markerStroke() {
+  try {
+    const v = getComputedStyle(document.documentElement).getPropertyValue('--marker-stroke').trim();
+    return v || '#ffffff';
+  } catch {
+    return '#ffffff';
+  }
+}
 
 // SE — filled circle, workload-matched color; larger + glowing in rebalance mode
 export function seIcon(color, rebalanceMode) {
@@ -13,7 +27,7 @@ export function seIcon(color, rebalanceMode) {
     : '';
   return L.divIcon({
     className: '',
-    html: `<div style="width:${d}px;height:${d}px;border-radius:50%;background:${color};border:2px solid var(--marker-stroke);${glow}"></div>`,
+    html: `<div style="width:${d}px;height:${d}px;border-radius:50%;background:${color};border:2px solid ${_markerStroke()};${glow}"></div>`,
     iconSize:   [d, d],
     iconAnchor: [d / 2, d / 2]
   });
@@ -24,7 +38,7 @@ export function aeIcon() {
   return L.divIcon({
     className: '',
     html: `<div style="width:18px;height:18px;display:flex;align-items:center;justify-content:center">
-             <div style="width:13px;height:13px;background:#3b82f6;border:2px solid var(--marker-stroke);transform:rotate(45deg)"></div>
+             <div style="width:13px;height:13px;background:#3b82f6;border:2px solid ${_markerStroke()};transform:rotate(45deg)"></div>
            </div>`,
     iconSize:   [18, 18],
     iconAnchor: [9, 9]
@@ -58,7 +72,7 @@ export function seLeaderIcon() {
   return L.divIcon({
     className: '',
     html: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-             <polygon points="${pts}" fill="#d946ef" style="stroke:var(--marker-stroke);stroke-width:1.5;stroke-linejoin:round"/>
+             <polygon points="${pts}" fill="#d946ef" stroke="${_markerStroke()}" stroke-width="1.5" stroke-linejoin="round"/>
            </svg>`,
     iconSize:   [24, 24],
     iconAnchor: [12, 12]

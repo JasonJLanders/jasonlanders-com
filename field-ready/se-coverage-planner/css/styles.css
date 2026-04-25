@@ -132,7 +132,8 @@ html, body { font-family: var(--font); background: var(--bg); color: var(--text)
 /* MAP */
 .map-area { flex: 1; position: relative; min-width: 0; }
 #map { width: 100%; height: 100%; }
-.map-hint { position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%); background: var(--map-tooltip-bg); border: 1px solid var(--border); color: var(--muted); font-size: 12px; font-weight: 500; padding: 6px 14px; border-radius: 100px; pointer-events: none; z-index: 400; transition: opacity 0.3s; }
+/* Map hint pill ("Click a region to view SE assignments") — flips with the theme. */
+.map-hint { position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%); background: var(--map-tooltip-bg); border: 1px solid var(--border); color: var(--muted); font-size: 12px; font-weight: 500; padding: 6px 14px; border-radius: 100px; pointer-events: none; z-index: 400; transition: opacity 0.3s; backdrop-filter: blur(6px); }
 .map-hint.hidden { opacity: 0; }
 
 /* STATE ASSIGN POPUP (edit regions mode) */
