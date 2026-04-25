@@ -123,7 +123,7 @@ html, body { font-family: var(--font); background: var(--bg); color: var(--text)
 .app-body.map-collapsed .right-panel { width: 100%; max-width: none; left: 0; border-left: none; }
 
 /* REBALANCE BANNER */
-.rebalance-banner { height: 40px; background: rgba(245,158,11,0.12); border-bottom: 1px solid rgba(245,158,11,0.35); color: var(--amber); font-size: 13px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 12px; padding: 0 20px; }
+.rebalance-banner { height: 40px; background: rgba(245,158,11,0.12); border-bottom: 1px solid rgba(245,158,11,0.35); color: var(--amber); font-size: 13px; font-weight: 600; display: flex; align-items: center; justify-content: flex-start; gap: 12px; padding: 0 20px; }
 .banner-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--amber); box-shadow: 0 0 0 0 rgba(245,158,11,0.7); animation: pulseDot 1.6s infinite; }
 @keyframes pulseDot { 0% { box-shadow: 0 0 0 0 rgba(245,158,11,0.7); } 70% { box-shadow: 0 0 0 8px rgba(245,158,11,0); } 100% { box-shadow: 0 0 0 0 rgba(245,158,11,0); } }
 
