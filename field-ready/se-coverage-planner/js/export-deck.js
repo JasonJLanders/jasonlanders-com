@@ -13,6 +13,7 @@
 
 import { state } from './data.js';
 import { CONFIG, roleLabel } from './config.js';
+import { computeStats, workload } from './stats.js';
 
 // ── Theming for export ───────────────────────────────────────────────────────
 
@@ -204,7 +205,13 @@ function _aggregateForExport(data) {
     });
   });
 
-  // Per region: counts + leadership chain summary
+  // Use computeStats to get per-SE workload classification and quota carry/personal.
+  const seStats = computeStats(data, []);
+  const seByName = {};
+  seStats.forEach(s => { seByName[s.se] = s; });
+  const quotaTrackingOn = !!(seStats.length && seStats[0].quotaTrackingOn);
+
+  // Per region: counts + leadership chain summary + workload counts + quota rollup
   const summary = regions.map(r => {
     const rows = byRegion[r.name] || [];
     const seSet = new Set();
@@ -213,13 +220,52 @@ function _aggregateForExport(data) {
       if (x.se && !x.se.startsWith('TBH') && x.se !== 'UNASSIGNED') seSet.add(x.se);
       if (x.ae) aeSet.add(x.ae);
     });
+    // Workload tally for this region's SEs
+    let healthy = 0, stretched = 0, overloaded = 0;
+    let quotaCarried = 0, quotaPersonal = 0;
+    seSet.forEach(seName => {
+      const s = seByName[seName];
+      if (!s) return;
+      const wl = workload(s);
+      if (wl.label === 'Overloaded') overloaded++;
+      else if (wl.label === 'Stretched') stretched++;
+      else healthy++;
+      quotaCarried  += s.quotaCarried  || 0;
+      quotaPersonal += s.quotaPersonal || 0;
+    });
+    const coveragePct = quotaPersonal > 0 ? Math.round((quotaCarried / quotaPersonal) * 100) : null;
     return {
       name: r.name,
       color: r.color,
       seCount: seSet.size,
       aeCount: aeSet.size,
       acctCount: rows.length,
-      ratio: seSet.size ? (aeSet.size / seSet.size).toFixed(1) : '\u2014'
+      ratio: seSet.size ? (aeSet.size / seSet.size).toFixed(1) : '\u2014',
+      healthy, stretched, overloaded,
+      quotaCarried, quotaPersonal, coveragePct,
+      // Per-SE detail used by the per-region stats slide
+      ses: [...seSet].sort().map(seName => {
+        const s = seByName[seName];
+        const wl = s ? workload(s) : { label: '\u2014', cls: 'badge-muted' };
+        return {
+          name: seName,
+          accountCount: s ? s.accountCount : 0,
+          aeCount: s ? s.aeCount : 0,
+          quotaCarried: s ? (s.quotaCarried || 0) : 0,
+          quotaPersonal: s ? (s.quotaPersonal || 0) : 0,
+          coveragePct: (s && s.quotaPersonal > 0) ? Math.round(s.quotaCarried / s.quotaPersonal * 100) : null,
+          workload: wl.label
+        };
+      }),
+      // Per-AE detail
+      aes: [...aeSet].sort().map(aeName => {
+        const aeRows = rows.filter(x => x.ae === aeName);
+        return {
+          name: aeName,
+          accountCount: aeRows.length,
+          se: aeRows.length ? aeRows[0].se : ''
+        };
+      })
     };
   });
 
@@ -241,6 +287,7 @@ function _aggregateForExport(data) {
 
   return {
     regions, summary, byRegion,
+    quotaTrackingOn,
     totals: {
       seCount:   allSE.size,
       aeCount:   allAE.size,
@@ -248,6 +295,14 @@ function _aggregateForExport(data) {
       ratio:     allSE.size ? (allAE.size / allSE.size).toFixed(1) : '\u2014'
     }
   };
+}
+
+/** Format a dollar amount as $X.XM / $X.XK / $XX. */
+function _formatMoney(n) {
+  n = Number(n) || 0;
+  if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1_000)     return `$${(n / 1_000).toFixed(0)}K`;
+  return `$${n.toFixed(0)}`;
 }
 
 function _hexToRgb(hex) {
@@ -389,6 +444,94 @@ async function _buildPPT() {
     fontSize: 9, color: '8A839E', italic: true, fontFace: 'Inter'
   });
 
+  // ---- ORG HEALTH DASHBOARD SLIDE ----
+  const dash = pptx.addSlide();
+  dash.background = { color: 'FFFFFF' };
+  dash.addText('Org Health Dashboard', {
+    x: 0.4, y: 0.25, w: 10, h: 0.5,
+    fontSize: 24, bold: true, color: '0F0A1F', fontFace: 'Inter'
+  });
+  dash.addText(`${scenarioStr}  \u00b7  ${dateStr}`, {
+    x: 0.4, y: 0.78, w: 10, h: 0.3,
+    fontSize: 12, color: '6B6584', fontFace: 'Inter'
+  });
+
+  // Layout: grid of cards, max 4 per row
+  const cardsPerRow = Math.min(4, Math.max(2, agg.summary.length <= 4 ? agg.summary.length : 4));
+  const cardW = (13.333 - 0.4 - 0.4 - (cardsPerRow - 1) * 0.25) / cardsPerRow;
+  const cardH = 2.6;
+  agg.summary.forEach((r, idx) => {
+    const row = Math.floor(idx / cardsPerRow);
+    const col = idx % cardsPerRow;
+    const cx = 0.4 + col * (cardW + 0.25);
+    const cy = 1.4 + row * (cardH + 0.3);
+    const fillRgb = _stripHash(r.color);
+    // Color band on top
+    dash.addShape(pptx.ShapeType.rect, {
+      x: cx, y: cy, w: cardW, h: 0.32,
+      fill: { color: fillRgb }, line: { color: fillRgb, width: 0 }
+    });
+    // White card body
+    dash.addShape(pptx.ShapeType.rect, {
+      x: cx, y: cy + 0.32, w: cardW, h: cardH - 0.32,
+      fill: { color: 'FFFFFF' }, line: { color: 'D9D3E6', width: 0.5 }
+    });
+    // Region name on the band
+    dash.addText(r.name, {
+      x: cx + 0.15, y: cy + 0.02, w: cardW - 0.3, h: 0.28,
+      fontSize: 13, bold: true, color: _contrastText(r.color), fontFace: 'Inter'
+    });
+    // Stats stack inside body
+    const innerY = cy + 0.45;
+    const lh = 0.28;
+    const stats = [
+      [`${roleLabel('se')}s:`,       String(r.seCount)],
+      [`${roleLabel('ae')}s:`,       String(r.aeCount)],
+      ['Accounts:',                  String(r.acctCount)],
+      [`Avg ${roleLabel('ae')}:${roleLabel('se')}:`, `1:${r.ratio}`]
+    ];
+    if (agg.quotaTrackingOn && r.quotaPersonal > 0) {
+      stats.push(['Coverage:', `${_formatMoney(r.quotaCarried)} / ${_formatMoney(r.quotaPersonal)} (${r.coveragePct}%)`]);
+    }
+    stats.forEach((pair, i) => {
+      dash.addText(pair[0], {
+        x: cx + 0.15, y: innerY + i * lh, w: cardW * 0.55, h: lh,
+        fontSize: 10, color: '6B6584', fontFace: 'Inter', valign: 'middle'
+      });
+      dash.addText(pair[1], {
+        x: cx + cardW * 0.55, y: innerY + i * lh, w: cardW * 0.45 - 0.15, h: lh,
+        fontSize: 11, bold: true, color: '0F0A1F', fontFace: 'Inter', align: 'right', valign: 'middle'
+      });
+    });
+    // Workload tally bar at bottom
+    const wlY = cy + cardH - 0.42;
+    const totalSE = r.healthy + r.stretched + r.overloaded;
+    if (totalSE > 0) {
+      // Three-segment bar
+      const barX = cx + 0.15, barW = cardW - 0.3, barH = 0.16;
+      const hw = (r.healthy   / totalSE) * barW;
+      const sw = (r.stretched / totalSE) * barW;
+      const ow = (r.overloaded/ totalSE) * barW;
+      if (hw > 0) dash.addShape(pptx.ShapeType.rect, { x: barX,           y: wlY, w: hw, h: barH, fill: { color: '15803D' }, line: { color: '15803D', width: 0 } });
+      if (sw > 0) dash.addShape(pptx.ShapeType.rect, { x: barX + hw,      y: wlY, w: sw, h: barH, fill: { color: 'B45309' }, line: { color: 'B45309', width: 0 } });
+      if (ow > 0) dash.addShape(pptx.ShapeType.rect, { x: barX + hw + sw, y: wlY, w: ow, h: barH, fill: { color: 'B91C1C' }, line: { color: 'B91C1C', width: 0 } });
+      dash.addText(`${r.healthy} healthy \u00b7 ${r.stretched} stretched \u00b7 ${r.overloaded} overloaded`, {
+        x: cx + 0.15, y: wlY + 0.18, w: cardW - 0.3, h: 0.2,
+        fontSize: 8, color: '6B6584', fontFace: 'Inter'
+      });
+    } else {
+      dash.addText('No active SEs', {
+        x: cx + 0.15, y: wlY, w: cardW - 0.3, h: 0.2,
+        fontSize: 9, italic: true, color: '8A839E', fontFace: 'Inter'
+      });
+    }
+  });
+
+  dash.addText('Generated by SE Coverage Planner \u00b7 jasonlanders.com', {
+    x: 0.4, y: 7.15, w: 12.5, h: 0.25,
+    fontSize: 9, color: '8A839E', italic: true, fontFace: 'Inter'
+  });
+
   // ---- PER-REGION SLIDES ----
   agg.summary.forEach(r => {
     const slide = pptx.addSlide();
@@ -450,8 +593,119 @@ async function _buildPPT() {
       border: { type: 'solid', color: 'E5E2EC', pt: 0.5 }
     });
 
-    // Footer
     slide.addText('Generated by SE Coverage Planner \u00b7 jasonlanders.com', {
+      x: 0.4, y: 7.15, w: 12.5, h: 0.25,
+      fontSize: 9, color: '8A839E', italic: true, fontFace: 'Inter'
+    });
+
+    // ---- PER-REGION STATS SLIDE ----
+    const stat = pptx.addSlide();
+    stat.background = { color: 'FFFFFF' };
+    const fillRgb2 = _stripHash(r.color);
+    const textRgb2 = _contrastText(r.color);
+    stat.addShape(pptx.ShapeType.rect, {
+      x: 0, y: 0, w: 13.333, h: 0.7,
+      fill: { color: fillRgb2 }, line: { color: fillRgb2, width: 0 }
+    });
+    stat.addText(`${r.name}  \u00b7  Stats Detail`, {
+      x: 0.4, y: 0.1, w: 8, h: 0.5,
+      fontSize: 22, bold: true, color: textRgb2, fontFace: 'Inter'
+    });
+    stat.addText(`${r.seCount} ${roleLabel('se')}  \u00b7  ${r.aeCount} ${roleLabel('ae')}  \u00b7  ${r.acctCount} accts  \u00b7  Avg 1:${r.ratio}`, {
+      x: 8.4, y: 0.18, w: 4.8, h: 0.4,
+      fontSize: 12, color: textRgb2, align: 'right', valign: 'middle', fontFace: 'Inter'
+    });
+
+    // Top stat strip: 4-5 cards
+    const statCards = [
+      { label: `Active ${roleLabel('se')}s`, value: r.seCount },
+      { label: `${roleLabel('ae')}s`,        value: r.aeCount },
+      { label: 'Accounts',                   value: r.acctCount },
+      { label: `${roleLabel('ae')}:${roleLabel('se')} Ratio`, value: `1:${r.ratio}` }
+    ];
+    if (agg.quotaTrackingOn && r.quotaPersonal > 0) {
+      statCards.push({ label: 'Coverage', value: `${r.coveragePct}%` });
+    }
+    const sw = (13.333 - 0.8 - (statCards.length - 1) * 0.2) / statCards.length;
+    statCards.forEach((card, i) => {
+      const x = 0.4 + i * (sw + 0.2);
+      stat.addShape(pptx.ShapeType.rect, {
+        x, y: 1.0, w: sw, h: 0.85,
+        fill: { color: 'F0EEF6' }, line: { color: 'D9D3E6', width: 0.5 }
+      });
+      stat.addText(String(card.value), {
+        x, y: 1.05, w: sw, h: 0.45,
+        fontSize: 22, bold: true, color: '0F0A1F', align: 'center', valign: 'middle', fontFace: 'Inter'
+      });
+      stat.addText(card.label, {
+        x, y: 1.45, w: sw, h: 0.35,
+        fontSize: 9, color: '6B6584', align: 'center', valign: 'middle', fontFace: 'Inter'
+      });
+    });
+
+    // SE table on the left
+    const seTblX = 0.4;
+    const seTblY = 2.1;
+    const seTblW = 6.3;
+    stat.addText(`${roleLabel('se')} Workload`, {
+      x: seTblX, y: seTblY - 0.05, w: seTblW, h: 0.3,
+      fontSize: 11, bold: true, color: '6B6584', fontFace: 'Inter'
+    });
+    const seHeaderCols = [
+      { text: roleLabel('se'),   options: { bold: true, color: 'FFFFFF', fill: { color: '1F1733' }, fontFace: 'Inter', fontSize: 9, align: 'left' } },
+      { text: 'Accts',           options: { bold: true, color: 'FFFFFF', fill: { color: '1F1733' }, fontFace: 'Inter', fontSize: 9, align: 'right' } },
+      { text: roleLabel('ae') + 's', options: { bold: true, color: 'FFFFFF', fill: { color: '1F1733' }, fontFace: 'Inter', fontSize: 9, align: 'right' } },
+      { text: 'Workload',        options: { bold: true, color: 'FFFFFF', fill: { color: '1F1733' }, fontFace: 'Inter', fontSize: 9, align: 'left' } }
+    ];
+    const seRows = (r.ses && r.ses.length) ? r.ses.map(s => {
+      const wlColor = s.workload === 'Overloaded' ? 'B91C1C' : s.workload === 'Stretched' ? 'B45309' : '15803D';
+      return [
+        { text: s.name, options: { fontFace: 'Inter', fontSize: 9, color: '1F1733', align: 'left' } },
+        { text: String(s.accountCount), options: { fontFace: 'Inter', fontSize: 9, color: '1F1733', align: 'right' } },
+        { text: String(s.aeCount), options: { fontFace: 'Inter', fontSize: 9, color: '1F1733', align: 'right' } },
+        { text: s.workload, options: { fontFace: 'Inter', fontSize: 9, color: wlColor, bold: true, align: 'left' } }
+      ];
+    }) : [[
+      { text: 'No active SEs', options: { fontFace: 'Inter', fontSize: 10, color: '8A839E', italic: true } },
+      { text: '', options: { fontFace: 'Inter', fontSize: 9 } },
+      { text: '', options: { fontFace: 'Inter', fontSize: 9 } },
+      { text: '', options: { fontFace: 'Inter', fontSize: 9 } }
+    ]];
+    stat.addTable([seHeaderCols, ...seRows], {
+      x: seTblX, y: seTblY + 0.3, w: seTblW, h: 4.5,
+      colW: [2.6, 1.0, 1.0, 1.7],
+      border: { type: 'solid', color: 'E5E2EC', pt: 0.5 }
+    });
+
+    // AE list on the right
+    const aeTblX = 7.0;
+    const aeTblY = 2.1;
+    const aeTblW = 5.9;
+    stat.addText(`${roleLabel('ae')}s & Account Load`, {
+      x: aeTblX, y: aeTblY - 0.05, w: aeTblW, h: 0.3,
+      fontSize: 11, bold: true, color: '6B6584', fontFace: 'Inter'
+    });
+    const aeHeaderCols = [
+      { text: roleLabel('ae'),  options: { bold: true, color: 'FFFFFF', fill: { color: '1F1733' }, fontFace: 'Inter', fontSize: 9, align: 'left' } },
+      { text: 'Accts',          options: { bold: true, color: 'FFFFFF', fill: { color: '1F1733' }, fontFace: 'Inter', fontSize: 9, align: 'right' } },
+      { text: roleLabel('se'),  options: { bold: true, color: 'FFFFFF', fill: { color: '1F1733' }, fontFace: 'Inter', fontSize: 9, align: 'left' } }
+    ];
+    const aeRowsData = (r.aes && r.aes.length) ? r.aes.map(a => [
+      { text: a.name, options: { fontFace: 'Inter', fontSize: 9, color: '1F1733', align: 'left' } },
+      { text: String(a.accountCount), options: { fontFace: 'Inter', fontSize: 9, color: '1F1733', align: 'right' } },
+      { text: a.se || '\u2014', options: { fontFace: 'Inter', fontSize: 9, color: '1F1733', align: 'left' } }
+    ]) : [[
+      { text: `No ${roleLabel('ae')}s in this region`, options: { fontFace: 'Inter', fontSize: 10, color: '8A839E', italic: true } },
+      { text: '', options: { fontFace: 'Inter', fontSize: 9 } },
+      { text: '', options: { fontFace: 'Inter', fontSize: 9 } }
+    ]];
+    stat.addTable([aeHeaderCols, ...aeRowsData], {
+      x: aeTblX, y: aeTblY + 0.3, w: aeTblW, h: 4.5,
+      colW: [3.1, 0.9, 1.9],
+      border: { type: 'solid', color: 'E5E2EC', pt: 0.5 }
+    });
+
+    stat.addText('Generated by SE Coverage Planner \u00b7 jasonlanders.com', {
       x: 0.4, y: 7.15, w: 12.5, h: 0.25,
       fontSize: 9, color: '8A839E', italic: true, fontFace: 'Inter'
     });
@@ -558,6 +812,86 @@ async function _buildPDF() {
   pdf.setTextColor(138, 131, 158);
   pdf.text('Generated by SE Coverage Planner \u00b7 jasonlanders.com', 0.4, pageH - 0.25);
 
+  // --- ORG HEALTH DASHBOARD PAGE ---
+  pdf.addPage();
+  pdf.setFont('helvetica', 'bold');
+  pdf.setFontSize(20);
+  pdf.setTextColor(15, 10, 31);
+  pdf.text('Org Health Dashboard', 0.4, 0.55);
+  pdf.setFont('helvetica', 'normal');
+  pdf.setFontSize(11);
+  pdf.setTextColor(107, 101, 132);
+  pdf.text(`${scenarioStr}  \u00b7  ${dateStr}`, 0.4, 0.85);
+
+  // Grid of region cards (max 4 per row).
+  const dashCardsPerRow = Math.min(4, Math.max(2, agg.summary.length <= 4 ? agg.summary.length : 4));
+  const dashCardW = (pageW - 0.4 - 0.4 - (dashCardsPerRow - 1) * 0.2) / dashCardsPerRow;
+  const dashCardH = 2.3;
+  agg.summary.forEach((r, idx) => {
+    const row = Math.floor(idx / dashCardsPerRow);
+    const col = idx % dashCardsPerRow;
+    const cx = 0.4 + col * (dashCardW + 0.2);
+    const cy = 1.2 + row * (dashCardH + 0.2);
+    const { r: cr2, g: cg2, b: cb2 } = _hexToRgb(r.color);
+    // Color band
+    pdf.setFillColor(cr2, cg2, cb2);
+    pdf.rect(cx, cy, dashCardW, 0.3, 'F');
+    // Body
+    pdf.setDrawColor(217, 211, 230);
+    pdf.setFillColor(255, 255, 255);
+    pdf.rect(cx, cy + 0.3, dashCardW, dashCardH - 0.3, 'FD');
+    // Region name on band
+    const txc = _luminance(r.color) > 0.55 ? [31, 23, 51] : [255, 255, 255];
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(11);
+    pdf.setTextColor(txc[0], txc[1], txc[2]);
+    pdf.text(r.name, cx + 0.1, cy + 0.21);
+    // Stats stack
+    const lines = [
+      [`${roleLabel('se')}s:`,       String(r.seCount)],
+      [`${roleLabel('ae')}s:`,       String(r.aeCount)],
+      ['Accounts:',                  String(r.acctCount)],
+      [`Avg ${roleLabel('ae')}:${roleLabel('se')}:`, `1:${r.ratio}`]
+    ];
+    if (agg.quotaTrackingOn && r.quotaPersonal > 0) {
+      lines.push(['Coverage:', `${r.coveragePct}%`]);
+    }
+    pdf.setFontSize(9);
+    let lineY = cy + 0.55;
+    lines.forEach(pair => {
+      pdf.setFont('helvetica', 'normal');
+      pdf.setTextColor(107, 101, 132);
+      pdf.text(pair[0], cx + 0.1, lineY);
+      pdf.setFont('helvetica', 'bold');
+      pdf.setTextColor(15, 10, 31);
+      pdf.text(pair[1], cx + dashCardW - 0.1, lineY, { align: 'right' });
+      lineY += 0.22;
+    });
+    // Workload bar
+    const totalSE = r.healthy + r.stretched + r.overloaded;
+    if (totalSE > 0) {
+      const barX = cx + 0.1;
+      const barW = dashCardW - 0.2;
+      const barY = cy + dashCardH - 0.42;
+      const barH = 0.14;
+      const hw = (r.healthy   / totalSE) * barW;
+      const sw = (r.stretched / totalSE) * barW;
+      const ow = (r.overloaded/ totalSE) * barW;
+      if (hw > 0) { pdf.setFillColor(21, 128, 61);  pdf.rect(barX,           barY, hw, barH, 'F'); }
+      if (sw > 0) { pdf.setFillColor(180, 83, 9);   pdf.rect(barX + hw,      barY, sw, barH, 'F'); }
+      if (ow > 0) { pdf.setFillColor(185, 28, 28);  pdf.rect(barX + hw + sw, barY, ow, barH, 'F'); }
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(7);
+      pdf.setTextColor(107, 101, 132);
+      pdf.text(`${r.healthy} healthy \u00b7 ${r.stretched} stretched \u00b7 ${r.overloaded} overloaded`, barX, barY + 0.28);
+    }
+  });
+
+  pdf.setFont('helvetica', 'italic');
+  pdf.setFontSize(8);
+  pdf.setTextColor(138, 131, 158);
+  pdf.text('Generated by SE Coverage Planner \u00b7 jasonlanders.com', 0.4, pageH - 0.25);
+
   // --- PER-REGION PAGES ---
   agg.summary.forEach(r => {
     pdf.addPage();
@@ -629,6 +963,136 @@ async function _buildPDF() {
     }
 
     // Footer
+    pdf.setFont('helvetica', 'italic');
+    pdf.setFontSize(8);
+    pdf.setTextColor(138, 131, 158);
+    pdf.text('Generated by SE Coverage Planner \u00b7 jasonlanders.com', 0.4, pageH - 0.25);
+
+    // --- PER-REGION STATS DETAIL PAGE ---
+    pdf.addPage();
+    const { r: rr, g: rg, b: rb } = _hexToRgb(r.color);
+    pdf.setFillColor(rr, rg, rb);
+    pdf.rect(0, 0, pageW, 0.6, 'F');
+    const tc2 = _luminance(r.color) > 0.55 ? [31, 23, 51] : [255, 255, 255];
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(18);
+    pdf.setTextColor(tc2[0], tc2[1], tc2[2]);
+    pdf.text(`${r.name}  \u00b7  Stats Detail`, 0.4, 0.4);
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(11);
+    pdf.text(
+      `${r.seCount} ${roleLabel('se')}  \u00b7  ${r.aeCount} ${roleLabel('ae')}  \u00b7  ${r.acctCount} accts  \u00b7  Avg 1:${r.ratio}`,
+      pageW - 0.4, 0.4, { align: 'right' }
+    );
+
+    // Top stat cards
+    const sCards = [
+      { label: `Active ${roleLabel('se')}s`, value: r.seCount },
+      { label: `${roleLabel('ae')}s`,        value: r.aeCount },
+      { label: 'Accounts',                   value: r.acctCount },
+      { label: `${roleLabel('ae')}:${roleLabel('se')} Ratio`, value: `1:${r.ratio}` }
+    ];
+    if (agg.quotaTrackingOn && r.quotaPersonal > 0) sCards.push({ label: 'Coverage', value: `${r.coveragePct}%` });
+    const sw2 = (pageW - 0.8 - (sCards.length - 1) * 0.15) / sCards.length;
+    sCards.forEach((c, i) => {
+      const x = 0.4 + i * (sw2 + 0.15);
+      pdf.setDrawColor(217, 211, 230);
+      pdf.setFillColor(240, 238, 246);
+      pdf.roundedRect(x, 0.85, sw2, 0.7, 0.05, 0.05, 'FD');
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(14);
+      pdf.setTextColor(15, 10, 31);
+      pdf.text(String(c.value), x + sw2 / 2, 1.15, { align: 'center' });
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(8);
+      pdf.setTextColor(107, 101, 132);
+      pdf.text(c.label, x + sw2 / 2, 1.42, { align: 'center' });
+    });
+
+    // SE table on the left half
+    const seX = 0.4;
+    let   seY = 1.85;
+    const seW = 5.0;
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(10);
+    pdf.setTextColor(107, 101, 132);
+    pdf.text(`${roleLabel('se').toUpperCase()} WORKLOAD`, seX, seY);
+    seY += 0.18;
+    pdf.setFillColor(31, 23, 51);
+    pdf.rect(seX, seY, seW, 0.3, 'F');
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(8);
+    pdf.setTextColor(255, 255, 255);
+    pdf.text(roleLabel('se'),       seX + 0.08,        seY + 0.2);
+    pdf.text('Accts',                seX + seW * 0.55,  seY + 0.2, { align: 'right' });
+    pdf.text(roleLabel('ae') + 's',  seX + seW * 0.72,  seY + 0.2, { align: 'right' });
+    pdf.text('Workload',             seX + seW * 0.78,  seY + 0.2);
+    seY += 0.3;
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(8);
+    if (r.ses && r.ses.length) {
+      r.ses.forEach((s, idx) => {
+        if (seY > pageH - 0.5) return;
+        if (idx % 2 === 1) {
+          pdf.setFillColor(244, 242, 248);
+          pdf.rect(seX, seY, seW, 0.24, 'F');
+        }
+        pdf.setTextColor(31, 23, 51);
+        pdf.text(_truncate(s.name, 22), seX + 0.08, seY + 0.16);
+        pdf.text(String(s.accountCount), seX + seW * 0.55, seY + 0.16, { align: 'right' });
+        pdf.text(String(s.aeCount),      seX + seW * 0.72, seY + 0.16, { align: 'right' });
+        const wlColor = s.workload === 'Overloaded' ? [185, 28, 28] : s.workload === 'Stretched' ? [180, 83, 9] : [21, 128, 61];
+        pdf.setTextColor(wlColor[0], wlColor[1], wlColor[2]);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text(s.workload, seX + seW * 0.78, seY + 0.16);
+        pdf.setFont('helvetica', 'normal');
+        seY += 0.24;
+      });
+    } else {
+      pdf.setFont('helvetica', 'italic');
+      pdf.setTextColor(138, 131, 158);
+      pdf.text('No active SEs', seX + 0.08, seY + 0.18);
+    }
+
+    // AE table on the right half
+    const aeX = 5.6;
+    let   aeY = 1.85;
+    const aeW = pageW - aeX - 0.4;
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(10);
+    pdf.setTextColor(107, 101, 132);
+    pdf.text(`${roleLabel('ae').toUpperCase()}S & ACCOUNT LOAD`, aeX, aeY);
+    aeY += 0.18;
+    pdf.setFillColor(31, 23, 51);
+    pdf.rect(aeX, aeY, aeW, 0.3, 'F');
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(8);
+    pdf.setTextColor(255, 255, 255);
+    pdf.text(roleLabel('ae'),       aeX + 0.08,        aeY + 0.2);
+    pdf.text('Accts',                aeX + aeW * 0.62,  aeY + 0.2, { align: 'right' });
+    pdf.text(roleLabel('se'),        aeX + aeW * 0.68,  aeY + 0.2);
+    aeY += 0.3;
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(8);
+    if (r.aes && r.aes.length) {
+      r.aes.forEach((a, idx) => {
+        if (aeY > pageH - 0.5) return;
+        if (idx % 2 === 1) {
+          pdf.setFillColor(244, 242, 248);
+          pdf.rect(aeX, aeY, aeW, 0.24, 'F');
+        }
+        pdf.setTextColor(31, 23, 51);
+        pdf.text(_truncate(a.name, 28), aeX + 0.08, aeY + 0.16);
+        pdf.text(String(a.accountCount), aeX + aeW * 0.62, aeY + 0.16, { align: 'right' });
+        pdf.text(_truncate(a.se || '\u2014', 18), aeX + aeW * 0.68, aeY + 0.16);
+        aeY += 0.24;
+      });
+    } else {
+      pdf.setFont('helvetica', 'italic');
+      pdf.setTextColor(138, 131, 158);
+      pdf.text(`No ${roleLabel('ae')}s in this region`, aeX + 0.08, aeY + 0.18);
+    }
+
     pdf.setFont('helvetica', 'italic');
     pdf.setFontSize(8);
     pdf.setTextColor(138, 131, 158);
