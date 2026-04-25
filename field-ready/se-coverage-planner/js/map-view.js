@@ -307,8 +307,19 @@ async function renderRegionShapes() {
   regionLabelMarkers = [];
 
   const scope = CONFIG.mapScope || 'us';
-  const allFeatures = (await getMapFeatures(scope)).features;
   const regionFeatures = currentRegionFeatures();
+
+  // Defensive: if any assigned feature is a country and scope is 'us', auto-elevate to hybrid
+  // for rendering purposes. This prevents silently losing non-US regions when a user adds them
+  // in world/hybrid mode then views in us mode.
+  let effectiveScope = scope;
+  const allAssigned = Object.values(regionFeatures).flat();
+  const hasNonUsFeatures = allAssigned.some(id => typeof id === 'string' && id.startsWith('country:'));
+  if (hasNonUsFeatures && scope === 'us') {
+    effectiveScope = 'hybrid';
+  }
+
+  const allFeatures = (await getMapFeatures(effectiveScope)).features;
 
   REGIONS.forEach(region => {
     const names = regionFeatures[region.id] || [];
