@@ -139,16 +139,34 @@ export function renderSETable(seList, data, seNames, rebalanceMode, viewMode, ch
     };
     tbody.appendChild(seRow);
 
-    // Expand panel — accounts with optional reassignment dropdowns and (when tracking is on) per-account quota.
-    const acctEntries = [...se.accounts.keys()].map(name => {
-      const acctRecord = ACCOUNTS.find(a => a.name === name);
-      const annual = acctRecord ? normalizeToAnnual(acctRecord.quota || 0, acctRecord.quotaPeriod || 'annual') : 0;
-      return { name, annual };
+    // Expand panel — grouped by AE so the relationship 'this AE owns these accounts (under this SE)' is visible.
+    // Pull this SE's working-data rows; each row has { account, ae, ... }.
+    const seRows = data.filter(r => r.se === se.se);
+    // Group accounts by AE (preserve discovery order; UNASSIGNED bucket goes last).
+    const aeOrder = [];
+    const aeGroups = {};
+    seRows.forEach(r => {
+      const aeKey = (r.ae && !r.ae.startsWith('UNASSIGNED')) ? r.ae : '__UNASSIGNED__';
+      if (!aeGroups[aeKey]) {
+        aeGroups[aeKey] = { ae: aeKey, accounts: [] };
+        aeOrder.push(aeKey);
+      }
+      // Avoid duplicate accounts (defensive)
+      if (!aeGroups[aeKey].accounts.find(a => a.name === r.account)) {
+        const acctRecord = ACCOUNTS.find(a => a.name === r.account);
+        const annual = acctRecord ? normalizeToAnnual(acctRecord.quota || 0, acctRecord.quotaPeriod || 'annual') : 0;
+        aeGroups[aeKey].accounts.push({ name: r.account, annual });
+      }
     });
-    // Sort biggest-quota first when tracking is on so expensive accounts surface to the top.
-    if (quotaShown) acctEntries.sort((x, y) => y.annual - x.annual);
+    // Sort accounts within each group by quota desc (when tracking is on) so big contributors surface.
+    if (quotaShown) {
+      aeOrder.forEach(k => aeGroups[k].accounts.sort((x, y) => y.annual - x.annual));
+    }
+    // Move __UNASSIGNED__ to the end
+    const unIdx = aeOrder.indexOf('__UNASSIGNED__');
+    if (unIdx !== -1) { aeOrder.splice(unIdx, 1); aeOrder.push('__UNASSIGNED__'); }
 
-    const acctHtml = acctEntries.map(({ name: a, annual }) => {
+    function _renderAcctLine({ name: a, annual }) {
       const isChanged = changedSet.has(a);
       const cls = (isChanged ? ' changed' : '') + (se.isUnassigned ? ' unassigned-acct' : '');
       const note = _noteIcon(a);
@@ -157,40 +175,54 @@ export function renderSETable(seList, data, seNames, rebalanceMode, viewMode, ch
         : '';
       if (rebalanceMode && viewMode !== 'proposed') {
         const defaultOpt = se.isUnassigned
-          ? `<option value="" disabled selected>— assign to SE —</option>`
+          ? `<option value="" disabled selected>\u2014 assign to SE \u2014</option>`
           : '';
         const opts = defaultOpt + seNames.map(n =>
           `<option value="${n}"${!se.isUnassigned && n === se.se ? ' selected' : ''}>${esc(n)}</option>`
         ).join('');
-        return `<div class="expand-item${cls}">
-          <span>${esc(a)}${note ? ' ' + note : ''}${quotaTag}</span>
-          <span style="display:flex;align-items:center;gap:6px">
-            <select class="se-select" data-account="${esc(a)}"
-              onchange="if(this.value)reassignAccount(this.dataset.account,this.value)">${opts}</select>
-          </span>
+        return `<div class="ae-acct-row${cls}">
+          <span class="expand-name-wrap">${esc(a)}${note ? ' ' + note : ''}${quotaTag}</span>
+          <select class="se-select" data-account="${esc(a)}"
+            onchange="if(this.value)reassignAccount(this.dataset.account,this.value)">${opts}</select>
         </div>`;
       }
-      return `<div class="expand-item${cls}"><span>${esc(a)}${note ? ' ' + note : ''}${quotaTag}</span></div>`;
+      return `<div class="ae-acct-row${cls}"><span class="expand-name-wrap">${esc(a)}${note ? ' ' + note : ''}${quotaTag}</span></div>`;
+    }
+
+    const groupsHtml = aeOrder.map(aeKey => {
+      const grp = aeGroups[aeKey];
+      const isUnassigned = aeKey === '__UNASSIGNED__';
+      const totalAnnual = grp.accounts.reduce((s, a) => s + (a.annual || 0), 0);
+      const aePerson = isUnassigned ? null : getPersonByName(aeKey, 'AE');
+      const aeNoteIcon = aePerson ? _personNoteIcon(aePerson) : '';
+      const aeNameHtml = isUnassigned
+        ? `<span class="needs-assign-badge">&#9888; UNASSIGNED AE</span>`
+        : (aePerson
+            ? `<span class="ae-clickable" data-person-id="${aePerson.id}" title="Click to edit ${esc(aeKey)}">${esc(aeKey)}</span>`
+            : esc(aeKey));
+      const summary = `${grp.accounts.length} acct${grp.accounts.length !== 1 ? 's' : ''}${quotaShown && totalAnnual > 0 ? ' \u00b7 ' + formatCompact(totalAnnual) : ''}`;
+      const acctsHtml = grp.accounts.map(_renderAcctLine).join('');
+      return `<div class="ae-group${isUnassigned ? ' ae-group-unassigned' : ''}">
+        <div class="ae-group-header">
+          <span class="ae-group-icon">\u25c7</span>
+          <span class="expand-name-wrap">${aeNameHtml}${aeNoteIcon ? ' ' + aeNoteIcon : ''}</span>
+          <span class="ae-group-summary">${summary}</span>
+        </div>
+        <div class="ae-group-accounts">${acctsHtml}</div>
+      </div>`;
     }).join('');
 
-    // AE list — clickable if person exists in PEOPLE; orphan values shown in red
-    const aeHtml = [...se.aes].map(a => {
-      if (a.startsWith('UNASSIGNED')) {
-        return `<div class="expand-item unassigned-acct"><span class="expand-name-wrap"><span class="needs-assign-badge">&#9888; ${esc(a)}</span></span></div>`;
-      }
-      const aePerson = getPersonByName(a, 'AE');
-      const note = _personNoteIcon(aePerson);
-      if (aePerson) {
-        return `<div class="expand-item"><span class="expand-name-wrap"><span class="ae-clickable" data-person-id="${aePerson.id}" title="Click to edit ${esc(a)}">${esc(a)}</span>${note ? ' ' + note : ''}</span></div>`;
-      }
-      return `<div class="expand-item"><span class="expand-name-wrap">${esc(a)}</span></div>`;
-    }).join('');
+    // RDs footer (small line; RDs are a coverage signal not directly tied to specific accounts)
+    const rdNames = [...se.rds].filter(r => r && !r.startsWith('UNASSIGNED'));
+    const rdsFooter = rdNames.length
+      ? `<div class="expand-rds-footer"><span class="expand-rds-label">RDs:</span> ${rdNames.map(n => esc(n)).join(', ')}</div>`
+      : '';
 
     const expandRow = document.createElement('tr');
     expandRow.className = 'expand-row';
-    expandRow.innerHTML = `<td colspan="${quotaShown ? 8 : 7}"><div class="expand-inner" id="exp-${i}">
-      <div><div class="expand-col-title">Accounts</div>${acctHtml || '<div style="color:var(--muted);font-size:12px">No accounts assigned</div>'}</div>
-      <div><div class="expand-col-title">AEs</div>${aeHtml || '<div style="color:var(--muted);font-size:12px">—</div>'}</div>
+    expandRow.innerHTML = `<td colspan="${quotaShown ? 8 : 7}"><div class="expand-inner ae-grouped" id="exp-${i}">
+      ${groupsHtml || '<div style="color:var(--muted);font-size:12px">No accounts assigned</div>'}
+      ${rdsFooter}
     </div></td>`;
     tbody.appendChild(expandRow);
   });

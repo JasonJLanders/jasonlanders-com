@@ -234,7 +234,25 @@ thead th { padding: 10px 14px; text-align: left; font-size: 11px; font-weight: 7
 .expand-row td { padding: 0; background: var(--surface2); border-bottom: 1px solid var(--border); }
 .expand-inner { display: none; padding: 14px 20px 14px 44px; }
 .expand-inner.open { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+/* Single-column variant for the AE-grouped view (replaces the old two-column Accounts | AEs layout). */
+.expand-inner.ae-grouped.open { display: flex; flex-direction: column; gap: 12px; }
 .expand-col-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 8px; }
+
+/* AE group inside an SE expand row: header + indented account lines */
+.ae-group { display: flex; flex-direction: column; gap: 4px; }
+.ae-group-header { display: flex; align-items: center; gap: 8px; font-size: 12px; padding: 4px 0; border-bottom: 1px solid var(--border); }
+.ae-group-icon { color: var(--accent); font-size: 12px; flex-shrink: 0; }
+.ae-group-summary { margin-left: auto; font-size: 11px; font-weight: 600; color: var(--muted); white-space: nowrap; }
+.ae-group-accounts { padding-left: 22px; display: flex; flex-direction: column; }
+.ae-group-unassigned .ae-group-icon { color: var(--red); }
+
+.ae-acct-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 3px 0; font-size: 12px; color: var(--text); border-bottom: 1px dashed var(--border); }
+.ae-acct-row:last-child { border-bottom: none; }
+.ae-acct-row.changed { border-left: 2px solid var(--amber); padding-left: 6px; margin-left: -8px; }
+.ae-acct-row.unassigned-acct { color: var(--red); }
+
+.expand-rds-footer { font-size: 11px; color: var(--muted); padding: 6px 0 0; border-top: 1px dashed var(--border); margin-top: 4px; }
+.expand-rds-label { font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text); margin-right: 6px; font-size: 10px; }
 .expand-item { font-size: 12px; color: var(--text); padding: 4px 0; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; gap: 8px; }
 .expand-name-wrap { display: inline-flex; align-items: center; gap: 6px; min-width: 0; flex: 0 1 auto; }
 .expand-item:last-child { border-bottom: none; }
