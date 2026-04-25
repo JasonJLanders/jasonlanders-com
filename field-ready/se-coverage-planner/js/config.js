@@ -70,6 +70,38 @@ if (!CONFIG.mapScope) {
   saveConfig();
 }
 
+// Ensure workload rubric exists (Push 1: Capacity & Hires)
+if (!CONFIG.workload) {
+  CONFIG.workload = {
+    dimensions: { accounts: true, aes: true },
+    thresholds: {
+      // Per-segment thresholds; 'default' is used when a team has no override.
+      // An SE is Overloaded if ANY enabled dimension exceeds 'stretched',
+      // Stretched if any exceeds 'healthy', else Healthy.
+      Majors:  { accounts: { healthy: 4, stretched: 6 }, aes: { healthy: 2, stretched: 3 } },
+      Key:     { accounts: { healthy: 6, stretched: 9 }, aes: { healthy: 3, stretched: 4 } },
+      default: { accounts: { healthy: 6, stretched: 9 }, aes: { healthy: 3, stretched: 4 } }
+    }
+  };
+  saveConfig();
+}
+if (!CONFIG.workload.dimensions) {
+  CONFIG.workload.dimensions = { accounts: true, aes: true };
+  saveConfig();
+}
+if (!CONFIG.workload.thresholds) {
+  CONFIG.workload.thresholds = {
+    Majors:  { accounts: { healthy: 4, stretched: 6 }, aes: { healthy: 2, stretched: 3 } },
+    Key:     { accounts: { healthy: 6, stretched: 9 }, aes: { healthy: 3, stretched: 4 } },
+    default: { accounts: { healthy: 6, stretched: 9 }, aes: { healthy: 3, stretched: 4 } }
+  };
+  saveConfig();
+}
+if (!CONFIG.workload.thresholds.default) {
+  CONFIG.workload.thresholds.default = { accounts: { healthy: 6, stretched: 9 }, aes: { healthy: 3, stretched: 4 } };
+  saveConfig();
+}
+
 // Ensure quotas config exists (backfill for existing users)
 if (!CONFIG.quotas) {
   CONFIG.quotas = { levels: { account: false, ae: false, se: false }, buffer: 0.20, displayPeriod: 'annual' };
@@ -214,6 +246,78 @@ export function renderPersonnelSettings() {
 
 // ── Quotas section ────────────────────────────────────────────────────────────
 
+export function renderWorkloadSettings() {
+  const wl = CONFIG.workload;
+  if (!wl) return;
+
+  const elA = document.getElementById('wlDimAccounts');
+  const elE = document.getElementById('wlDimAEs');
+  if (elA) elA.checked = !!(wl.dimensions && wl.dimensions.accounts);
+  if (elE) elE.checked = !!(wl.dimensions && wl.dimensions.aes);
+
+  const container = document.getElementById('workloadThresholds');
+  if (!container) return;
+
+  // Build the list of segments: all configured teams + 'default' pinned at the top.
+  const teamNames = (CONFIG.teams || []).map(t => t.name).filter(Boolean);
+  const rows = ['default', ...teamNames];
+
+  // Ensure every team has a thresholds entry (fallback to default's values on first render)
+  const defT = wl.thresholds.default || { accounts: { healthy: 6, stretched: 9 }, aes: { healthy: 3, stretched: 4 } };
+  teamNames.forEach(name => {
+    if (!wl.thresholds[name]) wl.thresholds[name] = JSON.parse(JSON.stringify(defT));
+  });
+
+  container.innerHTML = `
+    <div class="wl-thresholds-grid">
+      <div class="wl-th-label">Team / Segment</div>
+      <div class="wl-th-group-label">Accounts: healthy \u2264</div>
+      <div class="wl-th-group-label">stretched \u2264</div>
+      <div class="wl-th-group-label">AEs: healthy \u2264</div>
+      <div class="wl-th-group-label">stretched \u2264</div>
+      ${rows.map(seg => {
+        const t = wl.thresholds[seg] || defT;
+        const isDefault = seg === 'default';
+        return `
+          <div class="wl-th-seg">${isDefault ? '<em>Default</em>' : esc(seg)}</div>
+          <input type="number" min="0" class="add-se-input wl-th-input" value="${t.accounts.healthy}"
+            onchange="updateWorkloadThreshold('${esc(seg)}','accounts','healthy',this.value)">
+          <input type="number" min="0" class="add-se-input wl-th-input" value="${t.accounts.stretched}"
+            onchange="updateWorkloadThreshold('${esc(seg)}','accounts','stretched',this.value)">
+          <input type="number" min="0" class="add-se-input wl-th-input" value="${t.aes.healthy}"
+            onchange="updateWorkloadThreshold('${esc(seg)}','aes','healthy',this.value)">
+          <input type="number" min="0" class="add-se-input wl-th-input" value="${t.aes.stretched}"
+            onchange="updateWorkloadThreshold('${esc(seg)}','aes','stretched',this.value)">
+        `;
+      }).join('')}
+    </div>
+  `;
+}
+
+window.updateWorkloadDim = (key, checked) => {
+  if (!CONFIG.workload.dimensions) CONFIG.workload.dimensions = {};
+  CONFIG.workload.dimensions[key] = !!checked;
+  saveConfig();
+  document.dispatchEvent(new CustomEvent('workload-changed'));
+};
+
+window.updateWorkloadThreshold = (segment, dim, level, val) => {
+  const n = parseInt(val, 10);
+  if (isNaN(n) || n < 0) return;
+  if (!CONFIG.workload.thresholds[segment]) {
+    CONFIG.workload.thresholds[segment] = JSON.parse(JSON.stringify(CONFIG.workload.thresholds.default));
+  }
+  const th = CONFIG.workload.thresholds[segment];
+  if (!th[dim]) th[dim] = { healthy: 0, stretched: 0 };
+  th[dim][level] = n;
+  // Auto-fix: stretched must be >= healthy
+  if (level === 'healthy' && th[dim].stretched < n) th[dim].stretched = n;
+  if (level === 'stretched' && th[dim].healthy > n) th[dim].healthy = n;
+  saveConfig();
+  document.dispatchEvent(new CustomEvent('workload-changed'));
+  renderWorkloadSettings();
+};
+
 export function renderQuotasSettings() {
   const q = CONFIG.quotas;
   const elAccount = document.getElementById('quotaLevelAccount');
@@ -240,6 +344,7 @@ export function switchSettingsTab(tab) {
   });
   if (tab === 'personnel') renderPersonnelSettings();
   if (tab === 'quotas')    renderQuotasSettings();
+  if (tab === 'workload')  renderWorkloadSettings();
 }
 
 // ── Window-exposed functions (called from dynamically-generated HTML) ─────────

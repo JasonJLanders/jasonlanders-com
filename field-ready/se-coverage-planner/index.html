@@ -182,8 +182,9 @@
 
     <!-- Tab bar -->
     <div class="settings-tabs">
-      <button class="settings-tab active" data-tab="map"    onclick="switchSettingsTab('map')">Map</button>
-      <button class="settings-tab"         data-tab="quotas" onclick="switchSettingsTab('quotas')">Quotas</button>
+      <button class="settings-tab active" data-tab="map"      onclick="switchSettingsTab('map')">Map</button>
+      <button class="settings-tab"         data-tab="workload" onclick="switchSettingsTab('workload')">Workload</button>
+      <button class="settings-tab"         data-tab="quotas"   onclick="switchSettingsTab('quotas')">Quotas</button>
     </div>
 
     <!-- Map tab (scope only) -->
@@ -210,6 +211,35 @@
         </button>
         <div style="font-size:11px;color:var(--muted);margin-top:12px;padding:10px 12px;background:var(--surface2);border-radius:8px;border:1px solid var(--border);line-height:1.6">
           To define region names, colors, and team/segment structure, use <strong style="color:var(--text)">☰ Manage Data</strong> in the toolbar.
+        </div>
+      </div>
+    </div>
+
+    <!-- Workload tab -->
+    <div id="settings-tab-workload" class="settings-tab-panel" style="display:none">
+      <div class="settings-section" style="margin-top:16px">
+        <div class="section-title">Dimensions to evaluate</div>
+        <div class="quota-levels">
+          <label class="quota-level-label">
+            <input type="checkbox" id="wlDimAccounts" onchange="updateWorkloadDim('accounts', this.checked)">
+            Accounts per SE
+          </label>
+          <label class="quota-level-label">
+            <input type="checkbox" id="wlDimAEs" onchange="updateWorkloadDim('aes', this.checked)">
+            AEs per SE
+          </label>
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px;line-height:1.6">
+          An SE is <strong style="color:var(--red)">Overloaded</strong> if any enabled dimension exceeds its Stretched threshold, <strong style="color:var(--yellow)">Stretched</strong> if any exceeds Healthy, otherwise <strong style="color:var(--green)">Healthy</strong>.
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="section-title">Thresholds by Team / Segment</div>
+        <div id="workloadThresholds"></div>
+        <div style="font-size:11px;color:var(--muted);margin-top:8px;line-height:1.6">
+          <strong style="color:var(--text)">Default</strong> is used for any team without its own row.
+          Define team names in <strong style="color:var(--text)">☰ Manage Data → Teams</strong>.
         </div>
       </div>
     </div>

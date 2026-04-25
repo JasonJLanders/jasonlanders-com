@@ -569,6 +569,9 @@ document.addEventListener('personnel-changed', () => render());
 document.addEventListener('regions-changed', () => render());
 document.addEventListener('teams-changed',   () => render());
 
+// Workload rubric changed in settings - recompute badges everywhere
+document.addEventListener('workload-changed', () => render());
+
 // ── Boot ──────────────────────────────────────────────────────────────────────
 // ── Sidebar resize / collapse ────────────────────────────────────────────────
 const SIDEBAR_KEY = 'se-planner-sidebar';

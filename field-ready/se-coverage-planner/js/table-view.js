@@ -82,7 +82,7 @@ export function renderSETable(seList, data, seNames, rebalanceMode, viewMode, ch
       <td>${se.isUnassigned ? '—' : esc(se.se_leader)}</td>
       <td>${se.isUnassigned ? '—' : esc(se.segment)}</td>
       <td>${se.accountCount}</td><td>${se.aeCount}</td><td>${se.rdCount}</td>
-      <td><span class="badge ${wl.cls}">${wl.label}</span></td>`;
+      <td><span class="badge ${wl.cls}" title="${wl.reasons && wl.reasons.length ? esc(wl.reasons.join('\n')) : ''}">${wl.label}</span></td>`;
 
     seRow.onclick = e => {
       // Don't toggle row when clicking a person-link (handled separately)

@@ -1,4 +1,59 @@
 import { BENCH } from './data.js';
+import { CONFIG } from './config.js';
+
+/**
+ * Resolve active workload thresholds for a given segment name.
+ * Falls back to CONFIG.workload.thresholds.default, then to legacy BENCH if nothing is configured.
+ */
+function _thresholdsFor(segment) {
+  const wl = CONFIG.workload || {};
+  const t  = wl.thresholds || {};
+  const seg = t[segment] || t.default;
+  if (seg && seg.accounts && seg.aes) return seg;
+  // Legacy fallback: BENCH had only AE thresholds; synthesize accounts thresholds as 2x
+  const b = BENCH[segment] || BENCH.Key;
+  return {
+    accounts: { healthy: b.healthy * 2, stretched: b.stretched * 2 },
+    aes:      { healthy: b.healthy,     stretched: b.stretched     }
+  };
+}
+
+/**
+ * Classify an SE across enabled dimensions and return the worst label hit.
+ * Also returns a reasons list so UI can explain why.
+ */
+export function classifyWorkload(se) {
+  const dims = (CONFIG.workload && CONFIG.workload.dimensions) || { accounts: true, aes: true };
+  const t    = _thresholdsFor(se.segment);
+  const checks = [];
+  if (dims.accounts) checks.push({ key: 'accounts', label: 'Accounts', value: se.accountCount, th: t.accounts });
+  if (dims.aes)      checks.push({ key: 'aes',      label: 'AEs',      value: se.aeCount,      th: t.aes });
+
+  if (!checks.length) {
+    return { label: 'Healthy', cls: 'badge-green', reasons: ['No dimensions enabled'] };
+  }
+
+  let worst = 'healthy';
+  const reasons = [];
+  checks.forEach(c => {
+    if (c.value > c.th.stretched) {
+      worst = 'overloaded';
+      reasons.push(`${c.value} ${c.label} > ${c.th.stretched} (overloaded)`);
+    } else if (c.value > c.th.healthy) {
+      if (worst !== 'overloaded') worst = 'stretched';
+      reasons.push(`${c.value} ${c.label} > ${c.th.healthy} (stretched)`);
+    } else {
+      reasons.push(`${c.value} ${c.label} ≤ ${c.th.healthy} (healthy)`);
+    }
+  });
+
+  const map = {
+    healthy:    { label: 'Healthy',    cls: 'badge-green'  },
+    stretched:  { label: 'Stretched',  cls: 'badge-yellow' },
+    overloaded: { label: 'Overloaded', cls: 'badge-red'    }
+  };
+  return { ...map[worst], reasons };
+}
 
 export function regionHealth(regionId, workingData) {
   const rows = workingData.filter(r => r.ae_region === regionId);
@@ -38,12 +93,9 @@ export function computeStats(data, extraSEs) {
 }
 
 export function workload(se) {
-  if (se.isUnassigned) return { label: '\u26a0 Needs Assignment', cls: 'badge-red' };
-  if (se.isTBH)        return { label: 'Open HC',               cls: 'badge-muted' };
-  const b = BENCH[se.segment] || BENCH.Key;
-  if (se.aeCount <= b.healthy)   return { label: 'Healthy',   cls: 'badge-green' };
-  if (se.aeCount <= b.stretched) return { label: 'Stretched', cls: 'badge-yellow' };
-  return                                { label: 'Overloaded', cls: 'badge-red' };
+  if (se.isUnassigned) return { label: '\u26a0 Needs Assignment', cls: 'badge-red', reasons: [] };
+  if (se.isTBH)        return { label: 'Open HC',                cls: 'badge-muted', reasons: [] };
+  return classifyWorkload(se);
 }
 
 export function renderRegionGrid(regions, seList, data) {
