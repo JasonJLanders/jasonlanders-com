@@ -284,9 +284,22 @@ function resetChanges() {
   state.changedAccounts.clear();
   state.addedSEs = [];
   state.lastProposalNarrative = '';
+  // Also clear any saved scenario — a fully-reset working set has nothing to compare against.
+  _clearSavedScenario();
   hideAddSEForm();
   syncProposedRevertBtn();
   render();
+}
+
+function _clearSavedScenario() {
+  state.scenarioB = null;
+  state.scenarioBChanged = new Set();
+  state.scenarioBAddedSEs = null;
+  state.scenarioBNarrative = '';
+  state.viewMode = 'current';
+  document.getElementById('viewToggleWrap').style.display = 'none';
+  document.getElementById('btnViewCurrent').classList.add('active');
+  document.getElementById('btnViewProposed').classList.remove('active');
 }
 
 function saveScenario() {
@@ -432,8 +445,25 @@ function revertProposedHires() {
   });
   state.addedSEs = state.addedSEs.filter(s => !s.proposedByWizard);
   state.lastProposalNarrative = '';
+  // Re-derive changedAccounts from a true diff between workingData and DATA so reverted accounts aren't flagged.
+  _rebuildChangedAccountsFromDiff();
+  // If nothing actually differs anymore, drop the saved scenario so the Proposed toggle disappears.
+  if (!state.changedAccounts.size && !state.addedSEs.length) {
+    _clearSavedScenario();
+  }
   render();
   syncProposedRevertBtn();
+}
+
+function _rebuildChangedAccountsFromDiff() {
+  const origBySe = {};
+  DATA.forEach(r => { if (r.account) origBySe[r.account] = r.se; });
+  state.changedAccounts.clear();
+  state.workingData.forEach(r => {
+    if (r.account && origBySe[r.account] !== undefined && origBySe[r.account] !== r.se) {
+      state.changedAccounts.add(r.account);
+    }
+  });
 }
 
 function syncProposedRevertBtn() {
