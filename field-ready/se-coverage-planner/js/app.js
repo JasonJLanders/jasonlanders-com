@@ -885,6 +885,8 @@ function applySidebarState() {
   const s = loadSidebarState();
   const width = Math.max(SIDEBAR_MIN, Math.min(SIDEBAR_MAX, s.width || SIDEBAR_DEFAULT));
   sidebar.style.width = width + 'px';
+  // Track current sidebar width as a CSS variable so the collapse button can ride the right edge.
+  document.documentElement.style.setProperty('--sidebar-w', (s.collapsed ? 0 : width) + 'px');
   if (s.collapsed) {
     sidebar.classList.add('collapsed');
     if (expandBtn) expandBtn.style.display = 'flex';
@@ -915,6 +917,7 @@ function setSidebarWidth(width) {
     sidebar.classList.remove('collapsed');
     sidebar.style.width = w + 'px';
   }
+  document.documentElement.style.setProperty('--sidebar-w', w + 'px');
 }
 
 function initSidebarControls() {
