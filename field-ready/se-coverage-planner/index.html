@@ -20,6 +20,14 @@
     <span>SE Coverage Planner</span>
     <span class="header-tag">Beta</span>
   </div>
+
+  <!-- Org-level stats inline in the header (was duplicated in the sidebar). -->
+  <div class="header-stats">
+    <div class="header-stat"><span class="header-stat-val" id="statSEs">—</span><span class="header-stat-lbl">SEs</span></div>
+    <div class="header-stat"><span class="header-stat-val" id="statAEs">—</span><span class="header-stat-lbl">AEs</span></div>
+    <div class="header-stat"><span class="header-stat-val" id="statRatio">—</span><span class="header-stat-lbl">Avg AE:SE</span></div>
+  </div>
+
   <div class="header-actions">
     <div id="scenarioControls" style="display:none; gap:8px; align-items:center;">
       <button class="btn btn-ghost" id="btnResetChanges">Reset Changes</button>
@@ -44,10 +52,40 @@
 <!-- TOOLBAR (mode controls + map layer toggles) -->
 <div class="toolbar">
   <div class="toolbar-group">
-    <button class="btn btn-ghost toolbar-btn" id="btnRebalance">Edit Alignments</button>
-    <button class="btn btn-ghost toolbar-btn" id="btnEditRegions">Edit Map Regions</button>
-    <button class="btn btn-ghost toolbar-btn" id="btnManageData">&#9776; Manage Data</button>
-    <button class="btn btn-ghost toolbar-btn" id="btnSettings">&#9881; Settings</button>
+    <div class="menu-wrap" id="editMenuWrap">
+      <button class="btn btn-ghost toolbar-btn menu-btn" id="btnEditMenu" aria-haspopup="true" aria-expanded="false">Edit <span class="menu-caret">▾</span></button>
+      <div class="menu-dropdown" id="editMenu" role="menu">
+        <button class="menu-item" id="btnRebalance" role="menuitem">
+          <span class="menu-item-icon">✎</span>
+          <span class="menu-item-body">
+            <span class="menu-item-title">Edit Alignments</span>
+            <span class="menu-item-desc">Rebalance accounts between SEs</span>
+          </span>
+        </button>
+        <button class="menu-item" id="btnEditRegions" role="menuitem">
+          <span class="menu-item-icon">▣</span>
+          <span class="menu-item-body">
+            <span class="menu-item-title">Edit Map Regions</span>
+            <span class="menu-item-desc">Reassign states/countries to regions</span>
+          </span>
+        </button>
+        <button class="menu-item" id="btnManageData" role="menuitem">
+          <span class="menu-item-icon">☰</span>
+          <span class="menu-item-body">
+            <span class="menu-item-title">Manage Data</span>
+            <span class="menu-item-desc">People, accounts, regions, teams</span>
+          </span>
+        </button>
+        <div class="menu-divider"></div>
+        <button class="menu-item" id="btnSettings" role="menuitem">
+          <span class="menu-item-icon">⚙</span>
+          <span class="menu-item-body">
+            <span class="menu-item-title">Settings</span>
+            <span class="menu-item-desc">Map scope, workload, quotas</span>
+          </span>
+        </button>
+      </div>
+    </div>
   </div>
   <div class="toolbar-group toolbar-layers" id="layerToggles">
     <span class="toolbar-label">Show on Map</span>
@@ -88,14 +126,12 @@
 
 <div class="app-body">
 
-  <!-- LEFT SIDEBAR: org stats + controls -->
+  <!-- LEFT SIDEBAR: regional stats only (org stats moved to header) -->
   <aside class="sidebar" id="sidebar">
-    <div class="stats-bar">
-      <div class="stat-card"><div class="stat-val" id="statSEs">—</div><div class="stat-label">Total SEs</div></div>
-      <div class="stat-card"><div class="stat-val" id="statAEs">—</div><div class="stat-label">Total AEs</div></div>
-      <div class="stat-card"><div class="stat-val" id="statRatio">—</div><div class="stat-label">Avg AE:SE Ratio</div></div>
+    <div class="sidebar-section-header">
+      <div class="section-title">Regional Summary</div>
+      <button class="icon-btn-tiny" id="btnCollapseAllRegions" title="Collapse all regions" aria-pressed="false">▾</button>
     </div>
-    <div class="section-title">Regional Summary</div>
     <div class="region-grid" id="regionGrid"></div>
     <div class="sidebar-resizer" id="sidebarResizer" title="Drag to resize · double-click to collapse"></div>
   </aside>

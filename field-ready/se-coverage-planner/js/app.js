@@ -158,6 +158,7 @@ function render() {
 
   // Sidebar region summary cards
   renderRegionGrid(CONFIG.regions, seList, data);
+  document.dispatchEvent(new CustomEvent('regions-rendered'));
 
   // Map shading + role markers
   updateRegionShading(data);
@@ -248,8 +249,14 @@ function removeSE(seName) {
 function toggleRebalance() {
   state.rebalanceMode = !state.rebalanceMode;
   const btn = document.getElementById('btnRebalance');
-  btn.textContent = state.rebalanceMode ? 'Exit Edit Mode' : 'Edit Alignments Mode';
-  btn.className   = state.rebalanceMode ? 'btn btn-amber toolbar-btn' : 'btn btn-ghost toolbar-btn';
+  // Update only the title text inside the menu item (preserve icon/desc structure)
+  const titleEl = btn ? btn.querySelector('.menu-item-title') : null;
+  if (titleEl) {
+    titleEl.textContent = state.rebalanceMode ? 'Exit Edit Alignments' : 'Edit Alignments';
+  } else if (btn) {
+    btn.textContent = state.rebalanceMode ? 'Exit Edit Mode' : 'Edit Alignments';
+  }
+  if (btn) btn.classList.toggle('menu-item-active', state.rebalanceMode);
   document.getElementById('rebalanceBanner').style.display = state.rebalanceMode ? 'flex' : 'none';
   document.querySelector('.app-body').classList.toggle('rebalance-active', state.rebalanceMode);
   if (!state.rebalanceMode) hideAddSEForm();
@@ -261,8 +268,13 @@ let regionEditMode = false;
 function toggleRegionEdit() {
   regionEditMode = !regionEditMode;
   const btn = document.getElementById('btnEditRegions');
-  btn.textContent = regionEditMode ? 'Done Editing Regions' : 'Edit Map Regions';
-  btn.className   = regionEditMode ? 'btn btn-amber toolbar-btn' : 'btn btn-ghost toolbar-btn';
+  const titleEl = btn ? btn.querySelector('.menu-item-title') : null;
+  if (titleEl) {
+    titleEl.textContent = regionEditMode ? 'Done Editing Regions' : 'Edit Map Regions';
+  } else if (btn) {
+    btn.textContent = regionEditMode ? 'Done Editing Regions' : 'Edit Map Regions';
+  }
+  if (btn) btn.classList.toggle('menu-item-active', regionEditMode);
 
   if (regionEditMode) {
     if (selectedRegion) closePanel();
@@ -818,6 +830,75 @@ function _applyRightPanelWidth(w) {
   panel.style.width = w + 'px';
 }
 
+// ── Edit dropdown menu ────────────────────────────────────────────────────────────────────────
+function initEditMenu() {
+  const wrap = document.getElementById('editMenuWrap');
+  const btn  = document.getElementById('btnEditMenu');
+  const menu = document.getElementById('editMenu');
+  if (!wrap || !btn || !menu) return;
+
+  function close() {
+    wrap.classList.remove('open');
+    btn.setAttribute('aria-expanded', 'false');
+  }
+  function toggle() {
+    const isOpen = wrap.classList.toggle('open');
+    btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+  }
+
+  btn.addEventListener('click', e => { e.stopPropagation(); toggle(); });
+  // Close on item click (the item handlers run their own action separately)
+  menu.querySelectorAll('.menu-item').forEach(item => {
+    item.addEventListener('click', () => setTimeout(close, 0));
+  });
+  // Click outside closes
+  document.addEventListener('click', e => {
+    if (!wrap.contains(e.target)) close();
+  });
+  // Escape closes
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') close();
+  });
+}
+
+// ── Region card collapse ─────────────────────────────────────────────────────────────────────
+const REGION_COLLAPSE_KEY = 'secp:regionsCollapsed';
+let _regionsAllCollapsed = false;
+try { _regionsAllCollapsed = localStorage.getItem(REGION_COLLAPSE_KEY) === '1'; } catch {}
+
+function initRegionCardCollapse() {
+  const allBtn = document.getElementById('btnCollapseAllRegions');
+  if (allBtn) {
+    _syncCollapseAllBtn();
+    allBtn.addEventListener('click', () => {
+      _regionsAllCollapsed = !_regionsAllCollapsed;
+      try { localStorage.setItem(REGION_COLLAPSE_KEY, _regionsAllCollapsed ? '1' : '0'); } catch {}
+      _syncCollapseAllBtn();
+      _applyRegionsCollapseState();
+    });
+  }
+  // Per-card click: toggle individual collapse on header click
+  document.getElementById('regionGrid').addEventListener('click', e => {
+    const header = e.target.closest('.region-header');
+    if (!header) return;
+    const card = header.closest('.region-card');
+    if (card) card.classList.toggle('collapsed');
+  });
+}
+function _syncCollapseAllBtn() {
+  const btn = document.getElementById('btnCollapseAllRegions');
+  if (!btn) return;
+  btn.setAttribute('aria-pressed', _regionsAllCollapsed ? 'true' : 'false');
+  btn.title = _regionsAllCollapsed ? 'Expand all regions' : 'Collapse all regions';
+}
+function _applyRegionsCollapseState() {
+  document.querySelectorAll('#regionGrid .region-card').forEach(card => {
+    card.classList.toggle('collapsed', _regionsAllCollapsed);
+  });
+}
+// Re-apply collapse state after each region grid render.
+document.addEventListener('regions-rendered', _applyRegionsCollapseState);
+
 function initRightPanelResize() {
   const panel = document.getElementById('rightPanel');
   const resizer = document.getElementById('rightPanelResizer');
@@ -981,6 +1062,8 @@ initTheme();
 initMap('map');
 initSidebarControls();
 initRightPanelResize();
+initEditMenu();
+initRegionCardCollapse();
 render();
 
 // Async geocoding - collect all role cities then render markers
