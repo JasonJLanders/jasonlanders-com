@@ -286,6 +286,7 @@ function toggleRebalance() {
   document.querySelector('.app-body').classList.toggle('rebalance-active', state.rebalanceMode);
   if (!state.rebalanceMode) hideAddSEForm();
   syncProposedRevertBtn();
+  _syncEditModeDoneBtn();
   render();
 }
 
@@ -300,6 +301,7 @@ function toggleRegionEdit() {
     btn.textContent = regionEditMode ? 'Done Editing Regions' : 'Edit Map Regions';
   }
   if (btn) btn.classList.toggle('menu-item-active', regionEditMode);
+  _syncEditModeDoneBtn();
 
   if (regionEditMode) {
     if (selectedRegion) closePanel();
@@ -891,6 +893,34 @@ document.addEventListener('role-labels-changed', () => render());
 
 // Theme changed - re-render so markers (and any inline-styled elements that snapshot CSS values) refresh.
 document.addEventListener('theme-changed', () => render());
+
+// Header 'Done' button: appears whenever a sticky edit mode is active. Clicking it exits whichever
+// mode is on (rebalance OR region-edit). Mirrors the menu-item toggle but is always visible while in mode.
+function _syncEditModeDoneBtn() {
+  const btn = document.getElementById('btnEditModeDone');
+  if (!btn) return;
+  const inMode = !!(state.rebalanceMode || regionEditMode);
+  btn.style.display = inMode ? '' : 'none';
+  if (state.rebalanceMode && regionEditMode) {
+    btn.textContent = 'Done';
+    btn.title = 'Exit edit modes';
+  } else if (state.rebalanceMode) {
+    btn.textContent = 'Done editing alignments';
+    btn.title = 'Exit Edit Alignments mode';
+  } else if (regionEditMode) {
+    btn.textContent = 'Done editing regions';
+    btn.title = 'Exit Edit Map Regions mode';
+  } else {
+    btn.textContent = 'Done';
+  }
+}
+const _btnEditModeDone = document.getElementById('btnEditModeDone');
+if (_btnEditModeDone) {
+  _btnEditModeDone.addEventListener('click', () => {
+    if (regionEditMode)         toggleRegionEdit();
+    else if (state.rebalanceMode) toggleRebalance();
+  });
+}
 
 // First-time region shapes finished building (async on world/hybrid scope).
 // re-render so updateRegionShading can apply health-stroke colors that didn't have layers to attach to yet.
