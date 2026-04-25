@@ -50,16 +50,26 @@ async function _captureMap() {
   // Wait for any in-flight tile loads to finish so the screenshot is complete
   await _waitTilesLoaded(mapInstance, 4000);
 
-  const { dataUrl, width, height } = await new Promise((resolve, reject) => {
-    leafletImage(mapInstance, (err, canvas) => {
-      if (err) { reject(err); return; }
-      resolve({
-        dataUrl: canvas.toDataURL('image/png'),
-        width: canvas.width,
-        height: canvas.height
+  let dataUrl, width, height;
+  try {
+    const captured = await new Promise((resolve, reject) => {
+      leafletImage(mapInstance, (err, canvas) => {
+        if (err) { reject(err); return; }
+        resolve({
+          dataUrl: canvas.toDataURL('image/png'),
+          width: canvas.width,
+          height: canvas.height
+        });
       });
     });
-  });
+    dataUrl = captured.dataUrl;
+    width   = captured.width;
+    height  = captured.height;
+  } catch (e) {
+    console.warn('[export-deck] leaflet-image capture failed:', e);
+    dataUrl = null;
+    width = height = 0;
+  }
 
   // Restore previous theme
   if (previousTheme !== 'light') {
@@ -68,6 +78,7 @@ async function _captureMap() {
     document.dispatchEvent(new CustomEvent('theme-changed', { detail: { theme: previousTheme || 'dark' } }));
   }
 
+  if (!dataUrl) return null;
   return { dataUrl, width, height };
 }
 
@@ -176,7 +187,14 @@ function _luminance(hex) {
   return (0.299 * r + 0.587 * g + 0.114 * b) / 255;
 }
 function _contrastText(hex) { return _luminance(hex) > 0.55 ? '1F1733' : 'FFFFFF'; }
-function _stripHash(hex) { return (hex || '').replace('#', ''); }
+/** Normalize a color to a 6-char uppercase hex string with no leading #. */
+function _stripHash(hex) {
+  let s = String(hex || '').replace('#', '').trim().toUpperCase();
+  // Expand 3-char shorthand if encountered
+  if (/^[0-9A-F]{3}$/.test(s)) s = s.split('').map(c => c + c).join('');
+  if (!/^[0-9A-F]{6}$/.test(s)) return '6B6584'; // safe default if anything weird
+  return s;
+}
 
 // ── PPT generator ────────────────────────────────────────────────────────────
 
@@ -343,17 +361,16 @@ async function _buildPPT() {
     ]);
     if (!tableRows.length) {
       tableRows.push([
-        { text: 'No accounts in this region', options: { fontFace: 'Inter', fontSize: 10, color: '8A839E', italic: true, colspan: 3 } },
-        { text: '', options: {} },
-        { text: '', options: {} }
+        { text: 'No accounts in this region', options: { fontFace: 'Inter', fontSize: 10, color: '8A839E', italic: true } },
+        { text: '', options: { fontFace: 'Inter', fontSize: 10, color: '8A839E' } },
+        { text: '', options: { fontFace: 'Inter', fontSize: 10, color: '8A839E' } }
       ]);
     }
 
     slide.addTable([tableHeader, ...tableRows], {
       x: tblX, y: tblY, w: tblW, h: tblH,
       colW: [1.9, 2.5, 1.9],
-      border: { type: 'solid', color: 'E5E2EC', pt: 0.5 },
-      autoPage: true
+      border: { type: 'solid', color: 'E5E2EC', pt: 0.5 }
     });
 
     // Footer
