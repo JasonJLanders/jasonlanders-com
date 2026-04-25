@@ -47,42 +47,76 @@ async function _captureMap() {
   const liveTransforms = _readLeafletPaneTransforms(mapEl);
 
   let dataUrl = null, width = 0, height = 0;
-  try {
-    const canvas = await html2canvas(mapEl, {
-      x: 0, y: 0,
-      width:  mapEl.clientWidth,
-      height: mapEl.clientHeight,
-      useCORS:    true,
-      allowTaint: false,
-      backgroundColor: '#FFFFFF',
-      scale:      2,
-      logging:    false,
-      ignoreElements: el => {
-        if (!el || !el.classList) return false;
-        return el.classList.contains('leaflet-control-attribution')
-            || el.classList.contains('layer-bar')
-            || el.classList.contains('toolbar');
-      },
-      // After html2canvas has cloned the DOM into a hidden iframe, force-replace each
-      // Leaflet pane transform with the matrix value we read from the live DOM. This
-      // prevents html2canvas's CSS-parsing from miscalculating compound transforms.
-      onclone: (clonedDoc) => {
-        const clonedMap = clonedDoc.getElementById('map');
-        if (!clonedMap) return;
-        liveTransforms.forEach(({ selector, transform }) => {
-          const el = clonedMap.querySelector(selector);
-          if (el) {
-            el.style.transform = transform;
-            el.style.willChange = 'auto';
-          }
-        });
-      }
-    });
-    dataUrl = canvas.toDataURL('image/png');
-    width   = canvas.width;
-    height  = canvas.height;
-  } catch (e) {
-    console.warn('[export-deck] html2canvas capture failed:', e);
+
+  // Try dom-to-image-more first — it handles Leaflet's nested transforms more reliably than
+  // html2canvas (which produces a tile/overlay offset). Fall back to html2canvas if needed.
+  const w2 = mapEl.clientWidth  * 2;
+  const h2 = mapEl.clientHeight * 2;
+  if (window.domtoimage && window.domtoimage.toPng) {
+    try {
+      const filter = (node) => {
+        if (!node || !node.classList) return true;
+        if (node.classList.contains('leaflet-control-attribution')) return false;
+        if (node.classList.contains('layer-bar')) return false;
+        if (node.classList.contains('toolbar')) return false;
+        return true;
+      };
+      dataUrl = await window.domtoimage.toPng(mapEl, {
+        bgcolor: '#FFFFFF',
+        width:   w2,
+        height:  h2,
+        style: {
+          transform: 'scale(2)',
+          transformOrigin: 'top left',
+          width:  mapEl.clientWidth + 'px',
+          height: mapEl.clientHeight + 'px'
+        },
+        cacheBust: true,
+        filter
+      });
+      width  = w2;
+      height = h2;
+    } catch (e) {
+      console.warn('[export-deck] dom-to-image capture failed, trying html2canvas:', e);
+      dataUrl = null;
+    }
+  }
+
+  if (!dataUrl) {
+    try {
+      const canvas = await html2canvas(mapEl, {
+        x: 0, y: 0,
+        width:  mapEl.clientWidth,
+        height: mapEl.clientHeight,
+        useCORS:    true,
+        allowTaint: false,
+        backgroundColor: '#FFFFFF',
+        scale:      2,
+        logging:    false,
+        ignoreElements: el => {
+          if (!el || !el.classList) return false;
+          return el.classList.contains('leaflet-control-attribution')
+              || el.classList.contains('layer-bar')
+              || el.classList.contains('toolbar');
+        },
+        onclone: (clonedDoc) => {
+          const clonedMap = clonedDoc.getElementById('map');
+          if (!clonedMap) return;
+          liveTransforms.forEach(({ selector, transform }) => {
+            const el = clonedMap.querySelector(selector);
+            if (el) {
+              el.style.transform = transform;
+              el.style.willChange = 'auto';
+            }
+          });
+        }
+      });
+      dataUrl = canvas.toDataURL('image/png');
+      width   = canvas.width;
+      height  = canvas.height;
+    } catch (e) {
+      console.warn('[export-deck] html2canvas capture failed:', e);
+    }
   }
 
   // Restore previous theme
