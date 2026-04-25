@@ -589,17 +589,59 @@ function tooltipFor(person) {
 
 // ── Role markers ──────────────────────────────────────────────────────────────
 
+// Markers + their offsets are tracked here so we can recompute pixel-perfect spread on zoom.
+let _spreadMarkers = []; // [{ marker, anchor: [lat,lng], offsetPx: [dx, dy] }]
+let _spreadZoomBound = false;
+
+function _applyMarkerSpreadOffsets() {
+  if (!map) return;
+  _spreadMarkers.forEach(({ marker, anchor, offsetPx }) => {
+    if (!offsetPx) return;
+    // Convert anchor latlng -> container pixel, add offset, convert back -> latlng.
+    const pt = map.latLngToContainerPoint(L.latLng(anchor[0], anchor[1]));
+    const shifted = map.containerPointToLatLng(L.point(pt.x + offsetPx[0], pt.y + offsetPx[1]));
+    marker.setLatLng(shifted);
+  });
+}
+
 export function renderRoleMarkers(roster, geocache, visibleLayers, rebalanceMode, showNames) {
   if (!map || !roleMarkerLayer) return;
   roleMarkerLayer.clearLayers();
+  _spreadMarkers = [];
 
+  // Pass 1: collect renderable people grouped by exact city coord (rounded to 5 decimals).
+  const groups = new Map();
+  const entries = [];
   roster.forEach(person => {
     if (!visibleLayers.has(person.role)) return;
     const city = person.city;
     if (!city) return;
     const coords = geocache[city];
     if (!coords) return;
+    const key = `${coords.lat.toFixed(5)},${coords.lng.toFixed(5)}`;
+    if (!groups.has(key)) groups.set(key, []);
+    const entry = { person, coords, key };
+    groups.get(key).push(entry);
+    entries.push(entry);
+  });
 
+  // Pass 2: assign a pixel offset to each entry. Single-person groups get [0,0]; multi-person
+  // groups get a circular spread (~14px radius) so they sit side-by-side at every zoom level.
+  entries.forEach(e => {
+    const groupSize = groups.get(e.key).length;
+    if (groupSize <= 1) {
+      e.offsetPx = [0, 0];
+      return;
+    }
+    const idx = groups.get(e.key).indexOf(e);
+    // Distribute around a circle. For pairs, spread on a horizontal axis. For 3+ a circle.
+    const radius = groupSize === 2 ? 12 : (groupSize <= 5 ? 14 : 18);
+    const angle  = (2 * Math.PI * idx) / groupSize - Math.PI / 2; // start at top
+    e.offsetPx = [Math.round(radius * Math.cos(angle)), Math.round(radius * Math.sin(angle))];
+  });
+
+  // Pass 3: actually create the markers.
+  entries.forEach(({ person, coords, offsetPx }) => {
     const isDraggable = person.role === 'SE' && rebalanceMode;
     let icon;
     switch (person.role) {
@@ -612,6 +654,7 @@ export function renderRoleMarkers(roster, geocache, visibleLayers, rebalanceMode
     }
 
     const marker = L.marker([coords.lat, coords.lng], { icon, draggable: isDraggable });
+    _spreadMarkers.push({ marker, anchor: [coords.lat, coords.lng], offsetPx });
 
     // Persistent name label next to the marker when the user has 'Names' toggled on.
     // First name only by default to keep the map readable; full name on hover via the tooltip.
@@ -664,6 +707,15 @@ export function renderRoleMarkers(roster, geocache, visibleLayers, rebalanceMode
 
     roleMarkerLayer.addLayer(marker);
   });
+
+  // Apply spread offsets now (so first paint is correct), then re-apply on zoom changes
+  // since converting latlng <-> pixel depends on the current zoom level.
+  _applyMarkerSpreadOffsets();
+  if (!_spreadZoomBound) {
+    map.on('zoomend', _applyMarkerSpreadOffsets);
+    map.on('moveend',  _applyMarkerSpreadOffsets);
+    _spreadZoomBound = true;
+  }
 }
 
 // Backward-compat shim
