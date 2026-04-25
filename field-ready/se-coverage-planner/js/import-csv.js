@@ -216,8 +216,15 @@ export function validateRecords(headers, records) {
 /**
  * Replace all account-grain data with the imported records.
  * Mutates state.workingData in place so existing references stay valid.
+ *
+ * @param {Array} records - validated records to import
+ * @param {Object} [opts]
+ * @param {boolean} [opts.replaceConfig=false] - when true, also prune any CONFIG.regions /
+ *   CONFIG.teams that aren't referenced by any imported row. Region geo assignments are
+ *   preserved for any region that survives. Removed regions also drop their feature mapping.
  */
-export function applyImport(records) {
+export function applyImport(records, opts = {}) {
+  const replaceConfig = !!opts.replaceConfig;
   // Reset core stores
   ACCOUNTS.length = 0;
   PEOPLE.length   = 0;
@@ -294,6 +301,24 @@ export function applyImport(records) {
     ensurePerson(r.avp,       'AVP',      r.avp_city,        r.region);
     ensurePerson(r.se_leader, 'SELeader', r.se_leader_city,  r.region);
   });
+
+  if (replaceConfig) {
+    // Prune CONFIG.regions / CONFIG.teams to only those referenced by an imported record.
+    const usedRegions  = new Set(records.map(r => r.region));
+    const usedSegments = new Set(records.map(r => r.segment));
+    if (Array.isArray(CONFIG.regions)) {
+      CONFIG.regions = CONFIG.regions.filter(r => usedRegions.has(r.name));
+    }
+    if (Array.isArray(CONFIG.teams)) {
+      CONFIG.teams = CONFIG.teams.filter(t => usedSegments.has(t.name));
+    }
+    // Also drop feature-region mappings for regions that no longer exist.
+    if (CONFIG.regionFeatures && typeof CONFIG.regionFeatures === 'object') {
+      Object.keys(CONFIG.regionFeatures).forEach(rid => {
+        if (!usedRegions.has(rid)) delete CONFIG.regionFeatures[rid];
+      });
+    }
+  }
 
   saveAccounts();
   savePeople();

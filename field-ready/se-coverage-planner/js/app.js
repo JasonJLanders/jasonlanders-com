@@ -740,10 +740,20 @@ function _renderImportPreview(filename, result) {
       </div>`
     : '';
 
+  const replaceCfgChecked = (() => {
+    try { return localStorage.getItem('secp:importReplaceConfig') === '1'; } catch { return false; }
+  })();
   const replaceWarning = `
-    <div style="padding:12px 14px;background:rgba(217,70,239,0.08);border:1px solid rgba(217,70,239,0.3);border-radius:8px;font-size:12px;color:var(--text);line-height:1.6;margin-bottom:14px">
-      <strong style="color:var(--accent)">Heads up:</strong> Clicking “Replace Data” will wipe all existing accounts, people, and any saved scenario. Configuration (regions, segments, role labels) stays.
+    <div style="padding:12px 14px;background:rgba(217,70,239,0.08);border:1px solid rgba(217,70,239,0.3);border-radius:8px;font-size:12px;color:var(--text);line-height:1.6;margin-bottom:10px">
+      <strong style="color:var(--accent)">Heads up:</strong> Clicking “Replace Data” will wipe all existing accounts, people, and any saved scenario. Configuration (regions, segments, role labels) stays unless you check the box below.
     </div>
+    <label style="display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border:1px solid var(--border);border-radius:8px;background:var(--surface);margin-bottom:14px;cursor:pointer">
+      <input type="checkbox" id="importReplaceCfg" ${replaceCfgChecked ? 'checked' : ''} style="margin-top:2px;flex-shrink:0;accent-color:var(--accent)">
+      <span>
+        <span style="font-size:13px;font-weight:700;color:var(--text)">Also replace regions and segments to match this file</span><br>
+        <span style="font-size:11px;color:var(--muted)">Removes any configured region or segment that no rows reference. Keeps geo assignments for surviving regions.</span>
+      </span>
+    </label>
   `;
 
   body.innerHTML = `
@@ -766,7 +776,10 @@ function _renderImportPreview(filename, result) {
 
 function _doImportConfirm() {
   if (!_importPending || !_importPending.valid || !_importPending.valid.length) return;
-  applyImport(_importPending.valid);
+  const cfgEl = document.getElementById('importReplaceCfg');
+  const replaceConfig = !!(cfgEl && cfgEl.checked);
+  try { localStorage.setItem('secp:importReplaceConfig', replaceConfig ? '1' : '0'); } catch {}
+  applyImport(_importPending.valid, { replaceConfig });
   _importPending = null;
   document.getElementById('importOverlay').style.display = 'none';
   // Re-render everything against the new data
