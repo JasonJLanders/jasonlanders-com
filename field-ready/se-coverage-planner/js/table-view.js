@@ -1,5 +1,6 @@
-import { workload, classifyQuotaAttainment } from './stats.js';
-import { formatCompact } from './quotas.js';
+import { workload, classifyQuotaAttainment, quotaCoverageDescription } from './stats.js';
+import { formatCompact, normalizeToAnnual } from './quotas.js';
+import { ACCOUNTS } from './accounts.js';
 import { getPersonByName } from './roster.js';
 import { getAccountByName } from './accounts.js';
 
@@ -100,9 +101,10 @@ export function renderSETable(seList, data, seNames, rebalanceMode, viewMode, ch
         const q = classifyQuotaAttainment(se.quotaAttainment);
         const carriedLabel  = formatCompact(se.quotaCarried || 0);
         const personalLabel = se.quotaPersonal > 0 ? formatCompact(se.quotaPersonal) : '\u2014';
+        const desc = quotaCoverageDescription(q.tier);
         const tip = se.quotaPersonal > 0
-          ? `Carrying ${carriedLabel} of ${personalLabel} target (${q.label})`
-          : `No personal quota set; carrying ${carriedLabel}`;
+          ? `Carrying ${carriedLabel} against personal target of ${personalLabel} (${q.label}).${desc ? '\n\n' + desc : ''}`
+          : `No personal quota set for this SE; carrying ${carriedLabel} from accounts/AEs assigned.`;
         quotaCellHtml = `<td class="quota-cell" title="${esc(tip)}">
           <div class="quota-cell-stack">
             <span class="quota-carry">${carriedLabel}</span>
@@ -128,11 +130,22 @@ export function renderSETable(seList, data, seNames, rebalanceMode, viewMode, ch
     };
     tbody.appendChild(seRow);
 
-    // Expand panel — accounts with optional reassignment dropdowns
-    const acctHtml = [...se.accounts.keys()].map(a => {
+    // Expand panel — accounts with optional reassignment dropdowns and (when tracking is on) per-account quota.
+    const acctEntries = [...se.accounts.keys()].map(name => {
+      const acctRecord = ACCOUNTS.find(a => a.name === name);
+      const annual = acctRecord ? normalizeToAnnual(acctRecord.quota || 0, acctRecord.quotaPeriod || 'annual') : 0;
+      return { name, annual };
+    });
+    // Sort biggest-quota first when tracking is on so expensive accounts surface to the top.
+    if (quotaShown) acctEntries.sort((x, y) => y.annual - x.annual);
+
+    const acctHtml = acctEntries.map(({ name: a, annual }) => {
       const isChanged = changedSet.has(a);
       const cls = (isChanged ? ' changed' : '') + (se.isUnassigned ? ' unassigned-acct' : '');
       const note = _noteIcon(a);
+      const quotaTag = quotaShown
+        ? `<span class="acct-quota-tag" title="Annualized quota for ${esc(a)}">${annual > 0 ? formatCompact(annual) : '\u2014'}</span>`
+        : '';
       if (rebalanceMode && viewMode !== 'proposed') {
         const defaultOpt = se.isUnassigned
           ? `<option value="" disabled selected>— assign to SE —</option>`
@@ -141,14 +154,14 @@ export function renderSETable(seList, data, seNames, rebalanceMode, viewMode, ch
           `<option value="${n}"${!se.isUnassigned && n === se.se ? ' selected' : ''}>${esc(n)}</option>`
         ).join('');
         return `<div class="expand-item${cls}">
-          <span>${esc(a)}${note ? ' ' + note : ''}</span>
+          <span>${esc(a)}${note ? ' ' + note : ''}${quotaTag}</span>
           <span style="display:flex;align-items:center;gap:6px">
             <select class="se-select" data-account="${esc(a)}"
               onchange="if(this.value)reassignAccount(this.dataset.account,this.value)">${opts}</select>
           </span>
         </div>`;
       }
-      return `<div class="expand-item${cls}"><span>${esc(a)}${note ? ' ' + note : ''}</span></div>`;
+      return `<div class="expand-item${cls}"><span>${esc(a)}${note ? ' ' + note : ''}${quotaTag}</span></div>`;
     }).join('');
 
     // AE list — clickable if person exists in PEOPLE; orphan values shown in red

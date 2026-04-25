@@ -34,12 +34,14 @@ export function classifyWorkload(se) {
   // It only contributes when quota tracking is on AND the dimension toggle is on AND the SE has a personal quota.
   if (dims.quota && se.quotaTrackingOn && se.quotaPersonal > 0 && se.quotaAttainment != null) {
     const pct = Math.round(se.quotaAttainment * 100);
-    if (se.quotaAttainment > 1.30) {
-      checks.push({ key: 'quota', label: 'Quota Load', value: `${pct}%`, _verdict: 'overloaded', _reason: `${pct}% of target > 130% (overloaded)` });
-    } else if (se.quotaAttainment > 1.10) {
-      checks.push({ key: 'quota', label: 'Quota Load', value: `${pct}%`, _verdict: 'stretched', _reason: `${pct}% of target > 110% (stretched)` });
+    if (se.quotaAttainment > 1.50) {
+      checks.push({ key: 'quota', label: 'Coverage', value: `${pct}%`, _verdict: 'overloaded', _reason: `${pct}% of personal target (likely data error or under-staffed)` });
+    } else if (se.quotaAttainment > 1.20) {
+      checks.push({ key: 'quota', label: 'Coverage', value: `${pct}%`, _verdict: 'stretched', _reason: `${pct}% of personal target (over-coverage)` });
+    } else if (se.quotaAttainment < 0.50) {
+      checks.push({ key: 'quota', label: 'Coverage', value: `${pct}%`, _verdict: 'stretched', _reason: `${pct}% of personal target (significantly under)` });
     } else {
-      checks.push({ key: 'quota', label: 'Quota Load', value: `${pct}%`, _verdict: 'healthy', _reason: `${pct}% of target \u2264 110% (healthy)` });
+      checks.push({ key: 'quota', label: 'Coverage', value: `${pct}%`, _verdict: 'healthy', _reason: `${pct}% of personal target (in reconciliation range)` });
     }
   }
 
@@ -144,18 +146,36 @@ export function computeStats(data, extraSEs) {
 }
 
 /**
- * Classify quota attainment into healthy / stretched / overloaded / under bands.
- * Drives the Quota column badge color in the SE table.
+ * Classify quota coverage into reconciliation bands.
+ *
+ * In a finalized territory plan, the sum of personal SE quotas should reconcile with
+ * the sum of carried account/AE quotas (within a small buffer for slippage). So this
+ * is really a *reconciliation* signal, not a workload signal. We use it to flag:
+ *   - data-entry errors (extreme values like 400% almost always mean a missing personal quota or stale data)
+ *   - over-coverage that needs redistribution or a personal-quota raise
+ *   - under-coverage that has slack capacity to absorb more accounts
  */
 export function classifyQuotaAttainment(attainment) {
   if (attainment === null || attainment === undefined) {
     return { label: '\u2014', cls: 'badge-muted', tier: 'na' };
   }
   const pct = Math.round(attainment * 100);
-  if (attainment > 1.30) return { label: `${pct}%`, cls: 'badge-red',    tier: 'overloaded' };
-  if (attainment > 1.10) return { label: `${pct}%`, cls: 'badge-yellow', tier: 'stretched' };
-  if (attainment >= 0.80) return { label: `${pct}%`, cls: 'badge-green',  tier: 'healthy' };
-  return { label: `${pct}%`, cls: 'badge-muted', tier: 'under' };
+  if (attainment > 1.50)  return { label: `${pct}%`, cls: 'badge-red',    tier: 'over-far'  };
+  if (attainment > 1.20)  return { label: `${pct}%`, cls: 'badge-yellow', tier: 'over'      };
+  if (attainment >= 0.80) return { label: `${pct}%`, cls: 'badge-green',  tier: 'balanced'  };
+  if (attainment >= 0.50) return { label: `${pct}%`, cls: 'badge-yellow', tier: 'under'     };
+  return { label: `${pct}%`, cls: 'badge-muted', tier: 'under-far' };
+}
+
+export function quotaCoverageDescription(tier) {
+  switch (tier) {
+    case 'over-far':   return 'Carrying far more than personal target. Likely data error, missing personal quota, or significant under-staffing.';
+    case 'over':       return 'Carrying more than personal target. Reassign accounts or raise personal quota.';
+    case 'balanced':   return 'In reconciliation range (80\u2013120% of personal target).';
+    case 'under':      return 'Carrying less than personal target. Slack capacity to absorb more accounts.';
+    case 'under-far':  return 'Carrying far less than personal target. New hire, ramp-up, or redistribution opportunity.';
+    default:           return '';
+  }
 }
 
 export function workload(se) {
@@ -290,12 +310,13 @@ export function renderRegionGrid(regions, seList, data) {
       const targetLabel  = target > 0 ? _formatCompactInline(target) : '\u2014';
       let qCls = 'var(--muted)';
       if (pct !== null) {
-        if (pct > 130) qCls = 'var(--red)';
-        else if (pct > 110) qCls = 'var(--yellow)';
+        if (pct > 150) qCls = 'var(--red)';
+        else if (pct > 120) qCls = 'var(--yellow)';
         else if (pct >= 80) qCls = 'var(--green)';
+        else if (pct >= 50) qCls = 'var(--yellow)';
       }
-      quotaRow = `<div class="region-stat" title="Sum of carried quota across this region's active SEs vs sum of their personal targets">
-        <span class="region-key">Quota Load</span>
+      quotaRow = `<div class="region-stat" title="Sum of carried quota across this region's active SEs vs sum of their personal targets. Should reconcile near 100% in a balanced plan.">
+        <span class="region-key">Coverage</span>
         <span class="region-val" style="color:${qCls}">${carriedLabel}${target > 0 ? ' / ' + targetLabel : ''}${pct !== null ? ' (' + pct + '%)' : ''}</span>
       </div>`;
     }

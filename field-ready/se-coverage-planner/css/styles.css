@@ -411,6 +411,9 @@ thead th { padding: 10px 14px; text-align: left; font-size: 11px; font-weight: 7
 .quota-carry { font-size: 12px; font-weight: 700; color: var(--text); }
 .quota-attain-badge { font-size: 9px; padding: 1px 6px; }
 
+/* Per-account quota tag in the expand row */
+.acct-quota-tag { display: inline-block; margin-left: 8px; font-size: 10px; font-weight: 700; color: var(--muted); background: var(--surface2); padding: 1px 7px; border-radius: 100px; vertical-align: middle; }
+
 /* PROPOSED HIRE styling — SEs added by the Propose Hires wizard */
 .se-row.proposed-hire td { background: rgba(217,70,239,0.08); border-left: 3px solid var(--accent); }
 .se-row.proposed-hire td:first-child { padding-left: 11px; }
