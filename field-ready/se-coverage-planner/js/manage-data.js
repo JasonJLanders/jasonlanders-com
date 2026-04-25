@@ -110,6 +110,64 @@ function _perOpts(sel) {
 
 // ── People table ──────────────────────────────────────────────────────────────
 
+// People sort state - column key + ascending flag, persisted to localStorage so it survives reloads.
+const PEOPLE_SORT_KEY = 'secp:peopleSort';
+let _peopleSort = (() => {
+  try {
+    const raw = localStorage.getItem(PEOPLE_SORT_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed.key === 'string') return parsed;
+    }
+  } catch {}
+  return { key: '', asc: true }; // default = no sort, original PEOPLE order
+})();
+
+function _savePeopleSort() {
+  try { localStorage.setItem(PEOPLE_SORT_KEY, JSON.stringify(_peopleSort)); } catch {}
+}
+
+/** Comparator for the active sort. Empty/falsy values sort to the bottom. */
+function _sortedPeople() {
+  if (!_peopleSort.key) return PEOPLE.slice();
+  const k = _peopleSort.key;
+  const dir = _peopleSort.asc ? 1 : -1;
+  return PEOPLE.slice().sort((a, b) => {
+    let av = a[k]; let bv = b[k];
+    // Booleans (active) - true sorts first when asc
+    if (typeof av === 'boolean' || typeof bv === 'boolean') {
+      av = av ? 1 : 0; bv = bv ? 1 : 0;
+      return (av - bv) * dir;
+    }
+    av = (av == null ? '' : String(av)).toLowerCase();
+    bv = (bv == null ? '' : String(bv)).toLowerCase();
+    if (!av && bv) return 1;
+    if (av && !bv) return -1;
+    if (av < bv) return -1 * dir;
+    if (av > bv) return  1 * dir;
+    // Tiebreak by name so order is stable
+    return (a.name || '').localeCompare(b.name || '');
+  });
+}
+
+/** Build a clickable sort-header <th>. */
+function _sortTh(label, key, extraClass) {
+  const active = _peopleSort.key === key;
+  const arrow = active ? (_peopleSort.asc ? ' \u25B4' : ' \u25BE') : '';
+  const cls = (extraClass || '') + ' sort-th' + (active ? ' sort-active' : '');
+  return `<th class="${cls.trim()}" onclick="mdPeopleSort('${esc(key)}')" title="Click to sort">${esc(label)}${arrow}</th>`;
+}
+
+window.mdPeopleSort = (key) => {
+  if (_peopleSort.key === key) {
+    _peopleSort.asc = !_peopleSort.asc;
+  } else {
+    _peopleSort = { key, asc: true };
+  }
+  _savePeopleSort();
+  _renderBody();
+};
+
 function _renderPeopleTable() {
   const showQ = _quotaShowPeople();
   const levels = CONFIG.quotas?.levels || {};
@@ -118,7 +176,7 @@ function _renderPeopleTable() {
     ? `<th>Quota</th><th>Period</th><th class="quota-computed-hdr">Computed</th>`
     : '';
 
-  const rows = PEOPLE.map(p => {
+  const rows = _sortedPeople().map(p => {
     const isQuotaRole = p.role === 'AE' || p.role === 'SE';
     const showQCell   = showQ && isQuotaRole;
 
@@ -166,9 +224,13 @@ function _renderPeopleTable() {
 
   return `<table class="data-table">
     <thead><tr>
-      <th>Name</th><th>Role</th><th>City</th><th>Region</th><th>Notes</th>
+      ${_sortTh('Name', 'name')}
+      ${_sortTh('Role', 'role')}
+      ${_sortTh('City', 'city')}
+      ${_sortTh('Region', 'region')}
+      <th>Notes</th>
       ${hdrQ}
-      <th>Active</th>
+      ${_sortTh('Active', 'active', 'dt-center')}
       <th class="dt-actions">
         <button class="btn btn-ghost" style="font-size:11px;padding:3px 10px"
           onclick="mdAddPerson()">+ Add Person</button>
