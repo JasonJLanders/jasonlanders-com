@@ -1,4 +1,5 @@
-import { workload } from './stats.js';
+import { workload, classifyQuotaAttainment } from './stats.js';
+import { formatCompact } from './quotas.js';
 import { getPersonByName } from './roster.js';
 import { getAccountByName } from './accounts.js';
 
@@ -57,6 +58,10 @@ export function renderSETable(seList, data, seNames, rebalanceMode, viewMode, ch
   const tbody = document.getElementById('seTableBody');
   tbody.innerHTML = '';
   const proposed = proposedSet || new Set();
+  // Detect whether quota tracking is on (any SE in the list has it). All entries share the flag.
+  const quotaShown = !!(seList.length && seList[0].quotaTrackingOn);
+  const quotaHeader = document.getElementById('seTableQuotaHeader');
+  if (quotaHeader) quotaHeader.style.display = quotaShown ? '' : 'none';
 
   seList.forEach((se, i) => {
     const wl = workload(se);
@@ -87,11 +92,32 @@ export function renderSETable(seList, data, seNames, rebalanceMode, viewMode, ch
       seNameCell = seNameContent + (seNote ? ' ' + seNote : '') + proposedBadge + removeBtnHtml;
     }
 
+    let quotaCellHtml = '';
+    if (quotaShown) {
+      if (se.isTBH || se.isUnassigned) {
+        quotaCellHtml = '<td class="quota-cell">\u2014</td>';
+      } else {
+        const q = classifyQuotaAttainment(se.quotaAttainment);
+        const carriedLabel  = formatCompact(se.quotaCarried || 0);
+        const personalLabel = se.quotaPersonal > 0 ? formatCompact(se.quotaPersonal) : '\u2014';
+        const tip = se.quotaPersonal > 0
+          ? `Carrying ${carriedLabel} of ${personalLabel} target (${q.label})`
+          : `No personal quota set; carrying ${carriedLabel}`;
+        quotaCellHtml = `<td class="quota-cell" title="${esc(tip)}">
+          <div class="quota-cell-stack">
+            <span class="quota-carry">${carriedLabel}</span>
+            <span class="badge ${q.cls} quota-attain-badge">${q.label}</span>
+          </div>
+        </td>`;
+      }
+    }
+
     seRow.innerHTML = `
       <td><span class="chevron">&#9654;</span>${seNameCell}</td>
-      <td>${se.isUnassigned ? '—' : esc(se.se_leader)}</td>
-      <td>${se.isUnassigned ? '—' : esc(se.segment)}</td>
+      <td>${se.isUnassigned ? '\u2014' : esc(se.se_leader)}</td>
+      <td>${se.isUnassigned ? '\u2014' : esc(se.segment)}</td>
       <td>${se.accountCount}</td><td>${se.aeCount}</td><td>${se.rdCount}</td>
+      ${quotaCellHtml}
       <td><span class="badge ${wl.cls}" title="${wl.reasons && wl.reasons.length ? esc(wl.reasons.join('\n')) : ''}">${wl.label}</span></td>`;
 
     seRow.onclick = e => {
@@ -140,7 +166,7 @@ export function renderSETable(seList, data, seNames, rebalanceMode, viewMode, ch
 
     const expandRow = document.createElement('tr');
     expandRow.className = 'expand-row';
-    expandRow.innerHTML = `<td colspan="7"><div class="expand-inner" id="exp-${i}">
+    expandRow.innerHTML = `<td colspan="${quotaShown ? 8 : 7}"><div class="expand-inner" id="exp-${i}">
       <div><div class="expand-col-title">Accounts</div>${acctHtml || '<div style="color:var(--muted);font-size:12px">No accounts assigned</div>'}</div>
       <div><div class="expand-col-title">AEs</div>${aeHtml || '<div style="color:var(--muted);font-size:12px">—</div>'}</div>
     </div></td>`;

@@ -162,6 +162,7 @@
               <th>Accounts</th>
               <th>AEs</th>
               <th>RDs</th>
+              <th id="seTableQuotaHeader" style="display:none">Quota</th>
               <th>Workload</th>
             </tr>
           </thead>
@@ -247,6 +248,10 @@
           <label class="quota-level-label">
             <input type="checkbox" id="wlDimAEs" onchange="updateWorkloadDim('aes', this.checked)">
             AEs per SE
+          </label>
+          <label class="quota-level-label" id="wlDimQuotaWrap" style="display:none">
+            <input type="checkbox" id="wlDimQuota" onchange="updateWorkloadDim('quota', this.checked)">
+            Quota Load (carrying &gt; 130% of target = overloaded)
           </label>
         </div>
         <div style="font-size:11px;color:var(--muted);margin-top:4px;line-height:1.6">

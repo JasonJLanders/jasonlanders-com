@@ -1,5 +1,7 @@
 import { BENCH } from './data.js';
 import { CONFIG } from './config.js';
+import { computeSEQuota, normalizeToAnnual } from './quotas.js';
+import { PEOPLE } from './roster.js';
 
 /**
  * Resolve active workload thresholds for a given segment name.
@@ -28,6 +30,18 @@ export function classifyWorkload(se) {
   const checks = [];
   if (dims.accounts) checks.push({ key: 'accounts', label: 'Accounts', value: se.accountCount, th: t.accounts });
   if (dims.aes)      checks.push({ key: 'aes',      label: 'AEs',      value: se.aeCount,      th: t.aes });
+  // Quota dimension is virtual: derived from quotaAttainment (% of personal target).
+  // It only contributes when quota tracking is on AND the dimension toggle is on AND the SE has a personal quota.
+  if (dims.quota && se.quotaTrackingOn && se.quotaPersonal > 0 && se.quotaAttainment != null) {
+    const pct = Math.round(se.quotaAttainment * 100);
+    if (se.quotaAttainment > 1.30) {
+      checks.push({ key: 'quota', label: 'Quota Load', value: `${pct}%`, _verdict: 'overloaded', _reason: `${pct}% of target > 130% (overloaded)` });
+    } else if (se.quotaAttainment > 1.10) {
+      checks.push({ key: 'quota', label: 'Quota Load', value: `${pct}%`, _verdict: 'stretched', _reason: `${pct}% of target > 110% (stretched)` });
+    } else {
+      checks.push({ key: 'quota', label: 'Quota Load', value: `${pct}%`, _verdict: 'healthy', _reason: `${pct}% of target \u2264 110% (healthy)` });
+    }
+  }
 
   if (!checks.length) {
     return { label: 'Healthy', cls: 'badge-green', reasons: ['No dimensions enabled'] };
@@ -36,6 +50,13 @@ export function classifyWorkload(se) {
   let worst = 'healthy';
   const reasons = [];
   checks.forEach(c => {
+    // Pre-classified quota check carries its verdict directly.
+    if (c._verdict) {
+      if (c._verdict === 'overloaded') worst = 'overloaded';
+      else if (c._verdict === 'stretched' && worst !== 'overloaded') worst = 'stretched';
+      reasons.push(c._reason);
+      return;
+    }
     if (c.value > c.th.stretched) {
       worst = 'overloaded';
       reasons.push(`${c.value} ${c.label} > ${c.th.stretched} (overloaded)`);
@@ -43,7 +64,7 @@ export function classifyWorkload(se) {
       if (worst !== 'overloaded') worst = 'stretched';
       reasons.push(`${c.value} ${c.label} > ${c.th.healthy} (stretched)`);
     } else {
-      reasons.push(`${c.value} ${c.label} ≤ ${c.th.healthy} (healthy)`);
+      reasons.push(`${c.value} ${c.label} \u2264 ${c.th.healthy} (healthy)`);
     }
   });
 
@@ -86,10 +107,55 @@ export function computeStats(data, extraSEs) {
       accounts: new Map(), aes: new Set(), rds: new Set()
     };
   });
-  return Object.values(map).map(s => ({
-    ...s, accountCount: s.accounts.size, aeCount: s.aes.size, rdCount: s.rds.size,
-    isTBH: s.se.startsWith('TBH'), isUnassigned: s.se === 'UNASSIGNED'
-  }));
+  const levels = (CONFIG.quotas && CONFIG.quotas.levels) || {};
+  const quotaTrackingOn = !!(levels.account || levels.ae || levels.se);
+
+  return Object.values(map).map(s => {
+    const isTBH = s.se.startsWith('TBH');
+    const isUnassigned = s.se === 'UNASSIGNED';
+    let quotaCarried = 0;
+    let quotaPersonal = 0;
+    let quotaAttainment = null;
+    if (quotaTrackingOn && !isTBH && !isUnassigned) {
+      // computeSEQuota already applies the buffer when account/ae level is on.
+      // For attainment we want the RAW carry, undivided by buffer; recompute without buffer.
+      const buffer = 1 - (CONFIG.quotas?.buffer ?? 0.20);
+      const buffered = computeSEQuota(s.se, data) || 0;
+      quotaCarried = buffer > 0 ? buffered / buffer : buffered;
+      const p = PEOPLE.find(p => p.name === s.se && p.role === 'SE');
+      quotaPersonal = p ? normalizeToAnnual(p.quota || 0, p.quotaPeriod || 'annual') : 0;
+      if (quotaPersonal > 0) {
+        quotaAttainment = quotaCarried / quotaPersonal;
+      }
+    }
+    return {
+      ...s,
+      accountCount: s.accounts.size,
+      aeCount: s.aes.size,
+      rdCount: s.rds.size,
+      isTBH,
+      isUnassigned,
+      quotaTrackingOn,
+      quotaCarried,
+      quotaPersonal,
+      quotaAttainment
+    };
+  });
+}
+
+/**
+ * Classify quota attainment into healthy / stretched / overloaded / under bands.
+ * Drives the Quota column badge color in the SE table.
+ */
+export function classifyQuotaAttainment(attainment) {
+  if (attainment === null || attainment === undefined) {
+    return { label: '\u2014', cls: 'badge-muted', tier: 'na' };
+  }
+  const pct = Math.round(attainment * 100);
+  if (attainment > 1.30) return { label: `${pct}%`, cls: 'badge-red',    tier: 'overloaded' };
+  if (attainment > 1.10) return { label: `${pct}%`, cls: 'badge-yellow', tier: 'stretched' };
+  if (attainment >= 0.80) return { label: `${pct}%`, cls: 'badge-green',  tier: 'healthy' };
+  return { label: `${pct}%`, cls: 'badge-muted', tier: 'under' };
 }
 
 export function workload(se) {
@@ -202,14 +268,38 @@ export function computeHireProposal(seList, { tbhSeed = 'Proposed' } = {}) {
 }
 
 export function renderRegionGrid(regions, seList, data) {
+  // Quota tracking flag (any SE row carries it; first row is fine).
+  const quotaShown = !!(seList.length && seList[0].quotaTrackingOn);
+
   document.getElementById('regionGrid').innerHTML = regions.map(region => {
     const rSEs  = seList.filter(s => s.ae_region === region.name && !s.isTBH && !s.isUnassigned);
     const rAEs  = new Set(data.filter(r => r.ae_region === region.name).map(r => r.ae));
     const tbhN  = seList.filter(s => s.ae_region === region.name && s.isTBH).length;
-    const ratio = rSEs.length ? (rAEs.size / rSEs.length).toFixed(1) : '—';
+    const ratio = rSEs.length ? (rAEs.size / rSEs.length).toFixed(1) : '-';
     let stCls = 'badge-green', stLabel = 'Healthy';
     if (rSEs.some(s => workload(s).label === 'Overloaded'))     { stCls = 'badge-red';    stLabel = 'Overloaded'; }
     else if (rSEs.some(s => workload(s).label === 'Stretched')) { stCls = 'badge-yellow'; stLabel = 'Stretched'; }
+
+    // Quota rollup for this region
+    let quotaRow = '';
+    if (quotaShown) {
+      const carried = rSEs.reduce((sum, s) => sum + (s.quotaCarried || 0), 0);
+      const target  = rSEs.reduce((sum, s) => sum + (s.quotaPersonal || 0), 0);
+      const pct     = target > 0 ? Math.round((carried / target) * 100) : null;
+      const carriedLabel = _formatCompactInline(carried);
+      const targetLabel  = target > 0 ? _formatCompactInline(target) : '\u2014';
+      let qCls = 'var(--muted)';
+      if (pct !== null) {
+        if (pct > 130) qCls = 'var(--red)';
+        else if (pct > 110) qCls = 'var(--yellow)';
+        else if (pct >= 80) qCls = 'var(--green)';
+      }
+      quotaRow = `<div class="region-stat" title="Sum of carried quota across this region's active SEs vs sum of their personal targets">
+        <span class="region-key">Quota Load</span>
+        <span class="region-val" style="color:${qCls}">${carriedLabel}${target > 0 ? ' / ' + targetLabel : ''}${pct !== null ? ' (' + pct + '%)' : ''}</span>
+      </div>`;
+    }
+
     return `<div class="region-card">
       <div class="region-header">
         <div class="region-name"><span class="region-dot" style="background:${region.color}"></span>${region.name}</div>
@@ -218,7 +308,15 @@ export function renderRegionGrid(regions, seList, data) {
       <div class="region-stat"><span class="region-key">Active SEs</span><span class="region-val">${rSEs.length}</span></div>
       <div class="region-stat"><span class="region-key">AEs</span><span class="region-val">${rAEs.size}</span></div>
       <div class="region-stat"><span class="region-key">Avg AE:SE</span><span class="region-val">1:${ratio}</span></div>
+      ${quotaRow}
       ${tbhN ? `<div class="region-stat"><span class="region-key">Open HC</span><span class="region-val" style="color:var(--muted)">${tbhN}</span></div>` : ''}
     </div>`;
   }).join('');
+}
+
+function _formatCompactInline(n) {
+  n = Number(n) || 0;
+  if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1_000)     return `$${(n / 1_000).toFixed(0)}K`;
+  return `$${n.toFixed(0)}`;
 }

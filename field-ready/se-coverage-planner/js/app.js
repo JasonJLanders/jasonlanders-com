@@ -768,6 +768,9 @@ document.addEventListener('teams-changed',   () => render());
 // Workload rubric changed in settings - recompute badges everywhere
 document.addEventListener('workload-changed', () => render());
 
+// Quota tracking config changed - re-render to show/hide quota column + recompute attainment
+document.addEventListener('quota-changed', () => render());
+
 // ── Boot ──────────────────────────────────────────────────────────────────────
 // ── Sidebar resize / collapse ────────────────────────────────────────────────
 const SIDEBAR_KEY = 'se-planner-sidebar';

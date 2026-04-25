@@ -73,7 +73,7 @@ if (!CONFIG.mapScope) {
 // Ensure workload rubric exists (Push 1: Capacity & Hires)
 if (!CONFIG.workload) {
   CONFIG.workload = {
-    dimensions: { accounts: true, aes: true },
+    dimensions: { accounts: true, aes: true, quota: false },
     thresholds: {
       // Per-segment thresholds; 'default' is used when a team has no override.
       // An SE is Overloaded if ANY enabled dimension exceeds 'stretched',
@@ -252,8 +252,15 @@ export function renderWorkloadSettings() {
 
   const elA = document.getElementById('wlDimAccounts');
   const elE = document.getElementById('wlDimAEs');
+  const elQ = document.getElementById('wlDimQuota');
+  const elQWrap = document.getElementById('wlDimQuotaWrap');
   if (elA) elA.checked = !!(wl.dimensions && wl.dimensions.accounts);
   if (elE) elE.checked = !!(wl.dimensions && wl.dimensions.aes);
+  // Show the quota workload dimension only when quota tracking is enabled at any level.
+  const qLevels = (CONFIG.quotas && CONFIG.quotas.levels) || {};
+  const quotaTrackingOn = !!(qLevels.account || qLevels.ae || qLevels.se);
+  if (elQWrap) elQWrap.style.display = quotaTrackingOn ? '' : 'none';
+  if (elQ) elQ.checked = !!(wl.dimensions && wl.dimensions.quota);
 
   const container = document.getElementById('workloadThresholds');
   if (!container) return;
@@ -371,15 +378,19 @@ window.openPersonAdd = role => {
 window.updateQuotaLevel = (level, checked) => {
   CONFIG.quotas.levels[level] = checked;
   saveConfig();
+  document.dispatchEvent(new CustomEvent('quota-changed'));
+  renderWorkloadSettings();
 };
 window.updateQuotaBuffer = val => {
   const parsed = parseFloat(val);
   CONFIG.quotas.buffer = isNaN(parsed) ? 0.20 : Math.max(0, Math.min(1, parsed / 100));
   saveConfig();
+  document.dispatchEvent(new CustomEvent('quota-changed'));
 };
 window.updateQuotaDisplayPeriod = val => {
   CONFIG.quotas.displayPeriod = val;
   saveConfig();
+  document.dispatchEvent(new CustomEvent('quota-changed'));
 };
 
 // Confirm → removePerson → re-render settings list + notify app
