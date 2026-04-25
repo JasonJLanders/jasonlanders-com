@@ -318,6 +318,16 @@ thead th { padding: 10px 14px; text-align: left; font-size: 11px; font-weight: 7
 .layer-toggles label:has(input[data-role="SELeader"]:checked) { border-color: #d946ef; color: #d946ef; background: rgba(217,70,239,0.08); }
 
 /* LEAFLET OVERRIDES */
+/* Leaflet zoom control (+/-) follows our theme. Default Leaflet styling is hardcoded white. */
+.leaflet-bar { border: 1px solid var(--border) !important; box-shadow: var(--shadow); }
+.leaflet-bar a, .leaflet-bar a:hover {
+  background: var(--surface);
+  color: var(--text);
+  border-bottom-color: var(--border);
+}
+.leaflet-bar a:hover { background: var(--surface2); color: var(--accent); }
+.leaflet-bar a.leaflet-disabled { background: var(--surface); color: var(--muted); opacity: 0.6; }
+
 /* Override Leaflet's default tooltip styling so all map tooltips follow our theme */
 .leaflet-tooltip { background: var(--map-tooltip-bg); border: 1px solid var(--border); color: var(--map-tooltip-text); font-family: var(--font); box-shadow: var(--shadow); }
 .leaflet-tooltip-top::before  { border-top-color: var(--border) !important; }
