@@ -114,7 +114,18 @@ document.getElementById('btnEditNotes').addEventListener('click', () => {
 // ── Local state ───────────────────────────────────────────────────────────────
 let selectedRegion = null;
 let geocache = {};
-let visibleLayers = new Set(['SE', 'AE']); // SE + AE on by default
+// Visible map layers — persisted to localStorage so the selection survives reloads.
+const LAYERS_STORAGE_KEY = 'secp:visibleLayers';
+let visibleLayers;
+try {
+  const stored = JSON.parse(localStorage.getItem(LAYERS_STORAGE_KEY) || 'null');
+  visibleLayers = Array.isArray(stored) ? new Set(stored) : new Set(['SE', 'AE']);
+} catch {
+  visibleLayers = new Set(['SE', 'AE']);
+}
+function _persistLayers() {
+  try { localStorage.setItem(LAYERS_STORAGE_KEY, JSON.stringify([...visibleLayers])); } catch {}
+}
 
 function refreshMarkers() {
   const data = (state.viewMode === 'proposed' && state.scenarioB) ? state.scenarioB : state.workingData;
@@ -695,9 +706,12 @@ document.getElementById('personEditOverlay').addEventListener('keydown', e => {
 
 // Layer toggle checkboxes
 document.querySelectorAll('#layerToggles input[data-role]').forEach(cb => {
+  // Restore persisted state on load
+  cb.checked = visibleLayers.has(cb.dataset.role);
   cb.addEventListener('change', () => {
     if (cb.checked) visibleLayers.add(cb.dataset.role);
     else visibleLayers.delete(cb.dataset.role);
+    _persistLayers();
     refreshMarkers();
   });
 });
