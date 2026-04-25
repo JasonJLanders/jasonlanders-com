@@ -136,6 +136,12 @@ html, body { font-family: var(--font); background: var(--bg); color: var(--text)
 .map-hint { position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%); background: var(--map-tooltip-bg); border: 1px solid var(--border); color: var(--muted); font-size: 12px; font-weight: 500; padding: 6px 14px; border-radius: 100px; pointer-events: none; z-index: 400; transition: opacity 0.3s; backdrop-filter: blur(6px); }
 .map-hint.hidden { opacity: 0; }
 
+/* Hide the centered hint pill on narrower viewports where it would collide
+   with the bottom-right legend. The legend wins because it carries info. */
+@media (max-width: 1100px) {
+  .map-hint { display: none; }
+}
+
 /* STATE ASSIGN POPUP (edit regions mode) */
 .state-assign-leaflet-popup .leaflet-popup-content-wrapper { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; color: var(--text); padding: 0; }
 .state-assign-leaflet-popup .leaflet-popup-content { margin: 12px 14px; }
