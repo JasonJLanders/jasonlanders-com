@@ -23,7 +23,7 @@ import { computeStats, workload } from './stats.js';
  *
  * Returns: Promise<{ dataUrl: string, width: number, height: number } | null>
  */
-async function _captureMap() {
+async function _captureMap(includeWorkload) {
   const mapEl = document.getElementById('map');
   if (!mapEl || !window.html2canvas) return null;
 
@@ -39,6 +39,27 @@ async function _captureMap() {
 
   // Wait for tiles to settle (theme change triggers a tile-layer rebuild).
   if (mapInstance) await _waitTilesLoaded(mapInstance, 4500);
+
+  // If the user opted OUT of including workload in exports, neutralize the colored
+  // region stroke (which encodes health: green/yellow/red) on the map snapshot only.
+  // Save originals so we can restore after capture.
+  const restoreStrokes = [];
+  if (!includeWorkload && mapInstance) {
+    try {
+      mapInstance.eachLayer(layer => {
+        // Region polygons are L.GeoJSON layers; iterate their internal layers.
+        if (layer && typeof layer.getLayers === 'function') {
+          layer.eachLayer(child => {
+            if (child && child.options && child.setStyle && typeof child.options.color === 'string') {
+              const orig = { color: child.options.color, weight: child.options.weight };
+              restoreStrokes.push(() => child.setStyle(orig));
+              child.setStyle({ color: '#9b9aa8', weight: 1 });
+            }
+          });
+        }
+      });
+    } catch (e) { console.warn('[export-deck] stroke neutralization failed:', e); }
+  }
 
   // Small extra delay so any final paint flushes.
   await new Promise(r => setTimeout(r, 200));
@@ -119,6 +140,9 @@ async function _captureMap() {
       console.warn('[export-deck] html2canvas capture failed:', e);
     }
   }
+
+  // Restore the colored region strokes
+  restoreStrokes.forEach(fn => { try { fn(); } catch {} });
 
   // Restore previous theme
   if (previousTheme !== 'light') {
@@ -339,7 +363,7 @@ async function _buildPPT() {
   const data = (state.viewMode === 'proposed' && state.scenarioB) ? state.scenarioB : state.workingData;
   const agg = _aggregateForExport(data);
 
-  const map = await _captureMap();
+  const map = await _captureMap(inclWorkload);
   // map may be null in degenerate setups; we'll lay out without it in that case.
 
   const pptx = new PptxGenJS();
@@ -736,7 +760,7 @@ async function _buildPDF() {
   const data = (state.viewMode === 'proposed' && state.scenarioB) ? state.scenarioB : state.workingData;
   const agg = _aggregateForExport(data);
 
-  const map = await _captureMap();
+  const map = await _captureMap(inclWorkload);
 
   // Landscape, letter
   const { jsPDF } = window.jspdf;

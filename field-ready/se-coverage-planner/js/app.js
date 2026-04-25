@@ -862,6 +862,10 @@ document.addEventListener('role-labels-changed', () => render());
 // Theme changed - re-render so markers (and any inline-styled elements that snapshot CSS values) refresh.
 document.addEventListener('theme-changed', () => render());
 
+// First-time region shapes finished building (async on world/hybrid scope).
+// re-render so updateRegionShading can apply health-stroke colors that didn't have layers to attach to yet.
+document.addEventListener('region-shapes-rendered', () => render());
+
 // ── Boot ──────────────────────────────────────────────────────────────────────
 // ── Sidebar resize / collapse ────────────────────────────────────────────────
 const SIDEBAR_KEY = 'se-planner-sidebar';

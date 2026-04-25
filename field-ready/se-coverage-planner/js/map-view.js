@@ -379,6 +379,9 @@ async function renderRegionShapes() {
 
     regionLayers[region.id] = layer;
   });
+  // Notify the app that region layers exist so it can re-apply health-stroke shading
+  // (initial render() runs before this async build completes).
+  document.dispatchEvent(new CustomEvent('region-shapes-rendered'));
 }
 
 // ── Reload map scope (called when user changes scope in settings) ─────────────
