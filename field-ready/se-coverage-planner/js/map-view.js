@@ -230,11 +230,46 @@ function getRegionForPoint(lat, lng) {
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 
+const MAP_VIEW_STORAGE_KEY = 'secp:mapView';
+
+/** Persist current map center+zoom + active scope (saved view is only used for that scope). */
+function _saveMapView() {
+  if (!map) return;
+  try {
+    const c = map.getCenter();
+    const payload = {
+      scope: CONFIG.mapScope || 'us',
+      lat: c.lat,
+      lng: c.lng,
+      zoom: map.getZoom()
+    };
+    localStorage.setItem(MAP_VIEW_STORAGE_KEY, JSON.stringify(payload));
+  } catch {}
+}
+
+/** Read saved view; only return it if scope matches and shape is valid. */
+function _loadMapView(currentScope) {
+  try {
+    const raw = localStorage.getItem(MAP_VIEW_STORAGE_KEY);
+    if (!raw) return null;
+    const v = JSON.parse(raw);
+    if (!v || v.scope !== currentScope) return null;
+    if (typeof v.lat !== 'number' || typeof v.lng !== 'number' || typeof v.zoom !== 'number') return null;
+    return v;
+  } catch {
+    return null;
+  }
+}
+
 export function initMap(containerId) {
   const scope = CONFIG.mapScope || 'us';
   const view  = SCOPE_VIEWS[scope] || SCOPE_VIEWS.us;
+  const saved = _loadMapView(scope);
 
-  map = L.map(containerId, { zoomControl: false }).setView(view.center, view.zoom);
+  const initialCenter = saved ? [saved.lat, saved.lng] : view.center;
+  const initialZoom   = saved ? saved.zoom            : view.zoom;
+
+  map = L.map(containerId, { zoomControl: false }).setView(initialCenter, initialZoom);
   L.control.zoom({ position: 'topright' }).addTo(map);
 
   _applyTileTheme();
@@ -242,6 +277,9 @@ export function initMap(containerId) {
   renderRegionShapes();
 
   roleMarkerLayer = L.layerGroup().addTo(map);
+
+  // Persist on user pan/zoom (moveend covers both).
+  map.on('moveend', _saveMapView);
 
   // React to theme changes: swap tiles + redraw edit-mode strokes if active.
   document.addEventListener('theme-changed', () => {
@@ -317,6 +355,9 @@ async function renderRegionShapes() {
 
 export async function reloadMapScope() {
   if (!map) return;
+
+  // Scope change invalidates the saved view; clear it so the new scope's default is used.
+  try { localStorage.removeItem(MAP_VIEW_STORAGE_KEY); } catch {}
 
   // Fly to new scope center/zoom
   const scope = CONFIG.mapScope || 'us';
