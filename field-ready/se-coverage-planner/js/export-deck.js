@@ -6,8 +6,9 @@
  * AE -> Account -> SE table on the right.
  *
  * Tech: PptxGenJS (window.PptxGenJS) for PPT, jsPDF (window.jspdf.jsPDF) for PDF.
- * Map -> PNG via leaflet-image (window.leafletImage), with a forced light theme so
- * the exported imagery looks clean on white slide backgrounds.
+ * Map -> PNG via html2canvas (window.html2canvas), which captures the live DOM
+ * (region polygons, divIcon markers, tile imagery) all together. Theme is forced
+ * to light during capture for clean rendering on white slide backgrounds.
  */
 
 import { state } from './data.js';
@@ -23,73 +24,45 @@ import { CONFIG, roleLabel } from './config.js';
  */
 async function _captureMap() {
   const mapEl = document.getElementById('map');
-  if (!mapEl || !window.L || !window.leafletImage) return null;
+  if (!mapEl || !window.html2canvas) return null;
 
-  // Find the active Leaflet map instance attached to #map (Leaflet doesn't expose this directly,
-  // but we can grab it via the private leaflet_id -> map registry it leaves on the element).
-  let mapInstance = null;
-  for (const key of Object.keys(L)) {
-    // No-op; we just need to use the in-memory map. Easier: read it from window since map-view holds it.
-  }
-  // Alternative: rely on the global map exposed by map-view. We'll set window.__planner_map there.
-  mapInstance = window.__planner_map || null;
-  if (!mapInstance) return null;
+  const mapInstance = window.__planner_map || null;
 
-  // Force-light theme for the capture
+  // Force-light theme for the capture so the exported image reads clean on white slides.
   const root = document.documentElement;
   const previousTheme = root.getAttribute('data-theme');
-  if (previousTheme === 'light') {
-    // Already light \u2014 no flicker needed
-  } else {
+  if (previousTheme !== 'light') {
     root.setAttribute('data-theme', 'light');
     document.dispatchEvent(new CustomEvent('theme-changed', { detail: { theme: 'light' } }));
-    // Wait one tick for tile swap to begin
-    await _waitTilesLoaded(mapInstance, 1500);
   }
 
-  // Wait for any in-flight tile loads to finish so the screenshot is complete
-  await _waitTilesLoaded(mapInstance, 4000);
+  // Wait for tiles to settle (theme change triggers a tile-layer rebuild).
+  if (mapInstance) await _waitTilesLoaded(mapInstance, 4500);
+  // Small extra delay so any final paint flushes.
+  await new Promise(r => setTimeout(r, 250));
 
-  // leaflet-image can't rasterize Leaflet DivIcon (HTML/SVG) markers - it tries to read
-  // an iconUrl that doesn't exist and crashes inside isDataURL/addCacheString. Temporarily
-  // remove all marker layers for the capture, then restore them after.
-  const removedMarkers = [];
-  mapInstance.eachLayer(layer => {
-    if (layer instanceof L.Marker) {
-      removedMarkers.push(layer);
-    } else if (layer instanceof L.LayerGroup) {
-      try {
-        layer.eachLayer(child => {
-          if (child instanceof L.Marker) removedMarkers.push(child);
-        });
-      } catch {}
-    }
-  });
-  removedMarkers.forEach(m => { try { mapInstance.removeLayer(m); } catch {} });
-
-  let dataUrl, width, height;
+  let dataUrl = null, width = 0, height = 0;
   try {
-    const captured = await new Promise((resolve, reject) => {
-      leafletImage(mapInstance, (err, canvas) => {
-        if (err) { reject(err); return; }
-        resolve({
-          dataUrl: canvas.toDataURL('image/png'),
-          width: canvas.width,
-          height: canvas.height
-        });
-      });
+    const canvas = await html2canvas(mapEl, {
+      useCORS:    true,         // Carto tiles support CORS
+      allowTaint: false,
+      backgroundColor: '#FFFFFF',
+      scale:      2,            // 2x for crisp print quality
+      logging:    false,
+      // Skip the leaflet-control-attribution strip and the layer-bar pill for a cleaner image.
+      ignoreElements: el => {
+        if (!el || !el.classList) return false;
+        return el.classList.contains('leaflet-control-attribution')
+            || el.classList.contains('layer-bar')
+            || el.classList.contains('toolbar');
+      }
     });
-    dataUrl = captured.dataUrl;
-    width   = captured.width;
-    height  = captured.height;
+    dataUrl = canvas.toDataURL('image/png');
+    width   = canvas.width;
+    height  = canvas.height;
   } catch (e) {
-    console.warn('[export-deck] leaflet-image capture failed:', e);
-    dataUrl = null;
-    width = height = 0;
+    console.warn('[export-deck] html2canvas capture failed:', e);
   }
-
-  // Restore marker layers we removed for capture
-  removedMarkers.forEach(m => { try { mapInstance.addLayer(m); } catch {} });
 
   // Restore previous theme
   if (previousTheme !== 'light') {
