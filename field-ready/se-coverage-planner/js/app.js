@@ -14,6 +14,7 @@ import { renderDiffBanner, renderSETable } from './table-view.js';
 import { initMap, updateRegionShading, renderRoleMarkers, enterStateEditMode, exitStateEditMode, invalidateMapSize, reloadMapScope } from './map-view.js';
 import { initTheme } from './theme.js';
 import { exportXLS } from './export-xls.js';
+import { roleLabel } from './config.js';
 import { geocodeCities } from './geocode.js';
 
 // ── Expose globals required by dynamically-generated inline onclick/oninput HTML ──
@@ -180,6 +181,11 @@ function render() {
     renderDiffBanner(state.viewMode, state.scenarioB, getDiff, state.scenarioBNarrative || '');
     const sourceAdded = state.viewMode === 'proposed' ? (state.scenarioBAddedSEs || []) : state.addedSEs;
     const proposedSet = new Set(sourceAdded.filter(s => s.proposedByWizard).map(s => s.se));
+    // Update column headers to reflect current role labels
+    const hSe = document.getElementById('hdr-seName');
+    const hLd = document.getElementById('hdr-seLeader');
+    if (hSe) hSe.textContent = `${roleLabel('se')} Name`;
+    if (hLd) hLd.textContent = roleLabel('seLeader');
     renderSETable(filteredList, data, seNames, state.rebalanceMode, state.viewMode, changedSet, proposedSet);
   } else {
     document.getElementById('seTableBody').innerHTML = '';
@@ -804,6 +810,9 @@ document.addEventListener('workload-changed', () => render());
 
 // Quota tracking config changed - re-render to show/hide quota column + recompute attainment
 document.addEventListener('quota-changed', () => render());
+
+// Role labels changed - re-render the SE table and re-open Manage Data if it's open
+document.addEventListener('role-labels-changed', () => render());
 
 // Theme changed - re-render so markers (and any inline-styled elements that snapshot CSS values) refresh.
 document.addEventListener('theme-changed', () => render());

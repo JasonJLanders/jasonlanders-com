@@ -71,11 +71,15 @@ function _quotaShowAccounts() { return !!(CONFIG.quotas?.levels?.account); }
 // ── Option builders ───────────────────────────────────────────────────────────
 
 const ROLE_OPTS = ['SE','AE','RD','RVP','AVP','SELeader'];
-const ROLE_LBL  = { SE:'SE', AE:'AE', RD:'RD', RVP:'RVP', AVP:'AVP', SELeader:'SE Leader' };
+// Role display labels - configurable per CONFIG.roleLabels (Settings -> Roles)
+function _roleLbl(roleKey) {
+  const map = { SE: 'se', AE: 'ae', RD: 'rd', RVP: 'rvp', AVP: 'avp', SELeader: 'seLeader' };
+  return (CONFIG.roleLabels && CONFIG.roleLabels[map[roleKey]]) || roleKey;
+}
 
 function _roleOpts(sel) {
   return ROLE_OPTS.map(r =>
-    `<option value="${r}"${r===sel?' selected':''}>${ROLE_LBL[r]}</option>`
+    `<option value="${r}"${r===sel?' selected':''}>${_roleLbl(r)}</option>`
   ).join('');
 }
 function _regionOpts(sel) {
@@ -492,10 +496,10 @@ function _renderLeadershipMap() {
     <div style="font-size:12px;color:var(--muted);padding:8px 16px;line-height:1.6;background:var(--surface2);border-radius:8px;margin-bottom:16px">
       Read-only summary derived from your account data. Edit assignments in the <strong style="color:var(--text)">Accounts</strong> tab; this view updates automatically. Cross-region and cross-segment leaders are flagged.
     </div>
-    ${renderTier('AVPs',       avps,       n => avpToRvps.get(n),     'RVPs')}
-    ${renderTier('RVPs',       rvps,       n => rvpToRds.get(n),      'RDs')}
-    ${renderTier('RDs',        rds,        n => rdToAes.get(n),       'AEs')}
-    ${renderTier('SE Leaders', seLeaders,  n => seLeaderToSes.get(n), 'SEs')}
+    ${renderTier(_roleLbl('AVP') + 's',          avps,       n => avpToRvps.get(n),     _roleLbl('RVP') + 's')}
+    ${renderTier(_roleLbl('RVP') + 's',          rvps,       n => rvpToRds.get(n),      _roleLbl('RD') + 's')}
+    ${renderTier(_roleLbl('RD') + 's',           rds,        n => rdToAes.get(n),       _roleLbl('AE') + 's')}
+    ${renderTier(_roleLbl('SELeader') + 's',     seLeaders,  n => seLeaderToSes.get(n), _roleLbl('SE') + 's')}
   </div>`;
 }
 

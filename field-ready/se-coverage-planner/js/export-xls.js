@@ -123,8 +123,21 @@ function _muteColor(hex, lightnessDelta, satCut) {
 
 // ── Sheet builders ───────────────────────────────────────────────────────────
 
-const LEAD_COLS = ['AVP', 'RVP', 'RD', 'AE', 'Account', 'SE', 'SE Leader'];
-const MERGE_COL_INDEXES = [0, 1, 2, 3, 6]; // AVP, RVP, RD, AE, SE Leader
+// Column headers are derived at export-time from CONFIG.roleLabels so the export
+// uses each user's preferred terminology (e.g. "VP Sales" instead of "AVP").
+function _leadCols() {
+  const r = CONFIG.roleLabels || {};
+  return [
+    r.avp || 'AVP',
+    r.rvp || 'RVP',
+    r.rd  || 'RD',
+    r.ae  || 'AE',
+    'Account',
+    r.se  || 'SE',
+    r.seLeader || 'SE Leader'
+  ];
+}
+const MERGE_COL_INDEXES = [0, 1, 2, 3, 6]; // AVP-tier, RVP-tier, RD-tier, AE-tier, SE-Leader-tier
 
 function _buildTeamSheet(teamName, teamIndex, totalTeams, data) {
   const rows = data
@@ -139,6 +152,7 @@ function _buildTeamSheet(teamName, teamIndex, totalTeams, data) {
   if (!rows.length) return null; // skip empty team
 
   // Build AOA: header + data rows.
+  const LEAD_COLS = _leadCols();
   const aoa = [LEAD_COLS];
   rows.forEach(r => {
     aoa.push([
@@ -180,9 +194,10 @@ function _buildTeamSheet(teamName, teamIndex, totalTeams, data) {
   ws['!merges'] = merges;
 
   // Header row styling
-  for (let c = 0; c < LEAD_COLS.length; c++) {
+  const headerCols = LEAD_COLS;
+  for (let c = 0; c < headerCols.length; c++) {
     const addr = XLSX.utils.encode_cell({ r: 0, c });
-    if (!ws[addr]) ws[addr] = { t: 's', v: LEAD_COLS[c] };
+    if (!ws[addr]) ws[addr] = { t: 's', v: headerCols[c] };
     ws[addr].s = {
       font: { bold: true, color: { rgb: 'FFFFFF' }, sz: 11 },
       fill: { patternType: 'solid', fgColor: { rgb: '1F1733' } },
@@ -215,7 +230,7 @@ function _buildTeamSheet(teamName, teamIndex, totalTeams, data) {
     const isHeavyTop  = heavyTopRows.has(r);
     const isMediumTop = mediumTopRows.has(r);
 
-    for (let c = 0; c < LEAD_COLS.length; c++) {
+    for (let c = 0; c < headerCols.length; c++) {
       const addr = XLSX.utils.encode_cell({ r, c });
       if (!ws[addr]) ws[addr] = { t: 's', v: '' };
 

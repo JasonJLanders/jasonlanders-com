@@ -14,6 +14,16 @@ const DEFAULT_CONFIG = {
   ],
   regionFeatures: null,  // lazily initialized from DEFAULT_REGION_FEATURES
   mapScope: 'us',        // 'us' | 'world' | 'hybrid'
+  // Display labels for leadership roles. Internal keys (avp, rvp, rd, ae, se, seLeader) stay constant
+  // so the data model isn't affected; only column headers / dropdowns / exports use these strings.
+  roleLabels: {
+    avp:      'AVP',
+    rvp:      'RVP',
+    rd:       'RD',
+    ae:       'AE',
+    se:       'SE',
+    seLeader: 'SE Leader'
+  },
   quotas: {
     levels: { account: false, ae: false, se: false },
     buffer: 0.20,
@@ -106,6 +116,20 @@ if (!CONFIG.workload.thresholds.default) {
 if (!CONFIG.quotas) {
   CONFIG.quotas = { levels: { account: false, ae: false, se: false }, buffer: 0.20, displayPeriod: 'annual' };
   saveConfig();
+}
+// Backfill roleLabels for users with pre-existing localStorage configs.
+if (!CONFIG.roleLabels) {
+  CONFIG.roleLabels = { avp: 'AVP', rvp: 'RVP', rd: 'RD', ae: 'AE', se: 'SE', seLeader: 'SE Leader' };
+  saveConfig();
+}
+// Always ensure each label has a value (defensive against partial configs).
+['avp','rvp','rd','ae','se','seLeader'].forEach(k => {
+  if (!CONFIG.roleLabels[k]) CONFIG.roleLabels[k] = ({ avp:'AVP', rvp:'RVP', rd:'RD', ae:'AE', se:'SE', seLeader:'SE Leader' })[k];
+});
+
+/** Get the display label for a role key (avp/rvp/rd/ae/se/seLeader). */
+export function roleLabel(key) {
+  return (CONFIG.roleLabels && CONFIG.roleLabels[key]) || key;
 }
 if (!CONFIG.quotas.levels) {
   CONFIG.quotas.levels = { account: false, ae: false, se: false };
@@ -352,7 +376,33 @@ export function switchSettingsTab(tab) {
   if (tab === 'personnel') renderPersonnelSettings();
   if (tab === 'quotas')    renderQuotasSettings();
   if (tab === 'workload')  renderWorkloadSettings();
+  if (tab === 'roles')     renderRoleLabelsSettings();
 }
+
+export function renderRoleLabelsSettings() {
+  const labels = CONFIG.roleLabels || {};
+  ['avp','rvp','rd','ae','se','seLeader'].forEach(k => {
+    const el = document.getElementById('roleLabel_' + k);
+    if (el) el.value = labels[k] || '';
+  });
+}
+
+window.updateRoleLabel = (key, val) => {
+  if (!CONFIG.roleLabels) CONFIG.roleLabels = {};
+  const trimmed = String(val || '').trim();
+  const defaults = { avp:'AVP', rvp:'RVP', rd:'RD', ae:'AE', se:'SE', seLeader:'SE Leader' };
+  CONFIG.roleLabels[key] = trimmed || defaults[key];
+  saveConfig();
+  document.dispatchEvent(new CustomEvent('role-labels-changed'));
+  renderRoleLabelsSettings();
+};
+
+window.resetRoleLabels = () => {
+  CONFIG.roleLabels = { avp:'AVP', rvp:'RVP', rd:'RD', ae:'AE', se:'SE', seLeader:'SE Leader' };
+  saveConfig();
+  document.dispatchEvent(new CustomEvent('role-labels-changed'));
+  renderRoleLabelsSettings();
+};
 
 // ── Window-exposed functions (called from dynamically-generated HTML) ─────────
 

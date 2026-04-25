@@ -199,8 +199,8 @@
         <table>
           <thead>
             <tr>
-              <th>SE Name</th>
-              <th>Leader</th>
+              <th id="hdr-seName">SE Name</th>
+              <th id="hdr-seLeader">Leader</th>
               <th>Seg</th>
               <th>Accounts</th>
               <th>AEs</th>
@@ -250,6 +250,7 @@
       <button class="settings-tab active" data-tab="map"      onclick="switchSettingsTab('map')">Map</button>
       <button class="settings-tab"         data-tab="workload" onclick="switchSettingsTab('workload')">Workload</button>
       <button class="settings-tab"         data-tab="quotas"   onclick="switchSettingsTab('quotas')">Quotas</button>
+      <button class="settings-tab"         data-tab="roles"    onclick="switchSettingsTab('roles')">Roles</button>
     </div>
 
     <!-- Map tab (scope only) -->
@@ -354,6 +355,29 @@
         <em>Account level on</em> → AE quota = sum of their accounts' quotas. SE quota = sum of their accounts × (1&nbsp;−&nbsp;buffer).<br>
         <em>AE level on (account off)</em> → SE quota = sum of their AEs' quotas × (1&nbsp;−&nbsp;buffer).<br>
         Edit quotas on individual people and accounts in <strong style="color:var(--text)">Manage Data</strong>.
+      </div>
+    </div>
+
+    <!-- ROLES TAB -->
+    <div id="settings-tab-roles" class="settings-tab-panel" style="display:none">
+      <div class="settings-section" style="margin-top:16px">
+        <div class="section-title">Role Display Labels</div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:12px">
+          Customize how leadership titles appear throughout the app and exports. The internal data model is unchanged — only display labels.
+        </div>
+        <div class="role-labels-grid">
+          <label class="role-label-row"><span>AVP →</span><input type="text" id="roleLabel_avp" maxlength="24" class="add-se-input" onblur="updateRoleLabel('avp', this.value)" onkeydown="if(event.key==='Enter')this.blur()"></label>
+          <label class="role-label-row"><span>RVP →</span><input type="text" id="roleLabel_rvp" maxlength="24" class="add-se-input" onblur="updateRoleLabel('rvp', this.value)" onkeydown="if(event.key==='Enter')this.blur()"></label>
+          <label class="role-label-row"><span>RD →</span><input type="text" id="roleLabel_rd" maxlength="24" class="add-se-input" onblur="updateRoleLabel('rd', this.value)" onkeydown="if(event.key==='Enter')this.blur()"></label>
+          <label class="role-label-row"><span>AE →</span><input type="text" id="roleLabel_ae" maxlength="24" class="add-se-input" onblur="updateRoleLabel('ae', this.value)" onkeydown="if(event.key==='Enter')this.blur()"></label>
+          <label class="role-label-row"><span>SE →</span><input type="text" id="roleLabel_se" maxlength="24" class="add-se-input" onblur="updateRoleLabel('se', this.value)" onkeydown="if(event.key==='Enter')this.blur()"></label>
+          <label class="role-label-row"><span>SE Leader →</span><input type="text" id="roleLabel_seLeader" maxlength="24" class="add-se-input" onblur="updateRoleLabel('seLeader', this.value)" onkeydown="if(event.key==='Enter')this.blur()"></label>
+        </div>
+        <button class="btn btn-ghost" style="margin-top:12px" onclick="resetRoleLabels()">Reset to defaults</button>
+      </div>
+      <div style="font-size:11px;color:var(--muted);line-height:1.7;margin-top:4px;padding:10px 12px;background:var(--surface2);border-radius:8px;border:1px solid var(--border)">
+        <strong style="color:var(--text)">Examples:</strong><br>
+        Datadog uses <code>AVP / RVP / RD</code>. Other companies use <code>VP Sales / Sales Director / Regional Manager</code>, <code>Group Lead / Team Lead</code>, <code>GM / SD / TM</code>, etc. Match what your team actually says.
       </div>
     </div>
   </div>
