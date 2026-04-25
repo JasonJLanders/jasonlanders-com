@@ -772,6 +772,9 @@ document.addEventListener('workload-changed', () => render());
 // Quota tracking config changed - re-render to show/hide quota column + recompute attainment
 document.addEventListener('quota-changed', () => render());
 
+// Theme changed - re-render so markers (and any inline-styled elements that snapshot CSS values) refresh.
+document.addEventListener('theme-changed', () => render());
+
 // ── Boot ──────────────────────────────────────────────────────────────────────
 // ── Sidebar resize / collapse ────────────────────────────────────────────────
 const SIDEBAR_KEY = 'se-planner-sidebar';

@@ -358,7 +358,7 @@ async function renderFeatureEditLayer() {
 
     const labelText = featureLabel(featureId, scope);
     fLayer.bindTooltip(
-      `<strong>${labelText}</strong><br>${assignedRegion ? `Assigned: ${assignedRegion}` : '<em>Unassigned</em>'}<br><span style="color:#a78bfa">Click to change region</span>`,
+      `<strong>${labelText}</strong><br>${assignedRegion ? `Assigned: ${assignedRegion}` : '<em>Unassigned</em>'}<br><span style="color:var(--accent)">Click to change region</span>`,
       { direction: 'top' }
     );
 

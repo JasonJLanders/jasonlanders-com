@@ -148,7 +148,7 @@ html, body { font-family: var(--font); background: var(--bg); color: var(--text)
 .state-assign-btn.unassign:hover { background: var(--red); color: var(--on-accent); border-color: var(--red); }
 
 /* MAP LEGEND */
-.map-legend { position: absolute; bottom: 16px; right: 16px; background: rgba(30,21,48,0.92); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; display: flex; align-items: center; gap: 10px; font-size: 11px; color: var(--muted); z-index: 400; pointer-events: none; }
+.map-legend { position: absolute; bottom: 16px; right: 16px; background: var(--map-tooltip-bg); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; display: flex; align-items: center; gap: 10px; font-size: 11px; color: var(--muted); z-index: 400; pointer-events: none; }
 .map-legend .legend-title { font-weight: 700; color: var(--text); text-transform: uppercase; letter-spacing: 1px; font-size: 10px; margin-right: 2px; }
 .map-legend .legend-item { display: flex; align-items: center; gap: 5px; }
 .map-legend .legend-swatch { display: inline-block; width: 14px; height: 10px; border-style: solid; border-width: 2px; border-radius: 2px; background: var(--row-hover); }
@@ -304,6 +304,13 @@ thead th { padding: 10px 14px; text-align: left; font-size: 11px; font-weight: 7
 .layer-toggles label:has(input[data-role="SELeader"]:checked) { border-color: #d946ef; color: #d946ef; background: rgba(217,70,239,0.08); }
 
 /* LEAFLET OVERRIDES */
+/* Override Leaflet's default tooltip styling so all map tooltips follow our theme */
+.leaflet-tooltip { background: var(--map-tooltip-bg); border: 1px solid var(--border); color: var(--map-tooltip-text); font-family: var(--font); box-shadow: var(--shadow); }
+.leaflet-tooltip-top::before  { border-top-color: var(--border) !important; }
+.leaflet-tooltip-bottom::before { border-bottom-color: var(--border) !important; }
+.leaflet-tooltip-left::before  { border-left-color: var(--border) !important; }
+.leaflet-tooltip-right::before { border-right-color: var(--border) !important; }
+
 .leaflet-tooltip.region-label { background: var(--map-tooltip-bg); border: 1px solid var(--border); color: var(--map-tooltip-text); font-weight: 700; font-size: 13px; font-family: var(--font); box-shadow: none; padding: 4px 12px; border-radius: 6px; }
 .leaflet-tooltip.region-label::before { display: none; }
 .leaflet-tooltip.se-marker-tooltip { background: var(--map-tooltip-bg); border: 1px solid var(--border); color: var(--map-tooltip-text); font-size: 12px; font-family: var(--font); box-shadow: var(--shadow); padding: 7px 10px; border-radius: 7px; line-height: 1.55; white-space: nowrap; }
