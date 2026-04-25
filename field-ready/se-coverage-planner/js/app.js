@@ -287,12 +287,18 @@ function toggleRegionEdit() {
 
 function collapseMap() {
   document.querySelector('.app-body').classList.add('map-collapsed');
+  // Clear the inline width so the .map-collapsed CSS rule (width:100%) can take effect.
+  // The user's preferred width is still in localStorage; we restore it on expandMap.
+  const panel = document.getElementById('rightPanel');
+  if (panel) panel.style.width = '';
   document.getElementById('btnCollapseMap').style.display = 'none';
   document.getElementById('btnExpandMap').style.display = 'flex';
 }
 
 function expandMap() {
   document.querySelector('.app-body').classList.remove('map-collapsed');
+  // Restore the user's preferred panel width (or default).
+  _applyRightPanelWidth(_loadRightPanelWidth());
   document.getElementById('btnCollapseMap').style.display = selectedRegion ? 'flex' : 'none';
   document.getElementById('btnExpandMap').style.display = 'none';
   setTimeout(() => { window.dispatchEvent(new Event('resize')); }, 50);
