@@ -55,7 +55,7 @@ html, body { font-family: var(--font); background: var(--bg); color: var(--text)
 *::-webkit-scrollbar-corner { background: transparent; }
 
 /* HEADER */
-.header { background: var(--surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 24px; height: 52px; position: sticky; top: 0; z-index: 10; gap: 12px; }
+.header { background: var(--surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 24px; height: 52px; position: sticky; top: 0; z-index: 1200; gap: 12px; }
 .header-brand { font-size: 15px; font-weight: 800; color: var(--strong); letter-spacing: -0.5px; display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
 .header-tag { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--accent); background: rgba(217,70,239,0.12); padding: 2px 8px; border-radius: 100px; }
 .header-actions { display: flex; gap: 8px; align-items: center; }
