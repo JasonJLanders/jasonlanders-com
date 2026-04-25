@@ -346,7 +346,7 @@ function submitAddSE() {
 function openSettings() {
   renderSettings();
   // Always reset to first tab when re-opening
-  switchSettingsTab('regions');
+  switchSettingsTab('map');
   document.getElementById('settingsOverlay').style.display = 'flex';
 }
 
@@ -468,8 +468,12 @@ document.getElementById('btnClosePanel').addEventListener('click', closePanel);
 document.getElementById('settingsOverlay').addEventListener('click', e => {
   if (e.target === e.currentTarget) closeSettings();
 });
-document.getElementById('btnAddRegion').addEventListener('click', addRegion);
-document.getElementById('btnAddTeam').addEventListener('click', addTeam);
+// btnAddRegion / btnAddTeam were removed from Settings; regions/teams now live in Manage Data.
+// Keep these guarded in case a legacy layout is ever reintroduced.
+const _btnAddRegion = document.getElementById('btnAddRegion');
+if (_btnAddRegion) _btnAddRegion.addEventListener('click', addRegion);
+const _btnAddTeam = document.getElementById('btnAddTeam');
+if (_btnAddTeam) _btnAddTeam.addEventListener('click', addTeam);
 
 // Map scope change — reload map, close settings so user sees the new view
 document.addEventListener('map-scope-changed', async () => {
@@ -560,6 +564,10 @@ document.addEventListener('edit-person',      e => openPersonEditModal(e.detail.
 
 // Personnel CRUD completed in config.js - refresh main view
 document.addEventListener('personnel-changed', () => render());
+
+// Regions/Teams CRUD completed in manage-data.js - refresh main view + map
+document.addEventListener('regions-changed', () => render());
+document.addEventListener('teams-changed',   () => render());
 
 // ── Boot ──────────────────────────────────────────────────────────────────────
 // ── Sidebar resize / collapse ────────────────────────────────────────────────

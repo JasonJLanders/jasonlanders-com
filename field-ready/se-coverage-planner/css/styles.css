@@ -188,6 +188,12 @@ thead th { padding: 10px 14px; text-align: left; font-size: 11px; font-weight: 7
 
 /* Notes input in Manage Data accounts table */
 .dt-input.dt-notes { min-width: 180px; max-width: 320px; }
+
+/* Color picker in Manage Data regions table */
+.dt-color { width: 32px; height: 26px; border: 1px solid var(--border); border-radius: 4px; background: var(--surface2); cursor: pointer; padding: 2px; flex-shrink: 0; }
+
+/* Read-only feature list cell (can be long) */
+.region-features-cell { font-size: 11px; color: var(--muted); line-height: 1.55; max-width: 420px; word-break: break-word; padding: 6px 10px; }
 .se-select { font-size: 11px; font-family: var(--font); background: var(--surface2); color: var(--text); border: 1px solid var(--border); border-radius: 4px; padding: 2px 6px; cursor: pointer; max-width: 130px; }
 .se-select:focus { outline: 1px solid var(--accent); border-color: var(--accent); }
 

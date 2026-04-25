@@ -126,19 +126,26 @@ function esc(str) {
 // ── Regions & Teams sections ───────────────────────────────────────────────────
 
 export function renderSettings() {
-  document.getElementById('regionsList').innerHTML = CONFIG.regions.map((r, i) => `
-    <div class="settings-row">
-      <input type="color" value="${r.color}" oninput="updateRegionColor(${i}, this.value)" />
-      <input type="text" class="add-se-input" value="${esc(r.name)}" oninput="updateRegionName(${i}, this.value)" style="flex:1" />
-      <button class="del-btn" onclick="deleteRegion(${i})">&#x2715;</button>
-    </div>`).join('');
+  // Legacy Regions/Teams lists now live in Manage Data; render them only if present.
+  const regionsListEl = document.getElementById('regionsList');
+  if (regionsListEl) {
+    regionsListEl.innerHTML = CONFIG.regions.map((r, i) => `
+      <div class="settings-row">
+        <input type="color" value="${r.color}" oninput="updateRegionColor(${i}, this.value)" />
+        <input type="text" class="add-se-input" value="${esc(r.name)}" oninput="updateRegionName(${i}, this.value)" style="flex:1" />
+        <button class="del-btn" onclick="deleteRegion(${i})">&#x2715;</button>
+      </div>`).join('');
+  }
 
-  document.getElementById('teamsList').innerHTML = CONFIG.teams.map((t, i) => `
-    <div class="settings-row">
-      <input type="text" class="add-se-input" value="${esc(t.name)}" oninput="updateTeamName(${i}, this.value)" style="flex:1" />
-      <input type="text" class="add-se-input" value="${esc(t.leader||'')}" oninput="updateTeamLeader(${i}, this.value)" style="flex:1" placeholder="Optional" />
-      <button class="del-btn" onclick="deleteTeam(${i})">&#x2715;</button>
-    </div>`).join('');
+  const teamsListEl = document.getElementById('teamsList');
+  if (teamsListEl) {
+    teamsListEl.innerHTML = CONFIG.teams.map((t, i) => `
+      <div class="settings-row">
+        <input type="text" class="add-se-input" value="${esc(t.name)}" oninput="updateTeamName(${i}, this.value)" style="flex:1" />
+        <input type="text" class="add-se-input" value="${esc(t.leader||'')}" oninput="updateTeamLeader(${i}, this.value)" style="flex:1" placeholder="Optional" />
+        <button class="del-btn" onclick="deleteTeam(${i})">&#x2715;</button>
+      </div>`).join('');
+  }
 
   // Map scope radio buttons
   const scopeEl = document.getElementById('mapScopeRadios');
@@ -150,15 +157,15 @@ export function renderSettings() {
   }
 }
 
-export function updateRegionColor(i, val) { CONFIG.regions[i].color  = val; }
-export function updateRegionName(i, val)  { CONFIG.regions[i].name   = val; }
-export function updateTeamName(i, val)    { CONFIG.teams[i].name     = val; }
-export function updateTeamLeader(i, val)  { CONFIG.teams[i].leader   = val; }
+export function updateRegionColor(i, val) { CONFIG.regions[i].color  = val; saveConfig(); }
+export function updateRegionName(i, val)  { CONFIG.regions[i].name   = val; saveConfig(); }
+export function updateTeamName(i, val)    { CONFIG.teams[i].name     = val; saveConfig(); }
+export function updateTeamLeader(i, val)  { CONFIG.teams[i].leader   = val; saveConfig(); }
 
-export function addRegion()     { CONFIG.regions.push({name:'New Region', color:'#a855f7'}); renderSettings(); }
-export function deleteRegion(i) { CONFIG.regions.splice(i, 1); renderSettings(); }
-export function addTeam()       { CONFIG.teams.push({name:'New Team', leader:''}); renderSettings(); }
-export function deleteTeam(i)   { CONFIG.teams.splice(i, 1); renderSettings(); }
+export function addRegion()     { CONFIG.regions.push({name:'New Region', color:'#a855f7'}); saveConfig(); renderSettings(); }
+export function deleteRegion(i) { CONFIG.regions.splice(i, 1); saveConfig(); renderSettings(); }
+export function addTeam()       { CONFIG.teams.push({name:'New Team', leader:''}); saveConfig(); renderSettings(); }
+export function deleteTeam(i)   { CONFIG.teams.splice(i, 1); saveConfig(); renderSettings(); }
 
 // ── Personnel section ─────────────────────────────────────────────────────────
 

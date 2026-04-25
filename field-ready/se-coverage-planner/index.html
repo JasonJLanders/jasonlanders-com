@@ -161,6 +161,8 @@
     <div class="manage-data-tabs">
       <button class="md-tab active" data-tab="people"   onclick="mdSwitchTab('people')">People</button>
       <button class="md-tab"         data-tab="accounts" onclick="mdSwitchTab('accounts')">Accounts</button>
+      <button class="md-tab"         data-tab="regions"  onclick="mdSwitchTab('regions')">Regions</button>
+      <button class="md-tab"         data-tab="teams"    onclick="mdSwitchTab('teams')">Teams</button>
     </div>
     <div class="manage-data-hdr-actions">
       <button class="btn btn-primary" onclick="mdCloseView()">Save &amp; Close</button>
@@ -180,13 +182,12 @@
 
     <!-- Tab bar -->
     <div class="settings-tabs">
-      <button class="settings-tab active" data-tab="regions" onclick="switchSettingsTab('regions')">Regions</button>
-      <button class="settings-tab"         data-tab="teams"   onclick="switchSettingsTab('teams')">Teams</button>
-      <button class="settings-tab"         data-tab="quotas"  onclick="switchSettingsTab('quotas')">Quotas</button>
+      <button class="settings-tab active" data-tab="map"    onclick="switchSettingsTab('map')">Map</button>
+      <button class="settings-tab"         data-tab="quotas" onclick="switchSettingsTab('quotas')">Quotas</button>
     </div>
 
-    <!-- Regions tab -->
-    <div id="settings-tab-regions" class="settings-tab-panel">
+    <!-- Map tab (scope only) -->
+    <div id="settings-tab-map" class="settings-tab-panel">
       <div class="settings-section" style="margin-top:16px">
         <div class="section-title">Map Scope</div>
         <div id="mapScopeRadios" style="display:flex;flex-direction:column;gap:6px;margin-bottom:4px">
@@ -207,29 +208,9 @@
           onclick="if(confirm('Reset all feature assignments to US defaults?')){resetFeatureAssignments();}">
           Reset Feature Assignments to Default
         </button>
-      </div>
-      <div class="settings-section" style="margin-top:16px">
-        <div class="section-title">Regions</div>
-        <div style="display:grid;grid-template-columns:32px 1fr;gap:4px 8px;margin-bottom:8px;padding:0 34px 0 0">
-          <div style="font-size:10px;color:var(--muted)">Color</div>
-          <div style="font-size:10px;color:var(--muted)">Name</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:12px;padding:10px 12px;background:var(--surface2);border-radius:8px;border:1px solid var(--border);line-height:1.6">
+          To define region names, colors, and team/segment structure, use <strong style="color:var(--text)">☰ Manage Data</strong> in the toolbar.
         </div>
-        <div id="regionsList"></div>
-        <button class="btn btn-ghost" style="margin-top:8px;font-size:11px" id="btnAddRegion">+ Add Region</button>
-      </div>
-    </div>
-
-    <!-- Teams tab -->
-    <div id="settings-tab-teams" class="settings-tab-panel" style="display:none">
-      <div class="settings-section" style="margin-top:16px;margin-bottom:0">
-        <div class="section-title">Teams / Segments</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr 26px;gap:4px 8px;margin-bottom:8px">
-          <div style="font-size:10px;color:var(--muted)">Team Name (= Segment)</div>
-          <div style="font-size:10px;color:var(--muted)">SE Leader (optional)</div>
-          <div></div>
-        </div>
-        <div id="teamsList"></div>
-        <button class="btn btn-ghost" style="margin-top:8px;font-size:11px" id="btnAddTeam">+ Add Team</button>
       </div>
     </div>
 

@@ -7,7 +7,7 @@ import {
   ACCOUNTS, addAccount, removeAccount,
   updateAccountName, updateAccountField, countAccountDependencies, getAccount
 } from './accounts.js';
-import { CONFIG } from './config.js';
+import { CONFIG, saveConfig } from './config.js';
 import { convertFromAnnual, formatCompact, computeAEQuota, computeSEQuota } from './quotas.js';
 import { state } from './data.js';
 
@@ -40,8 +40,14 @@ function _syncTabs() {
 }
 
 function _renderBody() {
-  document.getElementById('manageDataBody').innerHTML =
-    _activeTab === 'people' ? _renderPeopleTable() : _renderAccountsTable();
+  const body = document.getElementById('manageDataBody');
+  switch (_activeTab) {
+    case 'people':   body.innerHTML = _renderPeopleTable();   break;
+    case 'accounts': body.innerHTML = _renderAccountsTable(); break;
+    case 'regions':  body.innerHTML = _renderRegionsTable();  break;
+    case 'teams':    body.innerHTML = _renderTeamsTable();    break;
+    default:         body.innerHTML = '';
+  }
 }
 
 function esc(str) {
@@ -219,7 +225,104 @@ function _renderAccountsTable() {
   </table>`;
 }
 
-// ── Window-exposed handlers ───────────────────────────────────────────────────
+// ── Regions table ─────────────────────────────────────────────────────────────────────────────
+
+// Format a list of namespaced featureIds as a readable comma-separated summary.
+// e.g. ['state:Georgia','country:Germany'] -> 'Georgia (State), Germany (Country)'
+function _formatFeatureList(list) {
+  if (!list || !list.length) return '<span style="color:var(--muted);font-style:italic">No features assigned</span>';
+  const parts = list.map(featureId => {
+    if (typeof featureId !== 'string') return '';
+    const idx = featureId.indexOf(':');
+    if (idx === -1) return esc(featureId);
+    const kind = featureId.slice(0, idx);
+    const name = featureId.slice(idx + 1);
+    const suffix = kind === 'country' ? ' (Country)' : ' (State)';
+    return esc(name) + suffix;
+  });
+  return parts.join(', ');
+}
+
+function _renderRegionsTable() {
+  const regions = CONFIG.regions || [];
+  const regionFeatures = CONFIG.regionFeatures || {};
+
+  const rows = regions.map((r, i) => {
+    const features = regionFeatures[r.name] || regionFeatures[r.id] || [];
+    const count = features.length;
+    return `<tr class="dt-row" data-entity-id="region-${i}">
+      <td style="width:48px">
+        <input type="color" value="${esc(r.color)}" class="dt-color"
+          oninput="mdUpdateRegionColor(${i}, this.value)"
+          onchange="mdUpdateRegionColor(${i}, this.value)" />
+      </td>
+      <td><input type="text" class="dt-input" value="${esc(r.name)}"
+        onblur="mdUpdateRegionName(${i}, this.value)"
+        onkeydown="mdDtKeydown(event,this)"></td>
+      <td class="region-features-cell">${_formatFeatureList(features)}</td>
+      <td class="dt-center" style="white-space:nowrap">
+        <span class="badge badge-muted">${count}</span>
+      </td>
+      <td class="dt-actions"><button class="dt-remove-btn" title="Remove region"
+        onclick="mdRemoveRegion(${i})">&#x2715;</button></td>
+    </tr>`;
+  }).join('');
+
+  return `<table class="data-table">
+    <thead><tr>
+      <th>Color</th>
+      <th>Name</th>
+      <th>Assigned features (read-only)</th>
+      <th class="dt-center">Count</th>
+      <th class="dt-actions">
+        <button class="btn btn-ghost" style="font-size:11px;padding:3px 10px"
+          onclick="mdAddRegion()">+ Add Region</button>
+      </th>
+    </tr></thead>
+    <tbody>${rows || '<tr><td colspan="5" style="padding:16px;color:var(--muted);font-size:12px">No regions defined.</td></tr>'}</tbody>
+  </table>
+  <div style="font-size:11px;color:var(--muted);margin:12px 20px;padding:10px 12px;background:var(--surface2);border-radius:8px;border:1px solid var(--border);line-height:1.6">
+    To change which states or countries belong to a region, close this panel and use <strong style="color:var(--text)">Edit Map Regions</strong> in the toolbar — click any state or country on the map to assign it.
+  </div>`;
+}
+
+// ── Teams table ─────────────────────────────────────────────────────────────────────────────
+
+function _renderTeamsTable() {
+  const teams = CONFIG.teams || [];
+  const rows = teams.map((t, i) => {
+    // Count SEs whose segment matches this team name.
+    // (Segment is stored on accounts, not people in current schema; fall back to account count.)
+    const memberCount = ACCOUNTS.filter(a => a.segment === t.name).length;
+    return `<tr class="dt-row" data-entity-id="team-${i}">
+      <td><input type="text" class="dt-input" value="${esc(t.name)}"
+        onblur="mdUpdateTeamName(${i}, this.value)"
+        onkeydown="mdDtKeydown(event,this)"></td>
+      <td><input type="text" class="dt-input" value="${esc(t.leader || '')}"
+        placeholder="Optional SE Leader"
+        onblur="mdUpdateTeamLeader(${i}, this.value)"
+        onkeydown="mdDtKeydown(event,this)"></td>
+      <td class="dt-center"><span class="badge badge-muted">${memberCount}</span></td>
+      <td class="dt-actions"><button class="dt-remove-btn" title="Remove team"
+        onclick="mdRemoveTeam(${i})">&#x2715;</button></td>
+    </tr>`;
+  }).join('');
+
+  return `<table class="data-table">
+    <thead><tr>
+      <th>Team Name (= Segment)</th>
+      <th>SE Leader (optional)</th>
+      <th class="dt-center">Accounts</th>
+      <th class="dt-actions">
+        <button class="btn btn-ghost" style="font-size:11px;padding:3px 10px"
+          onclick="mdAddTeam()">+ Add Team</button>
+      </th>
+    </tr></thead>
+    <tbody>${rows || '<tr><td colspan="4" style="padding:16px;color:var(--muted);font-size:12px">No teams defined.</td></tr>'}</tbody>
+  </table>`;
+}
+
+// ── Window-exposed handlers ─────────────────────────────────────────────────────────────────────
 
 window.mdSwitchTab = tab => {
   _activeTab = tab;
@@ -328,4 +431,130 @@ window.mdSaveAccountField = (id, field, val) => {
 
 window.mdSaveAccountQuota = (id, val) => {
   updateAccountField(id, 'quota', parseFloat(val) || 0);
+};
+
+// Regions
+function _notifyRegionsChanged() {
+  // Tell app.js to re-render the main view (region cards, map shading, etc.)
+  document.dispatchEvent(new CustomEvent('regions-changed'));
+}
+
+window.mdAddRegion = () => {
+  if (!CONFIG.regions) CONFIG.regions = [];
+  CONFIG.regions.push({ name: 'New Region', color: '#a855f7' });
+  saveConfig();
+  _notifyRegionsChanged();
+  _renderBody();
+  // Highlight + focus the new row
+  requestAnimationFrame(() => {
+    const rows = document.querySelectorAll('.data-table tr[data-entity-id^="region-"]');
+    const last = rows[rows.length - 1];
+    if (last) {
+      last.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      last.classList.add('dt-row-new');
+      const nameInput = last.querySelectorAll('input[type="text"]')[0];
+      if (nameInput) { nameInput.focus(); nameInput.select(); }
+    }
+  });
+};
+
+window.mdRemoveRegion = i => {
+  const r = CONFIG.regions[i];
+  if (!r) return;
+  const features = (CONFIG.regionFeatures || {})[r.name] || [];
+  const extra = features.length
+    ? `\n\n${features.length} feature${features.length !== 1 ? 's' : ''} assigned to this region will become unassigned.`
+    : '';
+  if (!confirm(`Remove region "${r.name}"?${extra}`)) return;
+  // Drop assignments for this region
+  if (CONFIG.regionFeatures && CONFIG.regionFeatures[r.name]) {
+    delete CONFIG.regionFeatures[r.name];
+  }
+  CONFIG.regions.splice(i, 1);
+  saveConfig();
+  _notifyRegionsChanged();
+  _renderBody();
+};
+
+window.mdUpdateRegionName = (i, val) => {
+  const newName = val.trim();
+  const r = CONFIG.regions[i];
+  if (!r || !newName || r.name === newName) { _renderBody(); return; }
+  const oldName = r.name;
+  r.name = newName;
+  // Re-key regionFeatures so assignments follow the rename
+  if (CONFIG.regionFeatures && CONFIG.regionFeatures[oldName]) {
+    CONFIG.regionFeatures[newName] = CONFIG.regionFeatures[oldName];
+    delete CONFIG.regionFeatures[oldName];
+  }
+  saveConfig();
+  _notifyRegionsChanged();
+  _renderBody();
+};
+
+window.mdUpdateRegionColor = (i, val) => {
+  const r = CONFIG.regions[i];
+  if (!r) return;
+  r.color = val;
+  saveConfig();
+  _notifyRegionsChanged();
+};
+
+// Teams
+function _notifyTeamsChanged() {
+  document.dispatchEvent(new CustomEvent('teams-changed'));
+}
+
+window.mdAddTeam = () => {
+  if (!CONFIG.teams) CONFIG.teams = [];
+  CONFIG.teams.push({ name: 'New Team', leader: '' });
+  saveConfig();
+  _notifyTeamsChanged();
+  _renderBody();
+  requestAnimationFrame(() => {
+    const rows = document.querySelectorAll('.data-table tr[data-entity-id^="team-"]');
+    const last = rows[rows.length - 1];
+    if (last) {
+      last.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      last.classList.add('dt-row-new');
+      const nameInput = last.querySelector('input[type="text"]');
+      if (nameInput) { nameInput.focus(); nameInput.select(); }
+    }
+  });
+};
+
+window.mdRemoveTeam = i => {
+  const t = CONFIG.teams[i];
+  if (!t) return;
+  const count = ACCOUNTS.filter(a => a.segment === t.name).length;
+  const extra = count ? `\n\n${count} account${count !== 1 ? 's' : ''} currently reference this segment.` : '';
+  if (!confirm(`Remove team "${t.name}"?${extra}`)) return;
+  CONFIG.teams.splice(i, 1);
+  saveConfig();
+  _notifyTeamsChanged();
+  _renderBody();
+};
+
+window.mdUpdateTeamName = (i, val) => {
+  const newName = val.trim();
+  const t = CONFIG.teams[i];
+  if (!t || !newName || t.name === newName) { _renderBody(); return; }
+  const oldName = t.name;
+  t.name = newName;
+  // Propagate rename to accounts + data rows that referenced this team as their segment
+  ACCOUNTS.forEach(a => { if (a.segment === oldName) a.segment = newName; });
+  const propagate = rows => rows.forEach(r => { if (r.segment === oldName) r.segment = newName; });
+  propagate(state.workingData);
+  if (state.scenarioB) propagate(state.scenarioB);
+  saveConfig();
+  _notifyTeamsChanged();
+  _renderBody();
+};
+
+window.mdUpdateTeamLeader = (i, val) => {
+  const t = CONFIG.teams[i];
+  if (!t) return;
+  t.leader = val.trim();
+  saveConfig();
+  _notifyTeamsChanged();
 };
