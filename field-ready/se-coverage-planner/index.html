@@ -79,7 +79,32 @@
       </div>
     </div>
     <button class="btn btn-ghost" id="btnImport">Import Data</button>
-    <button class="btn btn-primary" id="btnExport">Export XLS</button>
+    <div class="menu-wrap" id="exportMenuWrap">
+      <button class="btn btn-primary menu-btn" id="btnExportMenu" aria-haspopup="true" aria-expanded="false">Export <span class="menu-caret">▾</span></button>
+      <div class="menu-dropdown menu-dropdown-right" id="exportMenu" role="menu">
+        <button class="menu-item" id="btnExportXLS" role="menuitem">
+          <span class="menu-item-icon">▤</span>
+          <span class="menu-item-body">
+            <span class="menu-item-title">XLS Workbook</span>
+            <span class="menu-item-desc">Full data, merged hierarchy, color fills</span>
+          </span>
+        </button>
+        <button class="menu-item" id="btnExportPPT" role="menuitem">
+          <span class="menu-item-icon">▣</span>
+          <span class="menu-item-body">
+            <span class="menu-item-title">PowerPoint Deck</span>
+            <span class="menu-item-desc">Map + per-region tables, paste-ready slides</span>
+          </span>
+        </button>
+        <button class="menu-item" id="btnExportPDF" role="menuitem">
+          <span class="menu-item-icon">▢</span>
+          <span class="menu-item-body">
+            <span class="menu-item-title">PDF Report</span>
+            <span class="menu-item-desc">Same layout, one page per region</span>
+          </span>
+        </button>
+      </div>
+    </div>
   </div>
 </header>
 
@@ -436,6 +461,9 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/leaflet-image@0.4.0/leaflet-image.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <script type="module" src="js/app.js"></script>
 </body>
 </html>

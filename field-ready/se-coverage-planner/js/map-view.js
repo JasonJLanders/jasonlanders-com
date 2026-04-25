@@ -277,6 +277,8 @@ export function initMap(containerId) {
   const initialZoom   = saved ? saved.zoom            : view.zoom;
 
   map = L.map(containerId, { zoomControl: false }).setView(initialCenter, initialZoom);
+  // Expose for the export module so it can capture the map as PNG.
+  try { window.__planner_map = map; } catch {}
   L.control.zoom({ position: 'topright' }).addTo(map);
 
   _applyTileTheme();

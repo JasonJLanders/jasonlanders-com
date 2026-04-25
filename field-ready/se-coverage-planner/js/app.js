@@ -14,6 +14,7 @@ import { renderDiffBanner, renderSETable } from './table-view.js';
 import { initMap, updateRegionShading, renderRoleMarkers, enterStateEditMode, exitStateEditMode, invalidateMapSize, reloadMapScope } from './map-view.js';
 import { initTheme } from './theme.js';
 import { exportXLS } from './export-xls.js';
+import { exportPPT, exportPDF } from './export-deck.js';
 import { roleLabel } from './config.js';
 import { geocodeCities } from './geocode.js';
 
@@ -580,7 +581,32 @@ function closeSettings() {
 }
 
 function importData() { alert('Import Data - coming in Run C'); }
-function doExport() { exportXLS(); }
+function doExportXLS() { exportXLS(); }
+function doExportPPT() { exportPPT(); }
+function doExportPDF() { exportPDF(); }
+
+// Wire up the Export dropdown menu (mirrors the Edit menu pattern).
+function initExportMenu() {
+  const wrap = document.getElementById('exportMenuWrap');
+  const btn  = document.getElementById('btnExportMenu');
+  const menu = document.getElementById('exportMenu');
+  if (!wrap || !btn || !menu) return;
+
+  function close() {
+    wrap.classList.remove('open');
+    btn.setAttribute('aria-expanded', 'false');
+  }
+  btn.addEventListener('click', e => {
+    e.stopPropagation();
+    const isOpen = wrap.classList.toggle('open');
+    btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+  });
+  menu.querySelectorAll('.menu-item').forEach(item => {
+    item.addEventListener('click', () => setTimeout(close, 0));
+  });
+  document.addEventListener('click', e => { if (!wrap.contains(e.target)) close(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+}
 
 // ── Person edit / add modal ───────────────────────────────────────────────────
 
@@ -681,7 +707,13 @@ document.getElementById('btnSubmitAddSE').addEventListener('click', submitAddSE)
 document.getElementById('btnCancelAddSE').addEventListener('click', hideAddSEForm);
 document.getElementById('btnSettings').addEventListener('click', openSettings);
 document.getElementById('btnImport').addEventListener('click', importData);
-document.getElementById('btnExport').addEventListener('click', doExport);
+// Export menu items
+const _btnExportXLS = document.getElementById('btnExportXLS');
+const _btnExportPPT = document.getElementById('btnExportPPT');
+const _btnExportPDF = document.getElementById('btnExportPDF');
+if (_btnExportXLS) _btnExportXLS.addEventListener('click', doExportXLS);
+if (_btnExportPPT) _btnExportPPT.addEventListener('click', doExportPPT);
+if (_btnExportPDF) _btnExportPDF.addEventListener('click', doExportPDF);
 document.getElementById('btnViewCurrent').addEventListener('click',  () => setViewMode('current'));
 document.getElementById('btnViewProposed').addEventListener('click', () => setViewMode('proposed'));
 document.getElementById('btnResetChanges').addEventListener('click', resetChanges);
@@ -1079,6 +1111,7 @@ initMap('map');
 initSidebarControls();
 initRightPanelResize();
 initEditMenu();
+initExportMenu();
 initRegionCardCollapse();
 render();
 
