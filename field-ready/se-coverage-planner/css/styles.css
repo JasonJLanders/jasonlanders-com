@@ -554,6 +554,26 @@ thead th { padding: 10px 14px; text-align: left; font-size: 11px; font-weight: 7
 .role-label-row input { width: 100%; }
 @media (max-width: 700px) { .role-labels-grid { grid-template-columns: 1fr; } }
 
+/* REPORTS DASHBOARD */
+.rpt-strip { display: flex; gap: 10px; flex-wrap: wrap; padding: 16px 20px 4px; }
+.rpt-stat { flex: 1; min-width: 150px; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; text-align: center; }
+.rpt-stat-val { font-size: 26px; font-weight: 800; color: var(--strong); letter-spacing: -0.5px; }
+.rpt-stat-lbl { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: var(--muted); margin-top: 4px; }
+.rpt-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; margin: 16px 20px; padding: 16px 18px; }
+.rpt-card-head { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 12px; margin-bottom: 12px; }
+.rpt-card-title { font-size: 14px; font-weight: 800; color: var(--text); grid-column: 1; }
+.rpt-card-sub { font-size: 11px; color: var(--muted); grid-column: 1; grid-row: 2; }
+.rpt-png-btn { grid-column: 2; grid-row: 1 / span 2; align-self: center; padding: 5px 11px; font-size: 11px; font-weight: 700; background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; color: var(--muted); cursor: pointer; transition: background 0.1s, color 0.1s; }
+.rpt-png-btn:hover { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+.rpt-canvas-wrap { width: 100%; position: relative; }
+.rpt-matrix-wrap { overflow-x: auto; }
+.rpt-matrix { width: 100%; border-collapse: collapse; }
+.rpt-matrix th, .rpt-matrix td { padding: 8px 12px; border: 1px solid var(--border); font-size: 12px; text-align: center; vertical-align: middle; }
+.rpt-matrix thead th { background: var(--surface2); color: var(--muted); font-weight: 700; font-size: 10px; text-transform: uppercase; letter-spacing: 0.6px; }
+.rpt-matrix .rpt-row-hdr { background: var(--surface2); color: var(--text); font-weight: 700; text-align: left; }
+.rpt-cell-num { font-size: 16px; font-weight: 800; color: var(--text); }
+.rpt-cell-meta { font-size: 10px; color: var(--muted); margin-top: 2px; }
+
 /* IMPORT MODAL */
 .import-dropzone { border: 2px dashed var(--border); border-radius: 12px; padding: 28px 20px; text-align: center; transition: background 0.15s, border-color 0.15s; background: var(--surface2); }
 .import-dropzone.drag-over { border-color: var(--accent); background: rgba(217,70,239,0.08); }

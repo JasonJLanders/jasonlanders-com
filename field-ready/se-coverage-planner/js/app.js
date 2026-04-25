@@ -16,6 +16,7 @@ import { initTheme } from './theme.js';
 import { exportXLS } from './export-xls.js';
 import { exportPPT, exportPDF } from './export-deck.js';
 import { COLUMNS as IMPORT_COLUMNS, downloadTemplate, parseCSV, validateRecords, applyImport } from './import-csv.js';
+import { openReports, closeReports, exportReportsPDF } from './reports.js';
 import { roleLabel } from './config.js';
 import { geocodeCities } from './geocode.js';
 
@@ -920,6 +921,14 @@ document.getElementById('btnSubmitAddSE').addEventListener('click', submitAddSE)
 document.getElementById('btnCancelAddSE').addEventListener('click', hideAddSEForm);
 document.getElementById('btnSettings').addEventListener('click', openSettings);
 document.getElementById('btnImport').addEventListener('click', importData);
+
+// Reports overlay wiring
+const _btnReports     = document.getElementById('btnReports');
+const _btnCloseRpt    = document.getElementById('btnCloseReports');
+const _btnReportPDF   = document.getElementById('btnReportPDF');
+if (_btnReports)   _btnReports.addEventListener('click', openReports);
+if (_btnCloseRpt)  _btnCloseRpt.addEventListener('click', closeReports);
+if (_btnReportPDF) _btnReportPDF.addEventListener('click', exportReportsPDF);
 document.getElementById('btnCloseImport').addEventListener('click', _closeImport);
 document.getElementById('btnCancelImport').addEventListener('click', _closeImport);
 document.getElementById('btnConfirmImport').addEventListener('click', _doImportConfirm);

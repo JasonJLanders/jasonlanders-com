@@ -69,6 +69,13 @@
             <span class="menu-item-desc">People, accounts, regions, segments</span>
           </span>
         </button>
+        <button class="menu-item" id="btnReports" role="menuitem">
+          <span class="menu-item-icon">📊</span>
+          <span class="menu-item-body">
+            <span class="menu-item-title">Reports</span>
+            <span class="menu-item-desc">Charts: ratios, workload distribution, coverage outliers</span>
+          </span>
+        </button>
         <div class="menu-divider"></div>
         <button class="menu-item" id="btnSettings" role="menuitem">
           <span class="menu-item-icon">⚙</span>
@@ -270,6 +277,19 @@
 </div>
 
 <!-- MANAGE DATA VIEW (full-screen, below header) -->
+<!-- REPORTS OVERLAY (full-screen analytics dashboard) -->
+<div id="reportsView" class="manage-data-view" style="display:none">
+  <div class="manage-data-header">
+    <div class="manage-data-title">📊 Reports</div>
+    <div style="flex:1"></div>
+    <div class="manage-data-hdr-actions">
+      <button class="btn btn-ghost" id="btnReportPDF">Export PDF</button>
+      <button class="icon-btn" id="btnCloseReports" title="Close">&#x2715;</button>
+    </div>
+  </div>
+  <div class="manage-data-body" id="reportsBody"></div>
+</div>
+
 <div id="manageDataView" class="manage-data-view" style="display:none">
   <div class="manage-data-header">
     <div class="manage-data-title">Manage Data</div>
@@ -491,6 +511,7 @@
 <script src="https://cdn.jsdelivr.net/npm/dom-to-image-more@3.4.4/dist/dom-to-image-more.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <script type="module" src="js/app.js"></script>
 </body>
 </html>
