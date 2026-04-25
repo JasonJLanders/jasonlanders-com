@@ -1087,10 +1087,16 @@ render();
   const mapHint = document.getElementById('mapHint');
   if (mapHint) mapHint.textContent = 'Geocoding locations...';
 
-  const cityFields = ['home_city', 'ae_city', 'rd_city', 'rvp_city', 'se_leader_city'];
-  const cities = [...new Set(
-    DATA.flatMap(r => cityFields.map(f => r[f]).filter(Boolean))
-  )];
+  // Pull cities from the live workingData (covers user-added accounts) AND PEOPLE (covers
+  // people whose city was edited but not yet propagated, plus people not yet on any account).
+  const cityFields = ['home_city', 'ae_city', 'rd_city', 'rvp_city', 'se_leader_city', 'avp_city'];
+  const fromData = state.workingData.flatMap(r => cityFields.map(f => r[f]).filter(Boolean));
+  let fromPeople = [];
+  try {
+    const peopleMod = await import('./roster.js');
+    fromPeople = (peopleMod.PEOPLE || []).map(p => p.city).filter(Boolean);
+  } catch {}
+  const cities = [...new Set([...fromData, ...fromPeople])];
 
   try {
     geocache = await geocodeCities(cities);
