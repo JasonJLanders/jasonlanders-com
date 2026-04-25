@@ -36,7 +36,7 @@
   --map-bg: #e8e4f0;
   --map-tooltip-bg: rgba(255,255,255,0.94);
   --map-tooltip-text: #1f1733;
-  --marker-stroke: #1f1733;
+  --marker-stroke: #6b6584;
   --overlay-veil: rgba(20,14,35,0.42);
   --shadow: 0 4px 14px rgba(15,10,31,0.12);
   --row-hover: rgba(15,10,31,0.04);
@@ -193,7 +193,7 @@ table { width: 100%; border-collapse: collapse; }
 thead th { padding: 10px 14px; text-align: left; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); background: var(--surface2); border-bottom: 1px solid var(--border); white-space: nowrap; }
 .se-row { cursor: pointer; }
 .se-row:hover td { background: var(--surface2); }
-.se-row td { padding: 11px 14px; font-size: 13px; border-bottom: 1px solid rgba(53,42,77,0.6); transition: background 0.1s; }
+.se-row td { padding: 11px 14px; font-size: 13px; border-bottom: 1px solid var(--border); transition: background 0.1s; }
 .se-row.tbh td { color: var(--muted); border-bottom-style: dashed; }
 .se-row.unassigned td { color: var(--red); }
 .se-row td:first-child { font-weight: 600; }
@@ -208,11 +208,11 @@ thead th { padding: 10px 14px; text-align: left; font-size: 11px; font-weight: 7
 .city-cell { max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted); font-size: 12px; }
 
 /* EXPAND PANEL */
-.expand-row td { padding: 0; background: rgba(38,29,58,0.5); border-bottom: 1px solid var(--border); }
+.expand-row td { padding: 0; background: var(--surface2); border-bottom: 1px solid var(--border); }
 .expand-inner { display: none; padding: 14px 20px 14px 44px; }
 .expand-inner.open { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
 .expand-col-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 8px; }
-.expand-item { font-size: 12px; color: var(--text); padding: 4px 0; border-bottom: 1px solid rgba(53,42,77,0.4); display: flex; justify-content: space-between; align-items: center; }
+.expand-item { font-size: 12px; color: var(--text); padding: 4px 0; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
 .expand-item:last-child { border-bottom: none; }
 .expand-item.changed { border-left: 2px solid var(--amber); padding-left: 6px; margin-left: -8px; }
 .expand-item.unassigned-acct { color: var(--red); }
@@ -244,10 +244,10 @@ thead th { padding: 10px 14px; text-align: left; font-size: 11px; font-weight: 7
 /* Expandable team rows in Manage Data */
 .md-team-row { cursor: pointer; }
 .md-team-row:hover td { background: var(--surface2); }
-.team-expand td { background: rgba(38,29,58,0.4); border-bottom: 1px solid var(--border); }
+.team-expand td { background: var(--surface2); border-bottom: 1px solid var(--border); }
 .team-expand-cell { padding: 10px 18px !important; }
 .team-expand-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 8px; }
-.team-expand-row { display: grid; grid-template-columns: 1fr 120px 1fr 1fr; gap: 12px; padding: 4px 0; border-bottom: 1px solid rgba(53,42,77,0.4); font-size: 12px; align-items: center; }
+.team-expand-row { display: grid; grid-template-columns: 1fr 120px 1fr 1fr; gap: 12px; padding: 4px 0; border-bottom: 1px solid var(--border); font-size: 12px; align-items: center; }
 .team-expand-row:last-child { border-bottom: none; }
 .team-expand-acct { font-weight: 600; color: var(--text); }
 .team-expand-meta { color: var(--muted); font-size: 11px; }
@@ -255,7 +255,7 @@ thead th { padding: 10px 14px; text-align: left; font-size: 11px; font-weight: 7
 /* Region expand two-column layout: accounts on left, people on right */
 .region-expand-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
 .region-expand-col { min-width: 0; }
-.region-expand-person { display: grid; grid-template-columns: 72px 1fr auto; gap: 12px; padding: 4px 0; border-bottom: 1px solid rgba(53,42,77,0.4); font-size: 12px; align-items: center; }
+.region-expand-person { display: grid; grid-template-columns: 72px 1fr auto; gap: 12px; padding: 4px 0; border-bottom: 1px solid var(--border); font-size: 12px; align-items: center; }
 .region-expand-person:last-child { border-bottom: none; }
 @media (max-width: 900px) {
   .region-expand-grid { grid-template-columns: 1fr; }
@@ -276,7 +276,7 @@ thead th { padding: 10px 14px; text-align: left; font-size: 11px; font-weight: 7
 .region-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
 .region-name { font-size: 14px; font-weight: 700; color: var(--strong); display: flex; align-items: center; gap: 8px; }
 .region-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-.region-stat { display: flex; justify-content: space-between; font-size: 12px; padding: 4px 0; border-bottom: 1px solid rgba(53,42,77,0.4); }
+.region-stat { display: flex; justify-content: space-between; font-size: 12px; padding: 4px 0; border-bottom: 1px solid var(--border); }
 .region-stat:last-child { border-bottom: none; }
 .region-key { color: var(--muted); }
 .region-val { font-weight: 600; color: var(--text); }
@@ -335,7 +335,7 @@ thead th { padding: 10px 14px; text-align: left; font-size: 11px; font-weight: 7
 
 /* ── PERSONNEL SECTION (inside settings) ── */
 .personnel-group { padding-bottom: 4px; }
-.personnel-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 7px 0; border-bottom: 1px solid rgba(53,42,77,0.45); }
+.personnel-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--border); }
 .personnel-row:last-of-type { border-bottom: none; }
 .personnel-row.personnel-inactive { opacity: 0.5; }
 .personnel-info { display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1; flex-wrap: wrap; }
@@ -384,7 +384,7 @@ thead th { padding: 10px 14px; text-align: left; font-size: 11px; font-weight: 7
    table never shows the darker stripe. */
 .data-table tbody tr:nth-child(2n of .dt-row) { background: var(--row-hover); }
 .data-table tbody tr:hover { background: var(--surface2); }
-.dt-row td { padding: 3px 6px; border-bottom: 1px solid rgba(53,42,77,0.3); vertical-align: middle; }
+.dt-row td { padding: 3px 6px; border-bottom: 1px solid var(--border); vertical-align: middle; }
 .dt-row-inactive { opacity: 0.4; }
 
 /* NEW ROW FLASH — when a row is just added via + Add Person / + Add Account */
