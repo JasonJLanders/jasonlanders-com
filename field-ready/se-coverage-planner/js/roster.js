@@ -150,11 +150,26 @@ export function updatePersonCity(id, newCity) {
   savePeople();
 }
 
-/** Update a person's region. No cascading rename needed. */
+/**
+ * Update a person's region and propagate to data rows.
+ *
+ * For roles that drive the AE region (SE, AE, RD, RVP, AVP, SE Leader), this updates
+ * r.ae_region on every workingData row referencing this person. That makes the
+ * left-sidebar region cards count the person correctly and the map markers fall under
+ * the right region's color band.
+ */
 export function updatePersonRegion(id, newRegion) {
   const person = getPerson(id);
   if (!person) return;
   person.region = newRegion;
+  const { nameField } = ROLE_FIELDS[person.role] || {};
+  if (nameField && newRegion) {
+    const propagate = rows => rows.forEach(r => {
+      if (r[nameField] === person.name) r.ae_region = newRegion;
+    });
+    propagate(state.workingData);
+    if (state.scenarioB) propagate(state.scenarioB);
+  }
   savePeople();
 }
 
