@@ -103,14 +103,6 @@
             <span class="menu-item-desc">Same layout, one page per region</span>
           </span>
         </button>
-        <div class="menu-divider"></div>
-        <label class="menu-toggle" onclick="event.stopPropagation()">
-          <input type="checkbox" id="exportInclWorkload" onchange="setExportInclWorkload(this.checked)">
-          <span class="menu-toggle-body">
-            <span class="menu-toggle-title">Include workload health</span>
-            <span class="menu-toggle-desc">Show health bars + colored Workload column on PPT/PDF exports</span>
-          </span>
-        </label>
       </div>
     </div>
   </div>
@@ -125,6 +117,10 @@
     <label class="layer-pill"><input type="checkbox" data-role="RD"> RD</label>
     <label class="layer-pill"><input type="checkbox" data-role="RVP"> RVP</label>
     <label class="layer-pill"><input type="checkbox" data-role="SELeader"> SE Leader</label>
+    <span class="toolbar-vsep"></span>
+    <label class="layer-pill layer-pill-health" title="Show colored region health borders (green/yellow/red workload)">
+      <input type="checkbox" id="toggleHealth" checked> Health
+    </label>
   </div>
 </div>
 

@@ -95,6 +95,8 @@ html, body { font-family: var(--font); background: var(--bg); color: var(--text)
 .toolbar-layers label:has(input[data-role="RD"]:checked)       { border-color: #f59e0b; color: #f59e0b; background: rgba(245,158,11,0.08); }
 .toolbar-layers label:has(input[data-role="RVP"]:checked)      { border-color: #a855f7; color: #a855f7; background: rgba(168,85,247,0.08); }
 .toolbar-layers label:has(input[data-role="SELeader"]:checked) { border-color: #d946ef; color: #d946ef; background: rgba(217,70,239,0.08); }
+.toolbar-vsep { width: 1px; height: 16px; background: var(--border); margin: 0 4px; align-self: center; }
+.layer-pill-health:has(input:checked) { border-color: var(--green); color: var(--green); background: rgba(34,197,94,0.10); }
 
 /* APP BODY — three-panel flex layout */
 /* Layer-bar is now floating, so app-body claims the toolbar's old vertical space. */

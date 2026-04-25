@@ -40,26 +40,10 @@ async function _captureMap(includeWorkload) {
   // Wait for tiles to settle (theme change triggers a tile-layer rebuild).
   if (mapInstance) await _waitTilesLoaded(mapInstance, 4500);
 
-  // If the user opted OUT of including workload in exports, neutralize the colored
-  // region stroke (which encodes health: green/yellow/red) on the map snapshot only.
-  // Save originals so we can restore after capture.
+  // Capture takes whatever the live map currently shows. The live map's Health toggle
+  // already controls whether region strokes encode workload (green/yellow/red) or just
+  // match each region's fill color. No additional manipulation needed here.
   const restoreStrokes = [];
-  if (!includeWorkload && mapInstance) {
-    try {
-      mapInstance.eachLayer(layer => {
-        // Region polygons are L.GeoJSON layers; iterate their internal layers.
-        if (layer && typeof layer.getLayers === 'function') {
-          layer.eachLayer(child => {
-            if (child && child.options && child.setStyle && typeof child.options.color === 'string') {
-              const orig = { color: child.options.color, weight: child.options.weight };
-              restoreStrokes.push(() => child.setStyle(orig));
-              child.setStyle({ color: '#9b9aa8', weight: 1 });
-            }
-          });
-        }
-      });
-    } catch (e) { console.warn('[export-deck] stroke neutralization failed:', e); }
-  }
 
   // Small extra delay so any final paint flushes.
   await new Promise(r => setTimeout(r, 200));
@@ -359,12 +343,12 @@ async function _buildPPT() {
     alert('PowerPoint export library is still loading. Try again in a moment.');
     return;
   }
-  const inclWorkload = !!(window.getExportInclWorkload && window.getExportInclWorkload());
+  // Mirror the live map's Health toggle. Single source of truth: whatever the user sees right now.
+  const inclWorkload = !!(window.getHealthVisible && window.getHealthVisible());
   const data = (state.viewMode === 'proposed' && state.scenarioB) ? state.scenarioB : state.workingData;
   const agg = _aggregateForExport(data);
 
   const map = await _captureMap(inclWorkload);
-  // map may be null in degenerate setups; we'll lay out without it in that case.
 
   const pptx = new PptxGenJS();
   pptx.defineLayout({ name: 'WIDE_16x9', width: 13.333, height: 7.5 });
@@ -756,7 +740,8 @@ async function _buildPDF() {
     alert('PDF export library is still loading. Try again in a moment.');
     return;
   }
-  const inclWorkload = !!(window.getExportInclWorkload && window.getExportInclWorkload());
+  // Mirror the live map's Health toggle.
+  const inclWorkload = !!(window.getHealthVisible && window.getHealthVisible());
   const data = (state.viewMode === 'proposed' && state.scenarioB) ? state.scenarioB : state.workingData;
   const agg = _aggregateForExport(data);
 

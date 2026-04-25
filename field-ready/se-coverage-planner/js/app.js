@@ -130,6 +130,16 @@ function _persistLayers() {
   try { localStorage.setItem(LAYERS_STORAGE_KEY, JSON.stringify([...visibleLayers])); } catch {}
 }
 
+// Health-display toggle (live map only). Persisted to localStorage:secp:healthVisible.
+const HEALTH_VIS_KEY = 'secp:healthVisible';
+let _healthVisible = (() => {
+  try {
+    const v = localStorage.getItem(HEALTH_VIS_KEY);
+    return v === null ? true : v === '1';
+  } catch { return true; }
+})();
+window.getHealthVisible = () => _healthVisible;
+
 function refreshMarkers() {
   const data = (state.viewMode === 'proposed' && state.scenarioB) ? state.scenarioB : state.workingData;
   const roster = getRoster(data, state.rebalanceMode ? state.addedSEs : []);
@@ -164,7 +174,7 @@ function render() {
   document.dispatchEvent(new CustomEvent('regions-rendered'));
 
   // Map shading + role markers
-  updateRegionShading(data);
+  updateRegionShading(data, _healthVisible);
   refreshMarkers();
 
   // Add SE bar (only in right panel when rebalance mode + region selected)
@@ -715,18 +725,9 @@ if (_btnExportXLS) _btnExportXLS.addEventListener('click', doExportXLS);
 if (_btnExportPPT) _btnExportPPT.addEventListener('click', doExportPPT);
 if (_btnExportPDF) _btnExportPDF.addEventListener('click', doExportPDF);
 
-// Persisted toggle: include workload health visualization on PPT/PDF exports.
-const _EXPORT_INCL_WORKLOAD_KEY = 'secp:exportInclWorkload';
-function _getExportInclWorkload() {
-  try { return localStorage.getItem(_EXPORT_INCL_WORKLOAD_KEY) === '1'; } catch { return false; }
-}
-window.setExportInclWorkload = (checked) => {
-  try { localStorage.setItem(_EXPORT_INCL_WORKLOAD_KEY, checked ? '1' : '0'); } catch {}
-};
-window.getExportInclWorkload = _getExportInclWorkload;
-// Restore checkbox state on boot
-const _exportInclEl = document.getElementById('exportInclWorkload');
-if (_exportInclEl) _exportInclEl.checked = _getExportInclWorkload();
+// Export deck reads the live Health-visibility flag (window.getHealthVisible) to decide
+// whether workload visuals appear in the PPT/PDF. Single source of truth: whatever the
+// user has set on the live map at the moment of export.
 document.getElementById('btnViewCurrent').addEventListener('click',  () => setViewMode('current'));
 document.getElementById('btnViewProposed').addEventListener('click', () => setViewMode('proposed'));
 document.getElementById('btnResetChanges').addEventListener('click', resetChanges);
@@ -785,6 +786,17 @@ document.querySelectorAll('#layerToggles input[data-role]').forEach(cb => {
     refreshMarkers();
   });
 });
+
+// Health visibility toggle (overlays workload color on the live map; export mirrors current state).
+const _toggleHealthEl = document.getElementById('toggleHealth');
+if (_toggleHealthEl) {
+  _toggleHealthEl.checked = _healthVisible;
+  _toggleHealthEl.addEventListener('change', () => {
+    _healthVisible = _toggleHealthEl.checked;
+    try { localStorage.setItem(HEALTH_VIS_KEY, _healthVisible ? '1' : '0'); } catch {}
+    render();
+  });
+}
 
 // Map region-selected event
 document.addEventListener('region-selected', e => openRegion(e.detail.regionId));

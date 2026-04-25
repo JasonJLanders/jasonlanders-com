@@ -525,19 +525,38 @@ export const exitStateEditMode  = exitFeatureEditMode;
 
 // ── Region shading ────────────────────────────────────────────────────────────
 
-export function updateRegionShading(workingData) {
+/**
+ * Apply region shading. When healthVisible is true (default), each region's stroke encodes
+ * SE workload (green/yellow/red, weight by severity). When false, the stroke matches the
+ * region's own fill color so internal state/country borders within a region blend in,
+ * leaving only neighboring regions visually distinguishable by their different fills.
+ */
+export function updateRegionShading(workingData, healthVisible) {
   if (!map) return;
+  const showHealth = healthVisible !== false;
   _liveRegions().forEach(region => {
     const layer = regionLayers[region.id];
     if (!layer) return;
-    const health = regionHealth(region.id, workingData);
     const base = regionBaseColor(region.id);
-    const newStyle = {
-      color:       HEALTH_STROKE[health],
-      weight:      HEALTH_WEIGHT[health],
-      fillColor:   base,
-      fillOpacity: 0.22
-    };
+    let newStyle;
+    if (showHealth) {
+      const health = regionHealth(region.id, workingData);
+      newStyle = {
+        color:       HEALTH_STROKE[health],
+        weight:      HEALTH_WEIGHT[health],
+        fillColor:   base,
+        fillOpacity: 0.22
+      };
+    } else {
+      // Stroke = fill color (so internal state borders blend in); thin weight; same fill.
+      newStyle = {
+        color:       base,
+        weight:      1,
+        opacity:     0.55,
+        fillColor:   base,
+        fillOpacity: 0.22
+      };
+    }
     regionStyles[region.id] = newStyle;
     layer.setStyle(newStyle);
   });
