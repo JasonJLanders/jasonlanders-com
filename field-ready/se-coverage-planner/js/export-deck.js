@@ -39,43 +39,43 @@ async function _captureMap() {
   // Wait for tiles to settle (theme change triggers a tile-layer rebuild).
   if (mapInstance) await _waitTilesLoaded(mapInstance, 4500);
 
-  // Workaround for html2canvas + Leaflet pane transform offsets:
-  // Leaflet positions its panes (tilePane, overlayPane, markerPane, tooltipPane) using
-  // transform: translate3d(X, Y, 0) on the parent .leaflet-map-pane. After a pan or zoom
-  // these transforms accumulate and html2canvas can render the polygons + markers shifted
-  // relative to the tiles. We capture the live transform offsets, set them all to 0
-  // temporarily, push the same offset onto each child pane's existing transform, capture,
-  // then restore. Result: html2canvas sees a single coordinate space.
-  let restoreFn = () => {};
-  if (mapInstance) {
-    try {
-      restoreFn = _flattenLeafletTransforms(mapEl);
-    } catch (e) {
-      console.warn('[export-deck] flatten transforms failed:', e);
-    }
-  }
-
   // Small extra delay so any final paint flushes.
   await new Promise(r => setTimeout(r, 200));
+
+  // Read each pane's live computed transform here — we'll re-apply them on the html2canvas
+  // clone so the panes render at the same absolute screen positions as the source map.
+  const liveTransforms = _readLeafletPaneTransforms(mapEl);
 
   let dataUrl = null, width = 0, height = 0;
   try {
     const canvas = await html2canvas(mapEl, {
-      // Match what's currently rendered after the transform flatten.
       x: 0, y: 0,
       width:  mapEl.clientWidth,
       height: mapEl.clientHeight,
-      useCORS:    true,         // Carto tiles support CORS
+      useCORS:    true,
       allowTaint: false,
       backgroundColor: '#FFFFFF',
-      scale:      2,            // 2x for crisp print quality
+      scale:      2,
       logging:    false,
-      // Skip the leaflet-control-attribution strip and the layer-bar pill for a cleaner image.
       ignoreElements: el => {
         if (!el || !el.classList) return false;
         return el.classList.contains('leaflet-control-attribution')
             || el.classList.contains('layer-bar')
             || el.classList.contains('toolbar');
+      },
+      // After html2canvas has cloned the DOM into a hidden iframe, force-replace each
+      // Leaflet pane transform with the matrix value we read from the live DOM. This
+      // prevents html2canvas's CSS-parsing from miscalculating compound transforms.
+      onclone: (clonedDoc) => {
+        const clonedMap = clonedDoc.getElementById('map');
+        if (!clonedMap) return;
+        liveTransforms.forEach(({ selector, transform }) => {
+          const el = clonedMap.querySelector(selector);
+          if (el) {
+            el.style.transform = transform;
+            el.style.willChange = 'auto';
+          }
+        });
       }
     });
     dataUrl = canvas.toDataURL('image/png');
@@ -83,8 +83,6 @@ async function _captureMap() {
     height  = canvas.height;
   } catch (e) {
     console.warn('[export-deck] html2canvas capture failed:', e);
-  } finally {
-    try { restoreFn(); } catch {}
   }
 
   // Restore previous theme
@@ -99,61 +97,32 @@ async function _captureMap() {
 }
 
 /**
- * Workaround html2canvas + Leaflet pane offset problem.
- *
- * Leaflet sets a translate transform on .leaflet-map-pane and additional transforms on each
- * inner pane (.leaflet-tile-pane, .leaflet-overlay-pane, etc.). html2canvas sums these in a
- * way that produces an offset between tile imagery and overlay/marker layers. Workaround:
- *   1. Read the current transform on .leaflet-map-pane (translate(x, y))
- *   2. Read each child pane's existing transform (translate(cx, cy))
- *   3. Set .leaflet-map-pane transform to none
- *   4. Set each child pane's transform to translate(cx + x, cy + y)
- *      → visually identical but everything reads from a single absolute origin
- * After capture, restore the original transforms.
+ * Read the live computed transform of every Leaflet pane element inside the given map
+ * container. Returns an array of { selector, transform } that html2canvas can re-apply
+ * to its DOM clone via onclone, so the cloned panes inherit the exact transform matrix
+ * the real map uses (avoiding any CSS recalculation that drifts from the source).
  */
-function _flattenLeafletTransforms(mapEl) {
-  const mapPane = mapEl.querySelector('.leaflet-map-pane');
-  if (!mapPane) return () => {};
-
-  const parsed = _parseTranslate(getComputedStyle(mapPane).transform);
-  if (!parsed) return () => {};
-  const { x: px, y: py } = parsed;
-
-  // Snapshot original inline transforms
-  const orig = [{ el: mapPane, t: mapPane.style.transform }];
-  const childPanes = mapPane.querySelectorAll(':scope > .leaflet-pane, :scope > [class*="leaflet-"]');
-
-  // Set map-pane transform to identity
-  mapPane.style.transform = 'translate3d(0px, 0px, 0px)';
-
-  childPanes.forEach(pane => {
-    orig.push({ el: pane, t: pane.style.transform });
-    const inner = _parseTranslate(getComputedStyle(pane).transform) || { x: 0, y: 0 };
-    pane.style.transform = `translate3d(${inner.x + px}px, ${inner.y + py}px, 0px)`;
+function _readLeafletPaneTransforms(mapEl) {
+  const out = [];
+  const ids = ['.leaflet-map-pane', '.leaflet-tile-pane', '.leaflet-overlay-pane',
+               '.leaflet-shadow-pane', '.leaflet-marker-pane', '.leaflet-tooltip-pane',
+               '.leaflet-popup-pane'];
+  ids.forEach(sel => {
+    const el = mapEl.querySelector(sel);
+    if (!el) return;
+    const t = getComputedStyle(el).transform;
+    if (t && t !== 'none') out.push({ selector: sel, transform: t });
   });
-
-  return function restore() {
-    orig.forEach(({ el, t }) => { el.style.transform = t || ''; });
-  };
-}
-
-function _parseTranslate(transformStr) {
-  if (!transformStr || transformStr === 'none') return { x: 0, y: 0 };
-  // matrix(a, b, c, d, tx, ty) or matrix3d(... 13 elems including tx, ty, tz, w)
-  const mm = transformStr.match(/matrix3d\(([^)]+)\)/);
-  if (mm) {
-    const parts = mm[1].split(',').map(s => parseFloat(s.trim()));
-    if (parts.length >= 14) return { x: parts[12], y: parts[13] };
-  }
-  const m = transformStr.match(/matrix\(([^)]+)\)/);
-  if (m) {
-    const parts = m[1].split(',').map(s => parseFloat(s.trim()));
-    if (parts.length >= 6) return { x: parts[4], y: parts[5] };
-  }
-  // Fallback: parse translate(...) directly
-  const t = transformStr.match(/translate(?:3d)?\(\s*(-?[\d.]+)px[, ]+\s*(-?[\d.]+)px/);
-  if (t) return { x: parseFloat(t[1]), y: parseFloat(t[2]) };
-  return { x: 0, y: 0 };
+  // Each tile container also has its own transform (the per-zoom-level container).
+  const tileContainers = mapEl.querySelectorAll('.leaflet-tile-container');
+  tileContainers.forEach((el, i) => {
+    const t = getComputedStyle(el).transform;
+    if (t && t !== 'none') {
+      // Stable selector by index within tile-pane
+      out.push({ selector: `.leaflet-tile-pane .leaflet-tile-container:nth-child(${i + 1})`, transform: t });
+    }
+  });
+  return out;
 }
 
 function _waitTilesLoaded(map, timeoutMs) {
