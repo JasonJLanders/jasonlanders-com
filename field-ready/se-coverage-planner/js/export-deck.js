@@ -50,6 +50,23 @@ async function _captureMap() {
   // Wait for any in-flight tile loads to finish so the screenshot is complete
   await _waitTilesLoaded(mapInstance, 4000);
 
+  // leaflet-image can't rasterize Leaflet DivIcon (HTML/SVG) markers - it tries to read
+  // an iconUrl that doesn't exist and crashes inside isDataURL/addCacheString. Temporarily
+  // remove all marker layers for the capture, then restore them after.
+  const removedMarkers = [];
+  mapInstance.eachLayer(layer => {
+    if (layer instanceof L.Marker) {
+      removedMarkers.push(layer);
+    } else if (layer instanceof L.LayerGroup) {
+      try {
+        layer.eachLayer(child => {
+          if (child instanceof L.Marker) removedMarkers.push(child);
+        });
+      } catch {}
+    }
+  });
+  removedMarkers.forEach(m => { try { mapInstance.removeLayer(m); } catch {} });
+
   let dataUrl, width, height;
   try {
     const captured = await new Promise((resolve, reject) => {
@@ -70,6 +87,9 @@ async function _captureMap() {
     dataUrl = null;
     width = height = 0;
   }
+
+  // Restore marker layers we removed for capture
+  removedMarkers.forEach(m => { try { mapInstance.addLayer(m); } catch {} });
 
   // Restore previous theme
   if (previousTheme !== 'light') {
