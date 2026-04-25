@@ -91,18 +91,34 @@ function _contrastText(hex) {
 /**
  * Compute the leadership-column fill for a row given its region and team index.
  * teamIndex 0 = darkest (Majors-equivalent), increasing = lighter.
+ *
+ * Colors are intentionally muted compared to the in-app vivid region colors so the
+ * spreadsheet reads as a corporate document rather than a UI. We accomplish this by
+ * pre-shifting the base toward lightness (~+0.18) and reducing saturation, then layering
+ * the per-team delta on top.
  */
 function _leadershipFill(regionName, teamIndex, totalTeams) {
   const region = (CONFIG.regions || []).find(r => r.name === regionName);
   const base = region ? region.color : '#6b6584';
-  // Map team index linearly across [-0.20, +0.30] so first team is darker, last is lightest.
-  // For 1 team: 0 (no shift). For 2 teams: -0.20 and +0.20. For 3+: spread.
+  // Soften the base: lighten ~18% and cut saturation by ~30% so the export reads gentler.
+  const muted = _muteColor(base, 0.18, 0.30);
+  // Per-team delta: first team slightly darker than the muted base, last team slightly lighter.
   let delta = 0;
   if (totalTeams > 1) {
     const t = teamIndex / (totalTeams - 1);  // 0..1
-    delta = -0.20 + t * 0.50;                // -0.20..+0.30
+    delta = -0.10 + t * 0.25;                // -0.10..+0.15 around the muted base
   }
-  return _shiftLightness(base, delta);
+  return _shiftLightness(muted, delta);
+}
+
+/** Lighten + desaturate a hex color to mute it. */
+function _muteColor(hex, lightnessDelta, satCut) {
+  const { r, g, b } = _hexToRgb(hex);
+  const { h, s, l } = _rgbToHsl(r, g, b);
+  const ns = Math.max(0, Math.min(1, s * (1 - satCut)));
+  const nl = Math.max(0, Math.min(1, l + lightnessDelta));
+  const out = _hslToRgb(h, ns, nl);
+  return _rgbToHex(out.r, out.g, out.b);
 }
 
 // ── Sheet builders ───────────────────────────────────────────────────────────
@@ -189,6 +205,9 @@ function _buildTeamSheet(teamName, teamIndex, totalTeams, data) {
       const isLeadershipCol = MERGE_COL_INDEXES.includes(c);
 
       if (isLeadershipCol) {
+        // AE column (index 3) stays horizontal: AEs typically span few rows so vertical text reads awkwardly.
+        // AVP/RVP/RD (indexes 0,1,2) and SE Leader (index 6) rotate because they tend to span many rows.
+        const useVertical = c !== 3;
         ws[addr].s = {
           font: { bold: true, color: { rgb: textHex }, sz: 11 },
           fill: { patternType: 'solid', fgColor: { rgb: fillHex } },
@@ -196,7 +215,7 @@ function _buildTeamSheet(teamName, teamIndex, totalTeams, data) {
             horizontal: 'center',
             vertical: 'center',
             wrapText: true,
-            textRotation: 90
+            ...(useVertical ? { textRotation: 90 } : {})
           },
           border: _border('FFFFFF')
         };
