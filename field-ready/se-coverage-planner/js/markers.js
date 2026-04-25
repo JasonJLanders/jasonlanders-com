@@ -13,7 +13,7 @@ export function seIcon(color, rebalanceMode) {
     : '';
   return L.divIcon({
     className: '',
-    html: `<div style="width:${d}px;height:${d}px;border-radius:50%;background:${color};border:2px solid #fff;${glow}"></div>`,
+    html: `<div style="width:${d}px;height:${d}px;border-radius:50%;background:${color};border:2px solid var(--marker-stroke);${glow}"></div>`,
     iconSize:   [d, d],
     iconAnchor: [d / 2, d / 2]
   });
@@ -24,7 +24,7 @@ export function aeIcon() {
   return L.divIcon({
     className: '',
     html: `<div style="width:18px;height:18px;display:flex;align-items:center;justify-content:center">
-             <div style="width:13px;height:13px;background:#3b82f6;border:2px solid #fff;transform:rotate(45deg)"></div>
+             <div style="width:13px;height:13px;background:#3b82f6;border:2px solid var(--marker-stroke);transform:rotate(45deg)"></div>
            </div>`,
     iconSize:   [18, 18],
     iconAnchor: [9, 9]
@@ -57,8 +57,8 @@ export function seLeaderIcon() {
   const pts = '12,2 14.4,8.8 21.5,8.9 15.8,13.2 17.9,20.1 12,16 6.1,20.1 8.2,13.2 2.5,8.9 9.7,8.8';
   return L.divIcon({
     className: '',
-    html: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-             <polygon points="${pts}" fill="#d946ef" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/>
+    html: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" style="--ms:var(--marker-stroke,#fff)">
+             <polygon points="${pts}" fill="#d946ef" stroke="var(--marker-stroke)" stroke-width="1.5" stroke-linejoin="round"/>
            </svg>`,
     iconSize:   [24, 24],
     iconAnchor: [12, 12]

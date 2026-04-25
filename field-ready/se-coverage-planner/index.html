@@ -8,6 +8,10 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="css/styles.css" />
+  <script>
+    /* Apply persisted theme before paint to avoid flash */
+    try { if (localStorage.getItem('secp:theme') === 'light') document.documentElement.setAttribute('data-theme', 'light'); } catch (e) {}
+  </script>
 </head>
 <body>
 
@@ -28,6 +32,10 @@
       </div>
     </div>
     <div class="vsep"></div>
+    <button class="icon-btn theme-toggle" id="btnThemeToggle" title="Toggle light/dark theme" aria-label="Toggle theme">
+      <span class="theme-icon-dark">☽</span>
+      <span class="theme-icon-light">☀</span>
+    </button>
     <button class="btn btn-ghost" id="btnImport">Import Data</button>
     <button class="btn btn-primary" id="btnExport">Export CSV</button>
   </div>

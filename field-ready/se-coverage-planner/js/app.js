@@ -12,6 +12,7 @@ import { getAccountByName } from './accounts.js';
 import { computeStats, renderRegionGrid, computeHireProposal, workload } from './stats.js';
 import { renderDiffBanner, renderSETable } from './table-view.js';
 import { initMap, updateRegionShading, renderRoleMarkers, enterStateEditMode, exitStateEditMode, invalidateMapSize, reloadMapScope } from './map-view.js';
+import { initTheme } from './theme.js';
 import { geocodeCities } from './geocode.js';
 
 // ── Expose globals required by dynamically-generated inline onclick/oninput HTML ──
@@ -346,7 +347,7 @@ function openProposeHiresModal() {
       </div>`;
     }).join('');
     body.innerHTML = `
-      <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:12px">
+      <div style="font-size:14px;font-weight:700;color:var(--strong);margin-bottom:12px">
         Proposing <span style="color:var(--accent)">${proposal.totalHires}</span> new SE${proposal.totalHires !== 1 ? 's' : ''}
       </div>
       <div style="color:var(--muted);font-size:12px;margin-bottom:14px;line-height:1.6">
@@ -895,6 +896,7 @@ function initSidebarControls() {
   });
 }
 
+initTheme();
 initMap('map');
 initSidebarControls();
 render();

@@ -12,12 +12,39 @@ function currentRegionFeatures() {
 /* global L */
 
 let map = null;
+let tileLayer = null;        // current Leaflet tileLayer; rebuilt on theme change
 const regionLayers = {};     // regionId → L.geoJSON layer (combined shape)
 const regionStyles = {};     // regionId → last-committed non-hover style
 let roleMarkerLayer = null;  // L.layerGroup holding all role markers
 let featureEditLayer = null; // L.layerGroup of individual polygons for edit mode
 let regionLabelMarkers = []; // tooltip markers for region labels
 let editMode = false;
+
+const TILES = {
+  dark:  { url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+           attribution: '&copy; OpenStreetMap &copy; CARTO',
+           subdomains: 'abcd', maxZoom: 19 },
+  light: { url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+           attribution: '&copy; OpenStreetMap &copy; CARTO',
+           subdomains: 'abcd', maxZoom: 19 }
+};
+
+function _currentTheme() {
+  return document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+}
+
+function _themeStrokeColor() {
+  // Region boundary stroke color when editing region mapping. White on dark, near-black on light.
+  return _currentTheme() === 'light' ? '#1f1733' : '#ffffff';
+}
+
+function _applyTileTheme() {
+  if (!map) return;
+  if (tileLayer) { map.removeLayer(tileLayer); tileLayer = null; }
+  const cfg = TILES[_currentTheme()];
+  tileLayer = L.tileLayer(cfg.url, { attribution: cfg.attribution, subdomains: cfg.subdomains, maxZoom: cfg.maxZoom });
+  tileLayer.addTo(map);
+}
 
 // Cached world countries features (populated on first use)
 let _worldFeaturesCache = null;
@@ -210,13 +237,21 @@ export function initMap(containerId) {
   map = L.map(containerId, { zoomControl: false }).setView(view.center, view.zoom);
   L.control.zoom({ position: 'topright' }).addTo(map);
 
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-  }).addTo(map);
+  _applyTileTheme();
 
   renderRegionShapes();
 
   roleMarkerLayer = L.layerGroup().addTo(map);
+
+  // React to theme changes: swap tiles + redraw edit-mode strokes if active.
+  document.addEventListener('theme-changed', () => {
+    _applyTileTheme();
+    if (editMode && featureEditLayer) {
+      featureEditLayer.eachLayer(l => {
+        try { l.setStyle({ color: _themeStrokeColor() }); } catch {}
+      });
+    }
+  });
 }
 
 // Tell Leaflet the container size changed (e.g. after a sidebar resize/collapse).
@@ -314,7 +349,7 @@ async function renderFeatureEditLayer() {
 
     const fLayer = L.geoJSON(feature, {
       style: {
-        color:       '#fff',
+        color:       _themeStrokeColor(),
         weight:      1,
         fillColor,
         fillOpacity: assignedRegion ? 0.45 : 0.2
