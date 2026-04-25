@@ -589,7 +589,7 @@ function tooltipFor(person) {
 
 // ── Role markers ──────────────────────────────────────────────────────────────
 
-export function renderRoleMarkers(roster, geocache, visibleLayers, rebalanceMode) {
+export function renderRoleMarkers(roster, geocache, visibleLayers, rebalanceMode, showNames) {
   if (!map || !roleMarkerLayer) return;
   roleMarkerLayer.clearLayers();
 
@@ -613,11 +613,23 @@ export function renderRoleMarkers(roster, geocache, visibleLayers, rebalanceMode
 
     const marker = L.marker([coords.lat, coords.lng], { icon, draggable: isDraggable });
 
-    marker.bindTooltip(tooltipFor(person), {
-      className: 'se-marker-tooltip',
-      direction: 'top',
-      offset: [0, -10]
-    });
+    // Persistent name label next to the marker when the user has 'Names' toggled on.
+    // First name only by default to keep the map readable; full name on hover via the tooltip.
+    if (showNames) {
+      const shortName = (person.name || '').split(' ')[0] || person.name || '';
+      marker.bindTooltip(shortName, {
+        permanent: true,
+        direction: 'right',
+        offset: [10, 0],
+        className: 'marker-name-label'
+      });
+    } else {
+      marker.bindTooltip(tooltipFor(person), {
+        className: 'se-marker-tooltip',
+        direction: 'top',
+        offset: [0, -10]
+      });
+    }
 
     marker.on('click', () => {
       document.dispatchEvent(new CustomEvent('region-selected', { detail: { regionId: person.region } }));

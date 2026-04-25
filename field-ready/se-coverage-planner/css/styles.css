@@ -97,6 +97,22 @@ html, body { font-family: var(--font); background: var(--bg); color: var(--text)
 .toolbar-layers label:has(input[data-role="SELeader"]:checked) { border-color: #d946ef; color: #d946ef; background: rgba(217,70,239,0.08); }
 .toolbar-vsep { width: 1px; height: 16px; background: var(--border); margin: 0 4px; align-self: center; }
 .layer-pill-health:has(input:checked) { border-color: var(--green); color: var(--green); background: rgba(34,197,94,0.10); }
+.layer-pill-names:has(input:checked) { border-color: var(--accent); color: var(--accent); background: rgba(217,70,239,0.10); }
+
+/* Persistent name labels next to map markers (when 'Names' toggle is on) */
+.leaflet-tooltip.marker-name-label {
+  background: var(--map-tooltip-bg);
+  border: 1px solid var(--border);
+  color: var(--map-tooltip-text);
+  font-family: var(--font);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  box-shadow: var(--shadow);
+  white-space: nowrap;
+}
+.leaflet-tooltip.marker-name-label::before { display: none; }
 
 /* APP BODY — three-panel flex layout */
 /* Layer-bar is now floating, so app-body claims the toolbar's old vertical space. */

@@ -140,13 +140,20 @@ let _healthVisible = (() => {
 })();
 window.getHealthVisible = () => _healthVisible;
 
+// Names-display toggle: show person name next to each marker. Persisted at secp:showNames.
+const NAMES_VIS_KEY = 'secp:showNames';
+let _showNames = (() => {
+  try { return localStorage.getItem(NAMES_VIS_KEY) === '1'; } catch { return false; }
+})();
+window.getShowNames = () => _showNames;
+
 function refreshMarkers() {
   const data = (state.viewMode === 'proposed' && state.scenarioB) ? state.scenarioB : state.workingData;
   const roster = getRoster(data, state.rebalanceMode ? state.addedSEs : []);
   // Filter out inactive people from the map
   const inactiveNames = new Set(PEOPLE.filter(p => p.active === false).map(p => p.name));
   const filteredRoster = roster.filter(r => !inactiveNames.has(r.name));
-  renderRoleMarkers(filteredRoster, geocache, visibleLayers, state.rebalanceMode);
+  renderRoleMarkers(filteredRoster, geocache, visibleLayers, state.rebalanceMode, _showNames);
 }
 
 // ── Main render ──────────────────────────────────────────────────────────────────
@@ -795,6 +802,17 @@ if (_toggleHealthEl) {
     _healthVisible = _toggleHealthEl.checked;
     try { localStorage.setItem(HEALTH_VIS_KEY, _healthVisible ? '1' : '0'); } catch {}
     render();
+  });
+}
+
+// Names visibility toggle: shows persistent name labels next to each marker.
+const _toggleNamesEl = document.getElementById('toggleNames');
+if (_toggleNamesEl) {
+  _toggleNamesEl.checked = _showNames;
+  _toggleNamesEl.addEventListener('change', () => {
+    _showNames = _toggleNamesEl.checked;
+    try { localStorage.setItem(NAMES_VIS_KEY, _showNames ? '1' : '0'); } catch {}
+    refreshMarkers();
   });
 }
 
