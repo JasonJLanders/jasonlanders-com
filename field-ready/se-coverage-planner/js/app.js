@@ -15,6 +15,7 @@ import { initMap, updateRegionShading, renderRoleMarkers, enterStateEditMode, ex
 import { initTheme } from './theme.js';
 import { exportXLS } from './export-xls.js';
 import { exportPPT, exportPDF } from './export-deck.js';
+import { COLUMNS as IMPORT_COLUMNS, downloadTemplate, parseCSV, validateRecords, applyImport } from './import-csv.js';
 import { roleLabel } from './config.js';
 import { geocodeCities } from './geocode.js';
 
@@ -599,7 +600,187 @@ function closeSettings() {
   render();
 }
 
-function importData() { alert('Import Data - coming in Run C'); }
+// ── Import Data modal ──────────────────────────────────────────────────────────────────────────
+const esc = _esc; // alias the existing _esc helper for inline-template readability
+let _importPending = null; // { valid, skipped, warnings } once a file has parsed successfully
+
+function importData() {
+  _importPending = null;
+  const overlay = document.getElementById('importOverlay');
+  const body    = document.getElementById('importBody');
+  const confirm = document.getElementById('btnConfirmImport');
+  if (!overlay || !body || !confirm) return;
+  body.innerHTML = _renderImportSpec();
+  confirm.style.display = 'none';
+  overlay.style.display = 'flex';
+  _wireImportSpec();
+}
+
+function _renderImportSpec() {
+  const cols = IMPORT_COLUMNS.map(c => `
+    <tr>
+      <td><code>${c.label}</code>${c.required ? ' <span style="color:var(--red);font-weight:700;font-size:10px">REQ</span>' : ''}</td>
+      <td style="color:var(--muted)">${c.desc || ''}</td>
+    </tr>`).join('');
+
+  return `
+    <div style="font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:14px;padding:10px 12px;background:var(--surface2);border-radius:8px;border:1px solid var(--border)">
+      <strong style="color:var(--text)">Replace-all import.</strong> Importing a file will <em>replace</em> all existing accounts and people. Configuration (regions, segments, role labels, map geometry) is unaffected. Configure those before importing.
+    </div>
+
+    <div style="display:flex;gap:10px;align-items:center;margin-bottom:14px">
+      <button class="btn btn-ghost" id="btnDownloadTemplate">\u2b07 Download sample CSV</button>
+      <span style="font-size:11px;color:var(--muted)">Edit the sample, then drop or upload it back here.</span>
+    </div>
+
+    <div id="importDropzone" class="import-dropzone">
+      <div style="font-size:13px;color:var(--text);font-weight:600;margin-bottom:4px">Drop CSV here</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:12px">or</div>
+      <button class="btn btn-primary" id="btnPickFile">Choose File</button>
+      <input type="file" id="importFileInput" accept=".csv,text/csv" style="display:none">
+    </div>
+
+    <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.6px;margin:18px 0 8px">Required + optional columns</div>
+    <div style="max-height:240px;overflow-y:auto;border:1px solid var(--border);border-radius:8px">
+      <table class="import-cols-table">
+        <thead><tr><th>Column</th><th>Description</th></tr></thead>
+        <tbody>${cols}</tbody>
+      </table>
+    </div>
+  `;
+}
+
+function _wireImportSpec() {
+  const dl = document.getElementById('btnDownloadTemplate');
+  if (dl) dl.addEventListener('click', downloadTemplate);
+
+  const pick = document.getElementById('btnPickFile');
+  const fileInput = document.getElementById('importFileInput');
+  if (pick && fileInput) {
+    pick.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', e => {
+      const f = e.target.files && e.target.files[0];
+      if (f) _handleImportFile(f);
+    });
+  }
+
+  const dz = document.getElementById('importDropzone');
+  if (dz) {
+    ['dragenter', 'dragover'].forEach(evt => {
+      dz.addEventListener(evt, e => { e.preventDefault(); e.stopPropagation(); dz.classList.add('drag-over'); });
+    });
+    ['dragleave', 'drop'].forEach(evt => {
+      dz.addEventListener(evt, e => { e.preventDefault(); e.stopPropagation(); dz.classList.remove('drag-over'); });
+    });
+    dz.addEventListener('drop', e => {
+      const f = e.dataTransfer.files && e.dataTransfer.files[0];
+      if (f) _handleImportFile(f);
+    });
+  }
+}
+
+async function _handleImportFile(file) {
+  const body = document.getElementById('importBody');
+  if (!body) return;
+  if (!/\.csv$/i.test(file.name) && !/csv/i.test(file.type)) {
+    body.innerHTML = `<div style="padding:20px;color:var(--red);font-size:13px">Unsupported file type. Please upload a .csv file.</div>` + body.innerHTML;
+    return;
+  }
+  let text;
+  try { text = await file.text(); }
+  catch (e) {
+    body.innerHTML = `<div style="padding:20px;color:var(--red);font-size:13px">Could not read file: ${(e && e.message) || e}</div>`;
+    return;
+  }
+  const { headers, records } = parseCSV(text);
+  const result = validateRecords(headers, records);
+  if (result.headerError) {
+    body.innerHTML = `<div style="padding:18px 16px;background:rgba(239,68,68,0.10);border:1px solid rgba(239,68,68,0.4);border-radius:8px;color:var(--red);font-size:13px;line-height:1.6">
+        <strong>Header error</strong><br>${esc(result.headerError)}
+      </div>
+      <div style="margin-top:12px"><button class="btn btn-ghost" onclick="document.getElementById('btnCancelImport').click()">Back</button></div>`;
+    return;
+  }
+  _importPending = result;
+  _renderImportPreview(file.name, result);
+}
+
+function _renderImportPreview(filename, result) {
+  const body    = document.getElementById('importBody');
+  const confirm = document.getElementById('btnConfirmImport');
+  if (!body || !confirm) return;
+
+  const validN   = result.valid.length;
+  const skippedN = result.skipped.length;
+  const warnN    = result.warnings.length;
+
+  const summary = `
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">
+      <div class="import-stat"><div class="import-stat-val" style="color:var(--green)">${validN}</div><div class="import-stat-lbl">Will Import</div></div>
+      <div class="import-stat"><div class="import-stat-val" style="color:${skippedN ? 'var(--red)' : 'var(--muted)'}">${skippedN}</div><div class="import-stat-lbl">Skipped</div></div>
+      <div class="import-stat"><div class="import-stat-val" style="color:${warnN ? 'var(--amber)' : 'var(--muted)'}">${warnN}</div><div class="import-stat-lbl">Warnings</div></div>
+    </div>
+  `;
+
+  const skippedList = result.skipped.length
+    ? `<div style="margin-bottom:14px">
+        <div style="font-size:11px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:6px">Skipped rows</div>
+        <div style="max-height:140px;overflow-y:auto;font-size:12px;color:var(--text);background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.25);border-radius:6px;padding:8px 10px;line-height:1.6">
+          ${result.skipped.map(s => `<div>Row ${s.rowIdx}: ${esc(s.reason)}</div>`).join('')}
+        </div>
+      </div>`
+    : '';
+
+  const warnList = result.warnings.length
+    ? `<div style="margin-bottom:14px">
+        <div style="font-size:11px;font-weight:700;color:var(--amber);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:6px">Warnings</div>
+        <div style="max-height:120px;overflow-y:auto;font-size:12px;color:var(--text);background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.25);border-radius:6px;padding:8px 10px;line-height:1.6">
+          ${result.warnings.map(w => `<div>${esc(w)}</div>`).join('')}
+        </div>
+      </div>`
+    : '';
+
+  const replaceWarning = `
+    <div style="padding:12px 14px;background:rgba(217,70,239,0.08);border:1px solid rgba(217,70,239,0.3);border-radius:8px;font-size:12px;color:var(--text);line-height:1.6;margin-bottom:14px">
+      <strong style="color:var(--accent)">Heads up:</strong> Clicking “Replace Data” will wipe all existing accounts, people, and any saved scenario. Configuration (regions, segments, role labels) stays.
+    </div>
+  `;
+
+  body.innerHTML = `
+    <div style="font-size:13px;color:var(--text);margin-bottom:6px">
+      Reviewed <strong>${esc(filename)}</strong>
+    </div>
+    ${summary}
+    ${skippedList}
+    ${warnList}
+    ${validN ? replaceWarning : '<div style="color:var(--muted);font-size:12px;margin:8px 0">No valid rows found in this file. Fix the issues above and try again, or download the sample CSV for the expected format.</div>'}
+  `;
+
+  if (validN > 0) {
+    confirm.style.display = '';
+    confirm.textContent = `Replace Data \u00b7 Import ${validN} row${validN !== 1 ? 's' : ''}`;
+  } else {
+    confirm.style.display = 'none';
+  }
+}
+
+function _doImportConfirm() {
+  if (!_importPending || !_importPending.valid || !_importPending.valid.length) return;
+  applyImport(_importPending.valid);
+  _importPending = null;
+  document.getElementById('importOverlay').style.display = 'none';
+  // Re-render everything against the new data
+  render();
+  // Geocode any newly-introduced cities
+  setTimeout(() => {
+    document.dispatchEvent(new CustomEvent('imported-data'));
+  }, 50);
+}
+
+function _closeImport() {
+  _importPending = null;
+  document.getElementById('importOverlay').style.display = 'none';
+}
 function doExportXLS() { exportXLS(); }
 function doExportPPT() { exportPPT(); }
 function doExportPDF() { exportPDF(); }
@@ -726,6 +907,12 @@ document.getElementById('btnSubmitAddSE').addEventListener('click', submitAddSE)
 document.getElementById('btnCancelAddSE').addEventListener('click', hideAddSEForm);
 document.getElementById('btnSettings').addEventListener('click', openSettings);
 document.getElementById('btnImport').addEventListener('click', importData);
+document.getElementById('btnCloseImport').addEventListener('click', _closeImport);
+document.getElementById('btnCancelImport').addEventListener('click', _closeImport);
+document.getElementById('btnConfirmImport').addEventListener('click', _doImportConfirm);
+document.getElementById('importOverlay').addEventListener('click', e => {
+  if (e.target.id === 'importOverlay') _closeImport();
+});
 // Export menu items
 const _btnExportXLS = document.getElementById('btnExportXLS');
 const _btnExportPPT = document.getElementById('btnExportPPT');
@@ -1219,3 +1406,20 @@ render();
   }
   refreshMarkers();
 })();
+
+// After a CSV import, re-geocode any new cities and refresh markers.
+document.addEventListener('imported-data', async () => {
+  const cityFields = ['home_city', 'ae_city', 'rd_city', 'rvp_city', 'se_leader_city', 'avp_city'];
+  const fromData = state.workingData.flatMap(r => cityFields.map(f => r[f]).filter(Boolean));
+  let fromPeople = [];
+  try {
+    const peopleMod = await import('./roster.js');
+    fromPeople = (peopleMod.PEOPLE || []).map(p => p.city).filter(Boolean);
+  } catch {}
+  const cities = [...new Set([...fromData, ...fromPeople])];
+  try {
+    const fresh = await geocodeCities(cities);
+    Object.assign(geocache, fresh);
+  } catch {}
+  refreshMarkers();
+});

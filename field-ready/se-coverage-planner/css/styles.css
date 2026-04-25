@@ -554,6 +554,18 @@ thead th { padding: 10px 14px; text-align: left; font-size: 11px; font-weight: 7
 .role-label-row input { width: 100%; }
 @media (max-width: 700px) { .role-labels-grid { grid-template-columns: 1fr; } }
 
+/* IMPORT MODAL */
+.import-dropzone { border: 2px dashed var(--border); border-radius: 12px; padding: 28px 20px; text-align: center; transition: background 0.15s, border-color 0.15s; background: var(--surface2); }
+.import-dropzone.drag-over { border-color: var(--accent); background: rgba(217,70,239,0.08); }
+.import-cols-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.import-cols-table thead { position: sticky; top: 0; background: var(--surface2); z-index: 1; }
+.import-cols-table th { text-align: left; padding: 8px 12px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: var(--muted); border-bottom: 1px solid var(--border); }
+.import-cols-table td { padding: 6px 12px; font-size: 12px; vertical-align: top; border-bottom: 1px dashed var(--border); }
+.import-cols-table td code { background: var(--surface2); padding: 1px 6px; border-radius: 4px; font-size: 11px; color: var(--text); }
+.import-stat { flex: 1; min-width: 110px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; text-align: center; }
+.import-stat-val { font-size: 22px; font-weight: 800; color: var(--text); letter-spacing: -0.5px; }
+.import-stat-lbl { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: var(--muted); margin-top: 3px; }
+
 /* SORTABLE TABLE HEADERS (Manage Data tabs) */
 .sort-th { cursor: pointer; user-select: none; transition: background 0.1s, color 0.1s; }
 .sort-th:hover { background: var(--row-hover); color: var(--text); }
