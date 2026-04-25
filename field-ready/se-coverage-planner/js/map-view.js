@@ -1,4 +1,11 @@
-import { REGIONS, BENCH } from './data.js';
+import { BENCH } from './data.js';
+
+// Build a region list from CONFIG.regions (the live, user-editable source) instead of the
+// legacy hardcoded data.js REGIONS constant. Each region uses its name as both id and name
+// so map layer keys + regionFeatures lookups stay aligned with stats/sidebar/export.
+function _liveRegions() {
+  return (CONFIG.regions || []).map(r => ({ id: r.name, name: r.name, color: r.color }));
+}
 import { US_STATES } from './us-states.js';
 import { regionHealth } from './stats.js';
 import { CONFIG, assignFeatureToRegion, getRegionForFeature } from './config.js';
@@ -63,10 +70,10 @@ const SCOPE_VIEWS = {
 };
 
 function regionBaseColor(regionId) {
-  const cfg = CONFIG.regions.find(r => r.name === regionId || r.id === regionId);
+  const cfg = (CONFIG.regions || []).find(r => r.name === regionId || r.id === regionId);
   if (cfg && cfg.color) return cfg.color;
-  const idx = REGIONS.findIndex(r => r.id === regionId);
-  return DEFAULT_REGION_COLORS[idx % DEFAULT_REGION_COLORS.length];
+  const idx = (CONFIG.regions || []).findIndex(r => (r.name === regionId) || (r.id === regionId));
+  return DEFAULT_REGION_COLORS[(idx >= 0 ? idx : 0) % DEFAULT_REGION_COLORS.length];
 }
 
 const REGION_CENTROIDS = {
@@ -324,7 +331,7 @@ async function renderRegionShapes() {
   // Build a quick set of all known featureIds in the active feature set so we can warn about misses.
   const knownIds = new Set(allFeatures.map(f => f.properties.featureId));
 
-  REGIONS.forEach(region => {
+  _liveRegions().forEach(region => {
     const names = regionFeatures[region.id] || [];
     const nameSet = new Set(names);
     const fc = subsetByNames(allFeatures, nameSet);
@@ -515,7 +522,7 @@ export const exitStateEditMode  = exitFeatureEditMode;
 
 export function updateRegionShading(workingData) {
   if (!map) return;
-  REGIONS.forEach(region => {
+  _liveRegions().forEach(region => {
     const layer = regionLayers[region.id];
     if (!layer) return;
     const health = regionHealth(region.id, workingData);
