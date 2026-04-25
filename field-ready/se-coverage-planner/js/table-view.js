@@ -79,10 +79,13 @@ export function renderSETable(seList, data, seNames, rebalanceMode, viewMode, ch
       ? `<button class="remove-se-btn" onclick="event.stopPropagation();removeSE(this.dataset.sename)" data-sename="${esc(se.se)}">&#x2715;</button>`
       : '';
 
-    // SE name cell: clickable to edit if the person exists in PEOPLE
-    let seNameCell;
+    // SE name cell: separates the wrap-able name text from the auxiliary icons (note pencil,
+    // proposed badge, remove button) so icons stay anchored to the right and don't wrap below the name.
+    let seNameTextHtml;
+    let seNameAuxHtml;
     if (se.isUnassigned) {
-      seNameCell = `<span class="needs-assign-badge">&#9888; UNASSIGNED</span>`;
+      seNameTextHtml = `<span class="needs-assign-badge">&#9888; UNASSIGNED</span>`;
+      seNameAuxHtml = '';
     } else {
       const sePerson = getPersonByName(se.se, 'SE');
       const seNameContent = sePerson
@@ -90,7 +93,8 @@ export function renderSETable(seList, data, seNames, rebalanceMode, viewMode, ch
         : esc(se.se);
       const seNote = _personNoteIcon(sePerson);
       const proposedBadge = isProposed ? '<span class="proposed-badge" title="Proposed by Propose Hires wizard">\u2728 Proposed</span>' : '';
-      seNameCell = seNameContent + (seNote ? ' ' + seNote : '') + proposedBadge + removeBtnHtml;
+      seNameTextHtml = seNameContent;
+      seNameAuxHtml = (seNote || '') + proposedBadge + removeBtnHtml;
     }
 
     let quotaCellHtml = '';
@@ -120,7 +124,7 @@ export function renderSETable(seList, data, seNames, rebalanceMode, viewMode, ch
     }
 
     seRow.innerHTML = `
-      <td><div class="se-name-cell"><span class="chevron">&#9654;</span><span class="se-name-text">${seNameCell}</span></div></td>
+      <td><div class="se-name-cell"><span class="chevron">&#9654;</span><span class="se-name-text">${seNameTextHtml}</span>${seNameAuxHtml ? `<span class="se-name-aux">${seNameAuxHtml}</span>` : ''}</div></td>
       <td>${se.isUnassigned ? '\u2014' : esc(se.se_leader)}</td>
       <td>${se.isUnassigned ? '\u2014' : esc(se.segment)}</td>
       <td>${se.accountCount}</td><td>${se.aeCount}</td><td>${se.rdCount}</td>
