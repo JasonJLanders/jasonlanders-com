@@ -100,14 +100,19 @@ export function renderSETable(seList, data, seNames, rebalanceMode, viewMode, ch
       } else {
         const q = classifyQuotaAttainment(se.quotaAttainment);
         const carriedLabel  = formatCompact(se.quotaCarried || 0);
-        const personalLabel = se.quotaPersonal > 0 ? formatCompact(se.quotaPersonal) : '\u2014';
+        const hasPersonal   = se.quotaPersonal > 0;
+        const personalLabel = hasPersonal ? formatCompact(se.quotaPersonal) : null;
         const desc = quotaCoverageDescription(q.tier);
-        const tip = se.quotaPersonal > 0
+        const tip = hasPersonal
           ? `Carrying ${carriedLabel} against personal target of ${personalLabel} (${q.label}).${desc ? '\n\n' + desc : ''}`
           : `No personal quota set for this SE; carrying ${carriedLabel} from accounts/AEs assigned.`;
+        // Show "$13.0M / $3.0M" when a personal target exists, else just the carried number.
+        const headlineHtml = hasPersonal
+          ? `<span class="quota-carry">${carriedLabel}</span><span class="quota-target"> / ${personalLabel}</span>`
+          : `<span class="quota-carry">${carriedLabel}</span><span class="quota-target quota-target-missing" title="No personal quota set in Manage Data \u2192 People"> / no target</span>`;
         quotaCellHtml = `<td class="quota-cell" title="${esc(tip)}">
           <div class="quota-cell-stack">
-            <span class="quota-carry">${carriedLabel}</span>
+            <div class="quota-cell-line">${headlineHtml}</div>
             <span class="badge ${q.cls} quota-attain-badge">${q.label}</span>
           </div>
         </td>`;
@@ -115,7 +120,7 @@ export function renderSETable(seList, data, seNames, rebalanceMode, viewMode, ch
     }
 
     seRow.innerHTML = `
-      <td><span class="chevron">&#9654;</span>${seNameCell}</td>
+      <td><div class="se-name-cell"><span class="chevron">&#9654;</span><span class="se-name-text">${seNameCell}</span></div></td>
       <td>${se.isUnassigned ? '\u2014' : esc(se.se_leader)}</td>
       <td>${se.isUnassigned ? '\u2014' : esc(se.segment)}</td>
       <td>${se.accountCount}</td><td>${se.aeCount}</td><td>${se.rdCount}</td>

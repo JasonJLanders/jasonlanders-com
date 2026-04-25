@@ -197,7 +197,12 @@ thead th { padding: 10px 14px; text-align: left; font-size: 11px; font-weight: 7
 .se-row.tbh td { color: var(--muted); border-bottom-style: dashed; }
 .se-row.unassigned td { color: var(--red); }
 .se-row td:first-child { font-weight: 600; }
-.chevron { display: inline-block; font-size: 10px; color: var(--muted); margin-right: 6px; transition: transform 0.15s; }
+.chevron { display: inline-block; font-size: 10px; color: var(--muted); transition: transform 0.15s; flex-shrink: 0; }
+
+/* SE name cell: chevron in its own column so wrapping names left-align under the name, not under the chevron */
+.se-name-cell { display: flex; align-items: flex-start; gap: 6px; }
+.se-name-cell .chevron { line-height: 1.5; padding-top: 2px; }
+.se-name-text { flex: 1; min-width: 0; }
 .se-row.open .chevron, .chevron.open { transform: rotate(90deg); }
 @keyframes seRowPulse {
   0%   { background: rgba(245,158,11,0.22); box-shadow: inset 0 0 0 1px #f59e0b; }
@@ -425,7 +430,10 @@ thead th { padding: 10px 14px; text-align: left; font-size: 11px; font-weight: 7
 /* QUOTA CELL in SE table */
 .quota-cell { white-space: nowrap; }
 .quota-cell-stack { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; line-height: 1.2; }
+.quota-cell-line { display: flex; align-items: baseline; gap: 0; }
 .quota-carry { font-size: 12px; font-weight: 700; color: var(--text); }
+.quota-target { font-size: 11px; font-weight: 600; color: var(--muted); }
+.quota-target-missing { color: var(--red); font-style: italic; }
 .quota-attain-badge { font-size: 9px; padding: 1px 6px; }
 
 /* Per-account quota tag in the expand row */
