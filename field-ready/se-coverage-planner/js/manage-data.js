@@ -250,26 +250,77 @@ function _renderRegionsTable() {
   const rows = regions.map((r, i) => {
     const features = regionFeatures[r.name] || regionFeatures[r.id] || [];
     const count = features.length;
-    return `<tr class="dt-row" data-entity-id="region-${i}">
+
+    // Accounts whose region matches (accounts store region as the region NAME)
+    const regionAccounts = ACCOUNTS.filter(a => a.region === r.name);
+    // People whose region matches
+    const regionPeople = PEOPLE.filter(p => p.active !== false && p.region === r.name);
+
+    const acctList = regionAccounts.length
+      ? regionAccounts.map(a => {
+          const seg  = a.segment ? esc(a.segment) : '<span style="color:var(--muted)">—</span>';
+          const ae   = a.ae      ? esc(a.ae)      : '<span style="color:var(--muted)">—</span>';
+          const se   = a.se      ? esc(a.se)      : '<span style="color:var(--muted)">—</span>';
+          return `<div class="team-expand-row">
+            <span class="team-expand-acct">${esc(a.name)}</span>
+            <span class="team-expand-meta">${seg}</span>
+            <span class="team-expand-meta">AE: ${ae}</span>
+            <span class="team-expand-meta">SE: ${se}</span>
+          </div>`;
+        }).join('')
+      : '<div style="color:var(--muted);font-size:12px;padding:4px 0">No accounts in this region.</div>';
+
+    const peopleList = regionPeople.length
+      ? regionPeople.map(p => {
+          const city = p.city ? esc(p.city) : '<span style="color:var(--muted)">—</span>';
+          return `<div class="region-expand-person">
+            <span class="badge badge-muted" style="min-width:60px;text-align:center">${esc(p.role)}</span>
+            <span class="team-expand-acct">${esc(p.name)}</span>
+            <span class="team-expand-meta">${city}</span>
+          </div>`;
+        }).join('')
+      : '<div style="color:var(--muted);font-size:12px;padding:4px 0">No people in this region.</div>';
+
+    return `<tr class="dt-row md-team-row" data-entity-id="region-${i}" data-region-index="${i}"
+        onclick="mdToggleRegionExpand(event, ${i})">
+      <td style="width:18px;cursor:pointer"><span class="chevron" id="region-chev-${i}">&#9654;</span></td>
       <td style="width:48px">
         <input type="color" value="${esc(r.color)}" class="dt-color"
           oninput="mdUpdateRegionColor(${i}, this.value)"
-          onchange="mdUpdateRegionColor(${i}, this.value)" />
+          onchange="mdUpdateRegionColor(${i}, this.value)"
+          onclick="event.stopPropagation()" />
       </td>
       <td><input type="text" class="dt-input" value="${esc(r.name)}"
         onblur="mdUpdateRegionName(${i}, this.value)"
-        onkeydown="mdDtKeydown(event,this)"></td>
+        onkeydown="mdDtKeydown(event,this)"
+        onclick="event.stopPropagation()"></td>
       <td class="region-features-cell">${_formatFeatureList(features)}</td>
       <td class="dt-center" style="white-space:nowrap">
         <span class="badge badge-muted">${count}</span>
       </td>
       <td class="dt-actions"><button class="dt-remove-btn" title="Remove region"
-        onclick="mdRemoveRegion(${i})">&#x2715;</button></td>
+        onclick="event.stopPropagation();mdRemoveRegion(${i})">&#x2715;</button></td>
+    </tr>
+    <tr class="team-expand" id="region-exp-${i}" style="display:none">
+      <td></td>
+      <td colspan="5" class="team-expand-cell">
+        <div class="region-expand-grid">
+          <div class="region-expand-col">
+            <div class="team-expand-title">Accounts (${regionAccounts.length})</div>
+            ${acctList}
+          </div>
+          <div class="region-expand-col">
+            <div class="team-expand-title">People (${regionPeople.length})</div>
+            ${peopleList}
+          </div>
+        </div>
+      </td>
     </tr>`;
   }).join('');
 
   return `<table class="data-table">
     <thead><tr>
+      <th style="width:18px"></th>
       <th>Color</th>
       <th>Name</th>
       <th>Assigned features (read-only)</th>
@@ -279,7 +330,7 @@ function _renderRegionsTable() {
           onclick="mdAddRegion()">+ Add Region</button>
       </th>
     </tr></thead>
-    <tbody>${rows || '<tr><td colspan="5" style="padding:16px;color:var(--muted);font-size:12px">No regions defined.</td></tr>'}</tbody>
+    <tbody>${rows || '<tr><td colspan="6" style="padding:16px;color:var(--muted);font-size:12px">No regions defined.</td></tr>'}</tbody>
   </table>
   <div style="font-size:11px;color:var(--muted);margin:12px 20px;padding:10px 12px;background:var(--surface2);border-radius:8px;border:1px solid var(--border);line-height:1.6">
     To change which states or countries belong to a region, close this panel and use <strong style="color:var(--text)">Edit Map Regions</strong> in the toolbar — click any state or country on the map to assign it.
@@ -591,6 +642,16 @@ window.mdToggleTeamExpand = (e, i) => {
   if (e && e.target && (e.target.closest('input,button,.dt-remove-btn'))) return;
   const expRow = document.getElementById('team-exp-' + i);
   const chev   = document.getElementById('team-chev-' + i);
+  if (!expRow) return;
+  const isOpen = expRow.style.display !== 'none';
+  expRow.style.display = isOpen ? 'none' : '';
+  if (chev) chev.classList.toggle('open', !isOpen);
+};
+
+window.mdToggleRegionExpand = (e, i) => {
+  if (e && e.target && (e.target.closest('input,button,.dt-remove-btn,.dt-color'))) return;
+  const expRow = document.getElementById('region-exp-' + i);
+  const chev   = document.getElementById('region-chev-' + i);
   if (!expRow) return;
   const isOpen = expRow.style.display !== 'none';
   expRow.style.display = isOpen ? 'none' : '';

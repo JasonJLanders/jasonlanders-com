@@ -205,6 +205,15 @@ thead th { padding: 10px 14px; text-align: left; font-size: 11px; font-weight: 7
 .team-expand-row:last-child { border-bottom: none; }
 .team-expand-acct { font-weight: 600; color: var(--text); }
 .team-expand-meta { color: var(--muted); font-size: 11px; }
+
+/* Region expand two-column layout: accounts on left, people on right */
+.region-expand-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.region-expand-col { min-width: 0; }
+.region-expand-person { display: grid; grid-template-columns: 72px 1fr auto; gap: 12px; padding: 4px 0; border-bottom: 1px solid rgba(53,42,77,0.4); font-size: 12px; align-items: center; }
+.region-expand-person:last-child { border-bottom: none; }
+@media (max-width: 900px) {
+  .region-expand-grid { grid-template-columns: 1fr; }
+}
 .se-select { font-size: 11px; font-family: var(--font); background: var(--surface2); color: var(--text); border: 1px solid var(--border); border-radius: 4px; padding: 2px 6px; cursor: pointer; max-width: 130px; }
 .se-select:focus { outline: 1px solid var(--accent); border-color: var(--accent); }
 
