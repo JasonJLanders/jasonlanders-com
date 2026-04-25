@@ -796,6 +796,67 @@ const SIDEBAR_MIN = 200;
 const SIDEBAR_MAX = 520;
 const SIDEBAR_DEFAULT = 320;
 
+// Right panel resize state (persisted under secp:rightPanelWidth)
+const RIGHT_PANEL_KEY = 'secp:rightPanelWidth';
+const RIGHT_PANEL_MIN = 480;
+const RIGHT_PANEL_MAX = 1400;
+const RIGHT_PANEL_DEFAULT = 760;
+
+function _loadRightPanelWidth() {
+  try {
+    const v = parseInt(localStorage.getItem(RIGHT_PANEL_KEY), 10);
+    if (isNaN(v)) return RIGHT_PANEL_DEFAULT;
+    return Math.max(RIGHT_PANEL_MIN, Math.min(RIGHT_PANEL_MAX, v));
+  } catch { return RIGHT_PANEL_DEFAULT; }
+}
+function _saveRightPanelWidth(w) {
+  try { localStorage.setItem(RIGHT_PANEL_KEY, String(w)); } catch {}
+}
+function _applyRightPanelWidth(w) {
+  const panel = document.getElementById('rightPanel');
+  if (!panel) return;
+  panel.style.width = w + 'px';
+}
+
+function initRightPanelResize() {
+  const panel = document.getElementById('rightPanel');
+  const resizer = document.getElementById('rightPanelResizer');
+  if (!panel || !resizer) return;
+
+  // Restore persisted width
+  _applyRightPanelWidth(_loadRightPanelWidth());
+
+  let dragging = false;
+  let rafId = null;
+
+  resizer.addEventListener('mousedown', e => {
+    e.preventDefault();
+    dragging = true;
+    panel.classList.add('resizing');
+    document.body.style.cursor = 'col-resize';
+  });
+  document.addEventListener('mousemove', e => {
+    if (!dragging) return;
+    // Panel is anchored to the right; width = (viewport right edge) - (mouse x)
+    const newWidth = window.innerWidth - e.clientX;
+    const clamped = Math.max(RIGHT_PANEL_MIN, Math.min(RIGHT_PANEL_MAX, newWidth));
+    if (rafId) cancelAnimationFrame(rafId);
+    rafId = requestAnimationFrame(() => {
+      _applyRightPanelWidth(clamped);
+      invalidateMapSize();
+    });
+  });
+  document.addEventListener('mouseup', () => {
+    if (!dragging) return;
+    dragging = false;
+    panel.classList.remove('resizing');
+    document.body.style.cursor = '';
+    const finalWidth = parseInt(panel.style.width, 10);
+    if (!isNaN(finalWidth)) _saveRightPanelWidth(finalWidth);
+    invalidateMapSize();
+  });
+}
+
 function loadSidebarState() {
   try { return JSON.parse(localStorage.getItem(SIDEBAR_KEY) || '{}'); } catch { return {}; }
 }
@@ -916,6 +977,7 @@ function initSidebarControls() {
 initTheme();
 initMap('map');
 initSidebarControls();
+initRightPanelResize();
 render();
 
 // Async geocoding - collect all role cities then render markers
