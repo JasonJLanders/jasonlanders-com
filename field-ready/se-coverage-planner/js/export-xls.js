@@ -191,18 +191,40 @@ function _buildTeamSheet(teamName, teamIndex, totalTeams, data) {
     };
   }
 
+  // Pre-compute partition rows: where do AVP / RVP / SE Leader values change between consecutive rows?
+  // These boundaries get heavier top borders to visually separate major leadership groups.
+  // Comparison is between rows[i-1] and rows[i] (data array, 0-indexed). Sheet row r=i+1.
+  const heavyTopRows = new Set();   // AVP boundary -> heaviest
+  const mediumTopRows = new Set();  // RVP or SE Leader boundary -> medium
+  for (let i = 1; i < rows.length; i++) {
+    const prev = rows[i - 1];
+    const cur  = rows[i];
+    if ((prev.avp || '') !== (cur.avp || '')) {
+      heavyTopRows.add(i + 1); // sheet row index
+    } else if ((prev.rvp || '') !== (cur.rvp || '') || (prev.se_leader || '') !== (cur.se_leader || '')) {
+      mediumTopRows.add(i + 1);
+    }
+  }
+
   // Style each row.
   // Determine a per-row region by looking at the source row's ae_region.
   for (let r = 1; r < aoa.length; r++) {
     const sourceRow = rows[r - 1];
     const fillHex = _leadershipFill(sourceRow.ae_region, teamIndex, totalTeams);
     const textHex = _contrastText(fillHex);
+    const isHeavyTop  = heavyTopRows.has(r);
+    const isMediumTop = mediumTopRows.has(r);
 
     for (let c = 0; c < LEAD_COLS.length; c++) {
       const addr = XLSX.utils.encode_cell({ r, c });
       if (!ws[addr]) ws[addr] = { t: 's', v: '' };
 
       const isLeadershipCol = MERGE_COL_INDEXES.includes(c);
+      const cellBorder = _partitionBorder({
+        baseColor: isLeadershipCol ? 'FFFFFF' : 'D9D3E6',
+        topHeavy: isHeavyTop,
+        topMedium: isMediumTop
+      });
 
       if (isLeadershipCol) {
         // AE column (index 3) stays horizontal: AEs typically span few rows so vertical text reads awkwardly.
@@ -217,14 +239,14 @@ function _buildTeamSheet(teamName, teamIndex, totalTeams, data) {
             wrapText: true,
             ...(useVertical ? { textRotation: 90 } : {})
           },
-          border: _border('FFFFFF')
+          border: cellBorder
         };
       } else {
         // Account / SE columns: plain horizontal text
         ws[addr].s = {
           font: { sz: 11, color: { rgb: '1F1733' } },
           alignment: { horizontal: 'left', vertical: 'center', wrapText: true },
-          border: _border('D9D3E6')
+          border: cellBorder
         };
       }
     }
@@ -243,6 +265,19 @@ function _border(hex) {
     bottom: { style: 'thin', color: { rgb: hex } },
     left:   { style: 'thin', color: { rgb: hex } },
     right:  { style: 'thin', color: { rgb: hex } }
+  };
+}
+
+/** Cell border with optional heavier/medium top edge for partition lines. */
+function _partitionBorder({ baseColor, topHeavy, topMedium }) {
+  const HEAVY  = { style: 'medium', color: { rgb: '4A4163' } };
+  const MEDIUM = { style: 'thin',   color: { rgb: '6B6584' } };
+  const base   = { style: 'thin',   color: { rgb: baseColor } };
+  return {
+    top:    topHeavy ? HEAVY : (topMedium ? MEDIUM : base),
+    bottom: base,
+    left:   base,
+    right:  base
   };
 }
 
