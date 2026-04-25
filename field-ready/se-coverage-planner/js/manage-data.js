@@ -42,11 +42,12 @@ function _syncTabs() {
 function _renderBody() {
   const body = document.getElementById('manageDataBody');
   switch (_activeTab) {
-    case 'people':   body.innerHTML = _renderPeopleTable();   break;
-    case 'accounts': body.innerHTML = _renderAccountsTable(); break;
-    case 'regions':  body.innerHTML = _renderRegionsTable();  break;
-    case 'teams':    body.innerHTML = _renderTeamsTable();    break;
-    default:         body.innerHTML = '';
+    case 'people':     body.innerHTML = _renderPeopleTable();     break;
+    case 'accounts':   body.innerHTML = _renderAccountsTable();   break;
+    case 'regions':    body.innerHTML = _renderRegionsTable();    break;
+    case 'teams':      body.innerHTML = _renderTeamsTable();      break;
+    case 'leadership': body.innerHTML = _renderLeadershipMap();   break;
+    default:           body.innerHTML = '';
   }
 }
 
@@ -69,8 +70,8 @@ function _quotaShowAccounts() { return !!(CONFIG.quotas?.levels?.account); }
 
 // ── Option builders ───────────────────────────────────────────────────────────
 
-const ROLE_OPTS = ['SE','AE','RD','RVP','SELeader'];
-const ROLE_LBL  = { SE:'SE', AE:'AE', RD:'RD', RVP:'RVP', SELeader:'SE Leader' };
+const ROLE_OPTS = ['SE','AE','RD','RVP','AVP','SELeader'];
+const ROLE_LBL  = { SE:'SE', AE:'AE', RD:'RD', RVP:'RVP', AVP:'AVP', SELeader:'SE Leader' };
 
 function _roleOpts(sel) {
   return ROLE_OPTS.map(r =>
@@ -358,7 +359,7 @@ function _renderTeamsTable() {
             <span class="team-expand-meta">SE: ${seStr}</span>
           </div>`;
         }).join('')
-      : '<div style="color:var(--muted);font-size:12px;padding:4px 0">No accounts reference this team.</div>';
+      : '<div style="color:var(--muted);font-size:12px;padding:4px 0">No accounts reference this segment.</div>';
 
     return `<tr class="dt-row md-team-row" data-entity-id="team-${i}" data-team-index="${i}"
         onclick="mdToggleTeamExpand(event, ${i})">
@@ -373,13 +374,13 @@ function _renderTeamsTable() {
         onkeydown="mdDtKeydown(event,this)"
         onclick="event.stopPropagation()"></td>
       <td class="dt-center"><span class="badge badge-muted">${count}</span></td>
-      <td class="dt-actions"><button class="dt-remove-btn" title="Remove team"
+      <td class="dt-actions"><button class="dt-remove-btn" title="Remove segment"
         onclick="event.stopPropagation();mdRemoveTeam(${i})">&#x2715;</button></td>
     </tr>
     <tr class="team-expand" id="team-exp-${i}" style="display:none">
       <td></td>
       <td colspan="4" class="team-expand-cell">
-        <div class="team-expand-title">Accounts in this team (${count})</div>
+        <div class="team-expand-title">Accounts in this segment (${count})</div>
         ${acctList}
       </td>
     </tr>`;
@@ -388,16 +389,114 @@ function _renderTeamsTable() {
   return `<table class="data-table">
     <thead><tr>
       <th style="width:18px"></th>
-      <th>Team Name (= Segment)</th>
+      <th>Segment Name</th>
       <th>SE Leader (optional)</th>
       <th class="dt-center">Accounts</th>
       <th class="dt-actions">
         <button class="btn btn-ghost" style="font-size:11px;padding:3px 10px"
-          onclick="mdAddTeam()">+ Add Team</button>
+          onclick="mdAddTeam()">+ Add Segment</button>
       </th>
     </tr></thead>
-    <tbody>${rows || '<tr><td colspan="5" style="padding:16px;color:var(--muted);font-size:12px">No teams defined.</td></tr>'}</tbody>
+    <tbody>${rows || '<tr><td colspan="5" style="padding:16px;color:var(--muted);font-size:12px">No segments defined.</td></tr>'}</tbody>
   </table>`;
+}
+
+// ── Leadership Map (read-only summary derived from account rows) ─────────────────────
+function _renderLeadershipMap() {
+  const data = state.workingData || [];
+  if (!data.length) {
+    return '<div style="padding:24px;color:var(--muted);font-size:13px">No data loaded.</div>';
+  }
+
+  // Aggregate by leadership role
+  // For each person at each leadership tier, compute: regions covered, segments covered, account count.
+  function aggregate(roleField) {
+    const map = new Map();
+    data.forEach(r => {
+      const name = r[roleField];
+      if (!name || name.startsWith('UNASSIGNED') || name.startsWith('TBH')) return;
+      if (!map.has(name)) map.set(name, { regions: new Set(), segments: new Set(), accountCount: 0, directReports: new Set() });
+      const e = map.get(name);
+      if (r.ae_region) e.regions.add(r.ae_region);
+      if (r.segment)   e.segments.add(r.segment);
+      e.accountCount++;
+    });
+    return [...map.entries()].map(([name, e]) => ({
+      name,
+      regions:  [...e.regions].sort(),
+      segments: [...e.segments].sort(),
+      accountCount: e.accountCount
+    })).sort((a, b) => a.name.localeCompare(b.name));
+  }
+
+  // For RVPs, compute their direct-report RDs (whose accounts share the same RVP).
+  function reportsForRole(parentField, childField) {
+    const map = new Map();
+    data.forEach(r => {
+      const parent = r[parentField];
+      const child  = r[childField];
+      if (!parent || !child || parent.startsWith('UNASSIGNED') || child.startsWith('UNASSIGNED')) return;
+      if (parent.startsWith('TBH') || child.startsWith('TBH')) return;
+      if (!map.has(parent)) map.set(parent, new Set());
+      map.get(parent).add(child);
+    });
+    return map;
+  }
+
+  const avps = aggregate('avp');
+  const rvps = aggregate('rvp');
+  const rds  = aggregate('rd');
+  const seLeaders = aggregate('se_leader');
+
+  const avpToRvps = reportsForRole('avp', 'rvp');
+  const rvpToRds  = reportsForRole('rvp', 'rd');
+  const rdToAes   = reportsForRole('rd', 'ae');
+  const seLeaderToSes = reportsForRole('se_leader', 'se');
+
+  function renderTier(title, items, getReports, reportsLabel) {
+    if (!items.length) {
+      return `<div class="lm-tier"><div class="lm-tier-title">${title}</div><div style="color:var(--muted);font-size:12px;padding:6px 0">No ${title.toLowerCase()} found in account data.</div></div>`;
+    }
+    return `<div class="lm-tier">
+      <div class="lm-tier-title">${title} (${items.length})</div>
+      <div class="lm-grid">
+        ${items.map(p => {
+          const reports = getReports ? getReports(p.name) : null;
+          const reportsHtml = reports && reports.size
+            ? `<div class="lm-reports"><div class="lm-reports-label">${reportsLabel}: ${reports.size}</div><div class="lm-reports-list">${[...reports].sort().map(esc).join(', ')}</div></div>`
+            : '';
+          const crossRegion = p.regions.length > 1
+            ? `<span class="lm-flag lm-flag-multi" title="Spans multiple regions">${p.regions.length} regions</span>`
+            : '';
+          const crossSegment = p.segments.length > 1
+            ? `<span class="lm-flag lm-flag-multi" title="Spans multiple segments">${p.segments.length} segments</span>`
+            : '';
+          return `<div class="lm-card">
+            <div class="lm-name">${esc(p.name)}</div>
+            <div class="lm-meta">
+              <span>${p.regions.join(', ') || '\u2014'}</span>
+              <span class="lm-sep">\u00b7</span>
+              <span>${p.segments.join(', ') || '\u2014'}</span>
+              <span class="lm-sep">\u00b7</span>
+              <span>${p.accountCount} accts</span>
+              ${crossRegion}${crossSegment}
+            </div>
+            ${reportsHtml}
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+  }
+
+  return `<div class="lm-container">
+    <div style="font-size:12px;color:var(--muted);padding:8px 16px;line-height:1.6;background:var(--surface2);border-radius:8px;margin-bottom:16px">
+      Read-only summary derived from your account data. Edit assignments in the <strong style="color:var(--text)">Accounts</strong> tab; this view updates automatically. Cross-region and cross-segment leaders are flagged.
+    </div>
+    ${renderTier('AVPs',       avps,       n => avpToRvps.get(n),     'RVPs')}
+    ${renderTier('RVPs',       rvps,       n => rvpToRds.get(n),      'RDs')}
+    ${renderTier('RDs',        rds,        n => rdToAes.get(n),       'AEs')}
+    ${renderTier('SE Leaders', seLeaders,  n => seLeaderToSes.get(n), 'SEs')}
+  </div>`;
 }
 
 // ── Window-exposed handlers ─────────────────────────────────────────────────────────────────────
@@ -585,7 +684,7 @@ function _notifyTeamsChanged() {
 
 window.mdAddTeam = () => {
   if (!CONFIG.teams) CONFIG.teams = [];
-  CONFIG.teams.push({ name: 'New Team', leader: '' });
+  CONFIG.teams.push({ name: 'New Segment', leader: '' });
   saveConfig();
   _notifyTeamsChanged();
   _renderBody();

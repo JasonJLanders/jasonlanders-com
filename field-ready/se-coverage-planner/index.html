@@ -65,7 +65,7 @@
           <span class="menu-item-icon">☰</span>
           <span class="menu-item-body">
             <span class="menu-item-title">Manage Data</span>
-            <span class="menu-item-desc">People, accounts, regions, teams</span>
+            <span class="menu-item-desc">People, accounts, regions, segments</span>
           </span>
         </button>
         <div class="menu-divider"></div>
@@ -226,7 +226,8 @@
       <button class="md-tab active" data-tab="people"   onclick="mdSwitchTab('people')">People</button>
       <button class="md-tab"         data-tab="accounts" onclick="mdSwitchTab('accounts')">Accounts</button>
       <button class="md-tab"         data-tab="regions"  onclick="mdSwitchTab('regions')">Regions</button>
-      <button class="md-tab"         data-tab="teams"    onclick="mdSwitchTab('teams')">Teams</button>
+      <button class="md-tab"         data-tab="teams"    onclick="mdSwitchTab('teams')">Segments</button>
+      <button class="md-tab"         data-tab="leadership" onclick="mdSwitchTab('leadership')">Leadership</button>
     </div>
     <div class="manage-data-hdr-actions">
       <button class="btn btn-primary" onclick="mdCloseView()">Save &amp; Close</button>
@@ -274,7 +275,7 @@
           Reset Feature Assignments to Default
         </button>
         <div style="font-size:11px;color:var(--muted);margin-top:12px;padding:10px 12px;background:var(--surface2);border-radius:8px;border:1px solid var(--border);line-height:1.6">
-          To define region names, colors, and team/segment structure, use <strong style="color:var(--text)">☰ Manage Data</strong> in the toolbar.
+          To define region names, colors, and segment structure, use <strong style="color:var(--text)">☰ Manage Data</strong> in the toolbar.
         </div>
       </div>
     </div>
@@ -303,11 +304,11 @@
       </div>
 
       <div class="settings-section">
-        <div class="section-title">Thresholds by Team / Segment</div>
+        <div class="section-title">Thresholds by Segment</div>
         <div id="workloadThresholds"></div>
         <div style="font-size:11px;color:var(--muted);margin-top:8px;line-height:1.6">
-          <strong style="color:var(--text)">Default</strong> is used for any team without its own row.
-          Define team names in <strong style="color:var(--text)">☰ Manage Data → Teams</strong>.
+          <strong style="color:var(--text)">Default</strong> is used for any segment without its own row.
+          Define segment names in <strong style="color:var(--text)">☰ Manage Data → Segments</strong>.
         </div>
       </div>
     </div>

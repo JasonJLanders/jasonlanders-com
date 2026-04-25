@@ -11,12 +11,15 @@ function genId() {
 // Never reassign it; only mutate in-place so references stay valid.
 export const PEOPLE = [];
 
-// Maps role → which DATA fields hold the name / city / region for that role
+// Maps role → which DATA fields hold the name / city / region for that role.
+// AVP rows may span multiple regions; the regionField is treated as 'home region' for AVP
+// (their actual scope is derived by aggregating account rows that reference them).
 export const ROLE_FIELDS = {
   SE:       { nameField: 'se',        cityField: 'home_city',      regionField: 'ae_region' },
   AE:       { nameField: 'ae',        cityField: 'ae_city',        regionField: 'ae_region' },
   RD:       { nameField: 'rd',        cityField: 'rd_city',        regionField: 'ae_region' },
   RVP:      { nameField: 'rvp',       cityField: 'rvp_city',       regionField: 'ae_region' },
+  AVP:      { nameField: 'avp',       cityField: 'avp_city',       regionField: 'ae_region' },
   SELeader: { nameField: 'se_leader', cityField: 'se_leader_city', regionField: 'ae_region' },
 };
 
@@ -26,6 +29,7 @@ export const ORPHAN_VALUE = {
   AE:       'UNASSIGNED - AE',
   RD:       'UNASSIGNED - RD',
   RVP:      'UNASSIGNED - RVP',
+  AVP:      'UNASSIGNED - AVP',
   SELeader: 'UNASSIGNED - LEADER',
 };
 
@@ -53,6 +57,7 @@ export function buildPeopleFromData(data) {
     add(row.ae,        'AE',       row.ae_city,        row.ae_region);
     add(row.rd,        'RD',       row.rd_city,        row.ae_region);
     add(row.rvp,       'RVP',      row.rvp_city,       row.ae_region);
+    add(row.avp,       'AVP',      row.avp_city,       row.ae_region);
     add(row.se_leader, 'SELeader', row.se_leader_city, row.ae_region);
   });
   return people;

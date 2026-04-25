@@ -521,6 +521,21 @@ thead th { padding: 10px 14px; text-align: left; font-size: 11px; font-weight: 7
 :root[data-theme="light"] .theme-toggle .theme-icon-dark  { display: none; }
 :root[data-theme="light"] .theme-toggle .theme-icon-light { display: inline; }
 
+/* LEADERSHIP MAP (Manage Data → Leadership tab) */
+.lm-container { display: flex; flex-direction: column; gap: 18px; padding: 4px 0 16px; }
+.lm-tier { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+.lm-tier-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--accent); margin-bottom: 12px; }
+.lm-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; }
+.lm-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; }
+.lm-name { font-size: 13px; font-weight: 700; color: var(--text); }
+.lm-meta { font-size: 11px; color: var(--muted); display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
+.lm-sep { opacity: 0.5; }
+.lm-flag { display: inline-block; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 100px; margin-left: 4px; }
+.lm-flag-multi { color: var(--amber); background: rgba(245,158,11,0.15); border: 1px solid rgba(245,158,11,0.35); }
+.lm-reports { margin-top: 4px; padding-top: 6px; border-top: 1px dashed var(--border); }
+.lm-reports-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: var(--muted); margin-bottom: 3px; }
+.lm-reports-list { font-size: 11px; color: var(--text); line-height: 1.5; }
+
 /* QUOTA CELL in SE table */
 .quota-cell { white-space: nowrap; }
 .quota-cell-stack { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; line-height: 1.2; }
