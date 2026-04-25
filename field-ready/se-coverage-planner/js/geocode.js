@@ -1,4 +1,6 @@
-const CACHE_KEY = 'se-planner-geocache';
+// v2 = global geocoding (was US-only). Bumping the key force-refreshes prior null entries
+// for international cities that previously failed to geocode under the US-only constraint.
+const CACHE_KEY = 'se-planner-geocache-v2';
 
 function loadCache() {
   try { return JSON.parse(localStorage.getItem(CACHE_KEY) || '{}'); }
@@ -27,7 +29,8 @@ export async function geocodeCities(cities) {
     const city = missing[i];
     if (i > 0) await delay(1100); // Nominatim rate limit: 1 req/sec
     try {
-      const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(city)}&format=json&limit=1&countrycodes=us`;
+      // No country restriction — supports global cities (was previously locked to US-only).
+      const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(city)}&format=json&limit=1`;
       const res = await fetch(url, {
         headers: { 'Accept': 'application/json' }
       });

@@ -321,11 +321,21 @@ async function renderRegionShapes() {
 
   const allFeatures = (await getMapFeatures(effectiveScope)).features;
 
+  // Build a quick set of all known featureIds in the active feature set so we can warn about misses.
+  const knownIds = new Set(allFeatures.map(f => f.properties.featureId));
+
   REGIONS.forEach(region => {
     const names = regionFeatures[region.id] || [];
     const nameSet = new Set(names);
     const fc = subsetByNames(allFeatures, nameSet);
-    if (!fc.features.length) return;
+    if (!fc.features.length) {
+      // Surface assigned-but-unrenderable features so user/dev can see what's wrong.
+      const orphans = names.filter(n => !knownIds.has(n));
+      if (orphans.length) {
+        console.warn(`[map] Region '${region.id}' has ${orphans.length} feature(s) not in active scope (${effectiveScope}):`, orphans);
+      }
+      return;
+    }
 
     const base = regionBaseColor(region.id);
     const initialStyle = {
