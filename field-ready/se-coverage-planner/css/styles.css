@@ -200,10 +200,10 @@ thead th { padding: 10px 14px; text-align: left; font-size: 11px; font-weight: 7
 .chevron { display: inline-block; font-size: 10px; color: var(--muted); transition: transform 0.15s; flex-shrink: 0; }
 
 /* SE name cell: chevron in its own column so wrapping names left-align under the name, not under the chevron.
-   Aux column (note pencil / proposed badge / remove button) stays anchored to the right and doesn't wrap below. */
-.se-name-cell { display: flex; align-items: flex-start; gap: 6px; }
+   Aux column (note pencil / proposed badge / remove button) sits next to the name, not pushed to the right edge. */
+.se-name-cell { display: flex; align-items: flex-start; gap: 6px; flex-wrap: wrap; }
 .se-name-cell .chevron { line-height: 1.5; padding-top: 2px; }
-.se-name-text { flex: 1; min-width: 0; }
+.se-name-text { min-width: 0; word-break: break-word; }
 .se-name-aux { display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0; padding-top: 1px; }
 .se-row.open .chevron, .chevron.open { transform: rotate(90deg); }
 @keyframes seRowPulse {
@@ -219,7 +219,8 @@ thead th { padding: 10px 14px; text-align: left; font-size: 11px; font-weight: 7
 .expand-inner { display: none; padding: 14px 20px 14px 44px; }
 .expand-inner.open { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
 .expand-col-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 8px; }
-.expand-item { font-size: 12px; color: var(--text); padding: 4px 0; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+.expand-item { font-size: 12px; color: var(--text); padding: 4px 0; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.expand-name-wrap { display: inline-flex; align-items: center; gap: 6px; min-width: 0; flex: 0 1 auto; }
 .expand-item:last-child { border-bottom: none; }
 .expand-item.changed { border-left: 2px solid var(--amber); padding-left: 6px; margin-left: -8px; }
 .expand-item.unassigned-acct { color: var(--red); }

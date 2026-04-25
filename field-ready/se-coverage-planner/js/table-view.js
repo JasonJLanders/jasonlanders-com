@@ -176,14 +176,14 @@ export function renderSETable(seList, data, seNames, rebalanceMode, viewMode, ch
     // AE list — clickable if person exists in PEOPLE; orphan values shown in red
     const aeHtml = [...se.aes].map(a => {
       if (a.startsWith('UNASSIGNED')) {
-        return `<div class="expand-item unassigned-acct"><span class="needs-assign-badge">&#9888; ${esc(a)}</span></div>`;
+        return `<div class="expand-item unassigned-acct"><span class="expand-name-wrap"><span class="needs-assign-badge">&#9888; ${esc(a)}</span></span></div>`;
       }
       const aePerson = getPersonByName(a, 'AE');
       const note = _personNoteIcon(aePerson);
       if (aePerson) {
-        return `<div class="expand-item"><span class="ae-clickable" data-person-id="${aePerson.id}" title="Click to edit ${esc(a)}">${esc(a)}</span>${note ? ' ' + note : ''}</div>`;
+        return `<div class="expand-item"><span class="expand-name-wrap"><span class="ae-clickable" data-person-id="${aePerson.id}" title="Click to edit ${esc(a)}">${esc(a)}</span>${note ? ' ' + note : ''}</span></div>`;
       }
-      return `<div class="expand-item">${esc(a)}</div>`;
+      return `<div class="expand-item"><span class="expand-name-wrap">${esc(a)}</span></div>`;
     }).join('');
 
     const expandRow = document.createElement('tr');
