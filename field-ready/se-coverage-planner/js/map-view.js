@@ -530,10 +530,34 @@ export const exitStateEditMode  = exitFeatureEditMode;
  * SE workload (green/yellow/red, weight by severity). When false, the stroke matches the
  * region's own fill color so internal state/country borders within a region blend in,
  * leaving only neighboring regions visually distinguishable by their different fills.
+ *
+ * If the live regions list has changed since shapes were last built (regions added or
+ * removed via Manage Data or CSV import), rebuild the shapes layer from scratch so the
+ * map matches CONFIG.regions exactly.
  */
 export function updateRegionShading(workingData, healthVisible) {
   if (!map) return;
   const showHealth = healthVisible !== false;
+
+  // Detect drift between current map layers and the live regions list. If the sets differ,
+  // rebuild shapes - this handles BOTH added regions (no layer yet) and removed regions
+  // (layer still attached but no longer in CONFIG).
+  const liveIds = new Set(_liveRegions().map(r => r.id));
+  const layerIds = new Set(Object.keys(regionLayers));
+  let driftDetected = liveIds.size !== layerIds.size;
+  if (!driftDetected) {
+    for (const id of liveIds) { if (!layerIds.has(id)) { driftDetected = true; break; } }
+  }
+  if (!driftDetected) {
+    for (const id of layerIds) { if (!liveIds.has(id)) { driftDetected = true; break; } }
+  }
+  if (driftDetected) {
+    // renderRegionShapes is async; it will fire region-shapes-rendered when done and
+    // app.js will re-call render(), which lands back here with no drift this time.
+    renderRegionShapes();
+    return;
+  }
+
   _liveRegions().forEach(region => {
     const layer = regionLayers[region.id];
     if (!layer) return;
