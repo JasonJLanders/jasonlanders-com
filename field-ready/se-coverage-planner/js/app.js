@@ -13,6 +13,7 @@ import { computeStats, renderRegionGrid, computeHireProposal, workload } from '.
 import { renderDiffBanner, renderSETable } from './table-view.js';
 import { initMap, updateRegionShading, renderRoleMarkers, enterStateEditMode, exitStateEditMode, invalidateMapSize, reloadMapScope } from './map-view.js';
 import { initTheme } from './theme.js';
+import { exportXLS } from './export-xls.js';
 import { geocodeCities } from './geocode.js';
 
 // ── Expose globals required by dynamically-generated inline onclick/oninput HTML ──
@@ -573,7 +574,7 @@ function closeSettings() {
 }
 
 function importData() { alert('Import Data - coming in Run C'); }
-function exportCSV()  { alert('Export CSV - coming in Run C'); }
+function doExport() { exportXLS(); }
 
 // ── Person edit / add modal ───────────────────────────────────────────────────
 
@@ -674,7 +675,7 @@ document.getElementById('btnSubmitAddSE').addEventListener('click', submitAddSE)
 document.getElementById('btnCancelAddSE').addEventListener('click', hideAddSEForm);
 document.getElementById('btnSettings').addEventListener('click', openSettings);
 document.getElementById('btnImport').addEventListener('click', importData);
-document.getElementById('btnExport').addEventListener('click', exportCSV);
+document.getElementById('btnExport').addEventListener('click', doExport);
 document.getElementById('btnViewCurrent').addEventListener('click',  () => setViewMode('current'));
 document.getElementById('btnViewProposed').addEventListener('click', () => setViewMode('proposed'));
 document.getElementById('btnResetChanges').addEventListener('click', resetChanges);
