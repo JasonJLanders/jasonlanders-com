@@ -291,25 +291,52 @@ function _renderRegionsTable() {
 function _renderTeamsTable() {
   const teams = CONFIG.teams || [];
   const rows = teams.map((t, i) => {
-    // Count SEs whose segment matches this team name.
-    // (Segment is stored on accounts, not people in current schema; fall back to account count.)
-    const memberCount = ACCOUNTS.filter(a => a.segment === t.name).length;
-    return `<tr class="dt-row" data-entity-id="team-${i}">
+    const teamAccounts = ACCOUNTS.filter(a => a.segment === t.name);
+    const count = teamAccounts.length;
+
+    // Expand-row payload: read-only list of accounts + their AE/SE owners
+    const acctList = teamAccounts.length
+      ? teamAccounts.map(a => {
+          const aeStr = a.ae  ? esc(a.ae)  : '<span style="color:var(--muted)">—</span>';
+          const seStr = a.se  ? esc(a.se)  : '<span style="color:var(--muted)">—</span>';
+          const regStr = a.region ? esc(a.region) : '<span style="color:var(--muted)">—</span>';
+          return `<div class="team-expand-row">
+            <span class="team-expand-acct">${esc(a.name)}</span>
+            <span class="team-expand-meta">${regStr}</span>
+            <span class="team-expand-meta">AE: ${aeStr}</span>
+            <span class="team-expand-meta">SE: ${seStr}</span>
+          </div>`;
+        }).join('')
+      : '<div style="color:var(--muted);font-size:12px;padding:4px 0">No accounts reference this team.</div>';
+
+    return `<tr class="dt-row md-team-row" data-entity-id="team-${i}" data-team-index="${i}"
+        onclick="mdToggleTeamExpand(event, ${i})">
+      <td style="width:18px;cursor:pointer"><span class="chevron" id="team-chev-${i}">&#9654;</span></td>
       <td><input type="text" class="dt-input" value="${esc(t.name)}"
         onblur="mdUpdateTeamName(${i}, this.value)"
-        onkeydown="mdDtKeydown(event,this)"></td>
+        onkeydown="mdDtKeydown(event,this)"
+        onclick="event.stopPropagation()"></td>
       <td><input type="text" class="dt-input" value="${esc(t.leader || '')}"
         placeholder="Optional SE Leader"
         onblur="mdUpdateTeamLeader(${i}, this.value)"
-        onkeydown="mdDtKeydown(event,this)"></td>
-      <td class="dt-center"><span class="badge badge-muted">${memberCount}</span></td>
+        onkeydown="mdDtKeydown(event,this)"
+        onclick="event.stopPropagation()"></td>
+      <td class="dt-center"><span class="badge badge-muted">${count}</span></td>
       <td class="dt-actions"><button class="dt-remove-btn" title="Remove team"
-        onclick="mdRemoveTeam(${i})">&#x2715;</button></td>
+        onclick="event.stopPropagation();mdRemoveTeam(${i})">&#x2715;</button></td>
+    </tr>
+    <tr class="team-expand" id="team-exp-${i}" style="display:none">
+      <td></td>
+      <td colspan="4" class="team-expand-cell">
+        <div class="team-expand-title">Accounts in this team (${count})</div>
+        ${acctList}
+      </td>
     </tr>`;
   }).join('');
 
   return `<table class="data-table">
     <thead><tr>
+      <th style="width:18px"></th>
       <th>Team Name (= Segment)</th>
       <th>SE Leader (optional)</th>
       <th class="dt-center">Accounts</th>
@@ -318,7 +345,7 @@ function _renderTeamsTable() {
           onclick="mdAddTeam()">+ Add Team</button>
       </th>
     </tr></thead>
-    <tbody>${rows || '<tr><td colspan="4" style="padding:16px;color:var(--muted);font-size:12px">No teams defined.</td></tr>'}</tbody>
+    <tbody>${rows || '<tr><td colspan="5" style="padding:16px;color:var(--muted);font-size:12px">No teams defined.</td></tr>'}</tbody>
   </table>`;
 }
 
@@ -557,4 +584,15 @@ window.mdUpdateTeamLeader = (i, val) => {
   t.leader = val.trim();
   saveConfig();
   _notifyTeamsChanged();
+};
+
+window.mdToggleTeamExpand = (e, i) => {
+  // Don't toggle when clicking inside an input, button, or anything explicitly stopped
+  if (e && e.target && (e.target.closest('input,button,.dt-remove-btn'))) return;
+  const expRow = document.getElementById('team-exp-' + i);
+  const chev   = document.getElementById('team-chev-' + i);
+  if (!expRow) return;
+  const isOpen = expRow.style.display !== 'none';
+  expRow.style.display = isOpen ? 'none' : '';
+  if (chev) chev.classList.toggle('open', !isOpen);
 };
