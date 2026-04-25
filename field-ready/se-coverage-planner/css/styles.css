@@ -199,12 +199,12 @@ thead th { padding: 10px 14px; text-align: left; font-size: 11px; font-weight: 7
 .se-row td:first-child { font-weight: 600; }
 .chevron { display: inline-block; font-size: 10px; color: var(--muted); transition: transform 0.15s; flex-shrink: 0; }
 
-/* SE name cell: chevron in its own column so wrapping names left-align under the name, not under the chevron.
-   Aux column (note pencil / proposed badge / remove button) sits inline with the name on the same row.
-   Long names wrap internally; aux stays anchored next to the (last line of the) name. */
+/* SE name cell: chevron in its own column. Name takes content width; aux icons sit inline next to name.
+   Names wrap on word boundaries only (e.g. between first and last name). overflow-wrap (not word-break)
+   prevents Chrome from splitting inside a word when the cell is narrow. */
 .se-name-cell { display: flex; align-items: flex-start; gap: 6px; flex-wrap: nowrap; }
 .se-name-cell .chevron { line-height: 1.5; padding-top: 2px; flex-shrink: 0; }
-.se-name-text { min-width: 0; word-break: break-word; }
+.se-name-text { min-width: 0; overflow-wrap: normal; word-break: normal; }
 .se-name-aux { display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0; padding-top: 1px; white-space: nowrap; }
 .se-row.open .chevron, .chevron.open { transform: rotate(90deg); }
 @keyframes seRowPulse {
