@@ -1,4 +1,5 @@
 import { DATA, state } from './data.js';
+import { propagatePeopleEditsToWorkingData } from './roster.js';
 
 const LS_KEY = 'se-planner-accounts';
 let _nextId = 1;
@@ -44,6 +45,7 @@ export function loadAccounts() {
         });
         ACCOUNTS.length = 0;
         ACCOUNTS.push(...parsed);
+        _ensureWorkingDataMatchesAccounts();
         return;
       }
     }
@@ -54,6 +56,52 @@ export function loadAccounts() {
   ACCOUNTS.length = 0;
   ACCOUNTS.push(...built);
   saveAccounts();
+}
+
+/**
+ * After ACCOUNTS is loaded from storage, make sure state.workingData reflects every persisted
+ * account. workingData itself is not persisted (it bootstraps from the static DATA constant),
+ * so any user-added accounts beyond the sample need a corresponding row inserted here or they
+ * become invisible to the map / sidebar / exports after a refresh.
+ */
+function _ensureWorkingDataMatchesAccounts() {
+  const wdAccountSet = new Set(state.workingData.map(r => r.account));
+  ACCOUNTS.forEach(a => {
+    if (wdAccountSet.has(a.name)) {
+      // Account already has at least one workingData row — propagate any persisted field deltas
+      // (region/ae/se/segment) so the row reflects what the Accounts tab currently says.
+      state.workingData.forEach(r => {
+        if (r.account !== a.name) return;
+        if (a.region  !== undefined) r.ae_region = a.region  || r.ae_region || '';
+        if (a.segment !== undefined) r.segment   = a.segment || r.segment   || '';
+        if (a.ae      !== undefined) r.ae        = a.ae      || r.ae        || '';
+        if (a.se      !== undefined) r.se        = a.se      || r.se        || '';
+      });
+      return;
+    }
+    // New (post-bootstrap) account that has no workingData row — create one.
+    state.workingData.push({
+      segment: a.segment || '',
+      avp: '', rvp: '', rvp_city: '',
+      rd: '', rd_city: '',
+      ae: a.ae || '', ae_city: '',
+      ae_region: a.region || '',
+      account: a.name,
+      se: a.se || '', se_leader: '', home_city: ''
+    });
+  });
+  // Also drop workingData rows whose account is no longer in ACCOUNTS (covers in-app deletions
+  // that happened before this boot). Mutate the array in place so other modules that already
+  // hold a reference to state.workingData see the same array.
+  const validAccountNames = new Set(ACCOUNTS.map(a => a.name));
+  for (let i = state.workingData.length - 1; i >= 0; i--) {
+    if (!validAccountNames.has(state.workingData[i].account)) {
+      state.workingData.splice(i, 1);
+    }
+  }
+  // Re-apply persisted PEOPLE city/region to any newly-added rows so people propagation
+  // doesn't get lost when accounts come in after PEOPLE bootstrap.
+  try { propagatePeopleEditsToWorkingData(); } catch {}
 }
 
 export function saveAccounts() {

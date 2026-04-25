@@ -76,6 +76,7 @@ export function loadPeople() {
         });
         PEOPLE.length = 0;
         PEOPLE.push(...parsed);
+        propagatePeopleEditsToWorkingData();
         return;
       }
     }
@@ -86,6 +87,28 @@ export function loadPeople() {
   PEOPLE.length = 0;
   PEOPLE.push(...built);
   savePeople();
+}
+
+/**
+ * After PEOPLE is loaded from storage, re-apply each person's persisted city/region back to
+ * matching workingData rows. workingData itself is bootstrapped fresh from the static DATA
+ * constant on every load, so any city/region edits the user made via Manage Data -> People
+ * would otherwise be lost on refresh.
+ *
+ * Exported because accounts.js needs to call this again after it adds new workingData rows
+ * for user-added accounts (those new rows wouldn't yet have the persisted person fields applied).
+ */
+export function propagatePeopleEditsToWorkingData() {
+  PEOPLE.forEach(p => {
+    const fields = ROLE_FIELDS[p.role];
+    if (!fields) return;
+    const { nameField, cityField } = fields;
+    state.workingData.forEach(r => {
+      if (r[nameField] !== p.name) return;
+      if (p.city)   r[cityField] = p.city;
+      if (p.region) r.ae_region  = p.region;
+    });
+  });
 }
 
 export function savePeople() {
