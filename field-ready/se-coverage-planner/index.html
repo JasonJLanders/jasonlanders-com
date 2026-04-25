@@ -44,17 +44,9 @@
       <span class="theme-icon-dark">☽</span>
       <span class="theme-icon-light">☀</span>
     </button>
-    <button class="btn btn-ghost" id="btnImport">Import Data</button>
-    <button class="btn btn-primary" id="btnExport">Export CSV</button>
-  </div>
-</header>
-
-<!-- TOOLBAR (mode controls + map layer toggles) -->
-<div class="toolbar">
-  <div class="toolbar-group">
     <div class="menu-wrap" id="editMenuWrap">
-      <button class="btn btn-ghost toolbar-btn menu-btn" id="btnEditMenu" aria-haspopup="true" aria-expanded="false">Edit <span class="menu-caret">▾</span></button>
-      <div class="menu-dropdown" id="editMenu" role="menu">
+      <button class="btn btn-ghost menu-btn" id="btnEditMenu" aria-haspopup="true" aria-expanded="false">Edit <span class="menu-caret">▾</span></button>
+      <div class="menu-dropdown menu-dropdown-right" id="editMenu" role="menu">
         <button class="menu-item" id="btnRebalance" role="menuitem">
           <span class="menu-item-icon">✎</span>
           <span class="menu-item-body">
@@ -86,7 +78,13 @@
         </button>
       </div>
     </div>
+    <button class="btn btn-ghost" id="btnImport">Import Data</button>
+    <button class="btn btn-primary" id="btnExport">Export CSV</button>
   </div>
+</header>
+
+<!-- LAYER PILL BAR — floats below the header, right-aligned, sized to its content -->
+<div class="toolbar layer-bar">
   <div class="toolbar-group toolbar-layers" id="layerToggles">
     <span class="toolbar-label">Show on Map</span>
     <label class="layer-pill"><input type="checkbox" data-role="SE" checked> SE</label>
