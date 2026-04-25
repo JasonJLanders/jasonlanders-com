@@ -26,13 +26,17 @@ function esc(str) {
   return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-export function renderDiffBanner(viewMode, scenarioB, getDiff) {
+export function renderDiffBanner(viewMode, scenarioB, getDiff, narrative) {
   const diffBanner = document.getElementById('diffBanner');
   if (viewMode === 'proposed' && scenarioB) {
     const diffs = getDiff();
+    const narrativeHtml = narrative
+      ? `<div class="diff-narrative"><span class="diff-narrative-icon">\u2728</span> ${esc(narrative)}</div>`
+      : '';
     if (diffs.length) {
       diffBanner.style.display = 'block';
       diffBanner.innerHTML = `<div class="diff-banner">
+        ${narrativeHtml}
         <div class="diff-banner-title">Scenario Changes vs Current</div>
         <div class="diff-list">${diffs.map(d => `<div class="diff-item">
           <strong>${esc(d.se)}</strong>
@@ -41,7 +45,7 @@ export function renderDiffBanner(viewMode, scenarioB, getDiff) {
         </div>`).join('')}</div>
       </div>`;
     } else {
-      diffBanner.innerHTML = `<div class="diff-banner"><div class="diff-banner-title">No changes vs Current</div></div>`;
+      diffBanner.innerHTML = `<div class="diff-banner">${narrativeHtml}<div class="diff-banner-title">No changes vs Current</div></div>`;
       diffBanner.style.display = 'block';
     }
   } else {
@@ -49,14 +53,19 @@ export function renderDiffBanner(viewMode, scenarioB, getDiff) {
   }
 }
 
-export function renderSETable(seList, data, seNames, rebalanceMode, viewMode, changedSet) {
+export function renderSETable(seList, data, seNames, rebalanceMode, viewMode, changedSet, proposedSet) {
   const tbody = document.getElementById('seTableBody');
   tbody.innerHTML = '';
+  const proposed = proposedSet || new Set();
 
   seList.forEach((se, i) => {
     const wl = workload(se);
+    const isProposed = proposed.has(se.se);
     const seRow = document.createElement('tr');
-    seRow.className = 'se-row' + (se.isTBH ? ' tbh' : '') + (se.isUnassigned ? ' unassigned' : '');
+    seRow.className = 'se-row'
+      + (se.isTBH ? ' tbh' : '')
+      + (se.isUnassigned ? ' unassigned' : '')
+      + (isProposed ? ' proposed-hire' : '');
     seRow.dataset.sename = se.se;
 
     const canRemove = rebalanceMode && !se.isTBH && !se.isUnassigned && viewMode !== 'proposed';
@@ -74,7 +83,8 @@ export function renderSETable(seList, data, seNames, rebalanceMode, viewMode, ch
         ? `<span class="person-link" data-person-id="${sePerson.id}" title="Click to edit ${esc(se.se)}">${esc(se.se)}</span>`
         : esc(se.se);
       const seNote = _personNoteIcon(sePerson);
-      seNameCell = seNameContent + (seNote ? ' ' + seNote : '') + removeBtnHtml;
+      const proposedBadge = isProposed ? '<span class="proposed-badge" title="Proposed by Propose Hires wizard">\u2728 Proposed</span>' : '';
+      seNameCell = seNameContent + (seNote ? ' ' + seNote : '') + proposedBadge + removeBtnHtml;
     }
 
     seRow.innerHTML = `

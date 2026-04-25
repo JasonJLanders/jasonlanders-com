@@ -98,6 +98,109 @@ export function workload(se) {
   return classifyWorkload(se);
 }
 
+/**
+ * Compute a minimum-hires proposal that reduces every active SE to Healthy.
+ * Groups by (region, segment). Uses account count as the primary load driver.
+ *
+ * Returns:
+ *   {
+ *     totalHires: number,
+ *     groups: [
+ *       {
+ *         region: string, segment: string,
+ *         hiresNeeded: number,
+ *         fromSEs:   [ { se, before: { accounts, aes }, after: { accounts } } ],
+ *         moves:     [ { account, from: seName, to: tbhLabel } ],
+ *         tbhLabels: [ 'TBH - Proposed 1', ... ]  // names for the created TBHs
+ *       }
+ *     ]
+ *   }
+ *
+ * Caller is expected to mutate state.workingData and state.addedSEs based on the returned moves.
+ * This function is pure and does not touch global state.
+ */
+export function computeHireProposal(seList, { tbhSeed = 'Proposed' } = {}) {
+  const result = { totalHires: 0, groups: [] };
+
+  // Only consider real, active SEs (skip TBH / UNASSIGNED)
+  const active = seList.filter(se => !se.isTBH && !se.isUnassigned);
+  if (!active.length) return result;
+
+  // Group by region + segment
+  const groups = new Map();
+  active.forEach(se => {
+    const key = (se.ae_region || '') + '\u0000' + (se.segment || '');
+    if (!groups.has(key)) groups.set(key, { region: se.ae_region || '', segment: se.segment || '', ses: [] });
+    groups.get(key).ses.push(se);
+  });
+
+  let tbhCounter = 1;
+
+  for (const group of groups.values()) {
+    const { region, segment, ses } = group;
+    // How overloaded each SE is, by accounts
+    const accountsHealthy = (_thresholdsFor(segment).accounts || {}).healthy || 999;
+    // Working copies of each SE's account set (names)
+    const workingAccts = new Map();
+    ses.forEach(se => workingAccts.set(se.se, [...se.accounts.keys()]));
+
+    // Does any SE in this group still exceed the healthy accounts threshold?
+    const anyOver = () => [...workingAccts.values()].some(acctList => acctList.length > accountsHealthy);
+    if (!anyOver()) continue;
+
+    const moves = [];
+    const tbhLabels = [];
+    let hiresForGroup = 0;
+
+    // Keep adding TBHs until no existing SE exceeds healthy.
+    // Safety cap: don't loop forever if config is pathological.
+    for (let safety = 0; safety < 100; safety++) {
+      if (!anyOver()) break;
+
+      hiresForGroup += 1;
+      const tbhLabel = `TBH - ${tbhSeed} ${tbhCounter++}`;
+      tbhLabels.push(tbhLabel);
+      let tbhAccounts = 0;
+
+      // Each pass, take ONE account from the most-loaded SE until TBH is full or no-one is over.
+      while (tbhAccounts < accountsHealthy && anyOver()) {
+        // Find the SE with the most accounts currently (must exceed healthy)
+        let worstSe = null;
+        let worstCount = -1;
+        for (const [seName, acctList] of workingAccts.entries()) {
+          if (acctList.length > accountsHealthy && acctList.length > worstCount) {
+            worstSe = seName;
+            worstCount = acctList.length;
+          }
+        }
+        if (!worstSe) break;
+
+        // Pop one account from that SE and move it to the TBH
+        const acctList = workingAccts.get(worstSe);
+        const movedAccount = acctList.pop(); // take from end (cheap)
+        moves.push({ account: movedAccount, from: worstSe, to: tbhLabel });
+        tbhAccounts += 1;
+      }
+    }
+
+    if (!hiresForGroup) continue;
+
+    const fromSEs = ses.map(se => {
+      const remaining = workingAccts.get(se.se) || [];
+      return {
+        se: se.se,
+        before: { accounts: se.accountCount, aes: se.aeCount },
+        after:  { accounts: remaining.length }
+      };
+    }).filter(x => x.before.accounts !== x.after.accounts);
+
+    result.groups.push({ region, segment, hiresNeeded: hiresForGroup, fromSEs, moves, tbhLabels });
+    result.totalHires += hiresForGroup;
+  }
+
+  return result;
+}
+
 export function renderRegionGrid(regions, seList, data) {
   document.getElementById('regionGrid').innerHTML = regions.map(region => {
     const rSEs  = seList.filter(s => s.ae_region === region.name && !s.isTBH && !s.isUnassigned);

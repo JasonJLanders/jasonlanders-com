@@ -55,7 +55,27 @@
 <div id="rebalanceBanner" class="rebalance-banner" style="display:none">
   <span class="banner-dot"></span>
   <span>Edit Alignments Mode is active. Click a region to modify SE/AE assignments.</span>
+  <button class="btn btn-ghost" id="btnProposeHires" title="Auto-compute the minimum hires needed to reduce everyone to Healthy">&#x2728; Propose Hires</button>
+  <button class="btn btn-ghost" id="btnRevertProposed" style="display:none" title="Undo the wizard's proposed hires + account moves">↶ Revert Proposed</button>
   <button class="btn btn-ghost" id="btnExitRebalance">Exit Edit Mode</button>
+</div>
+
+<!-- PROPOSE HIRES PREVIEW MODAL -->
+<div id="proposeHiresOverlay" class="notes-overlay" style="display:none">
+  <div class="notes-panel" style="width:560px">
+    <div class="notes-header">
+      <div class="notes-title">
+        <span style="font-size:16px">&#x2728;</span>
+        <span>Propose Hires</span>
+      </div>
+      <button class="icon-btn" id="btnClosePropose" title="Close">&#x2715;</button>
+    </div>
+    <div class="notes-body" id="proposeBody"></div>
+    <div class="notes-footer">
+      <button class="btn btn-ghost" id="btnCancelPropose">Cancel</button>
+      <button class="btn btn-primary" id="btnConfirmPropose">Add These Hires</button>
+    </div>
+  </div>
 </div>
 
 <div class="app-body">

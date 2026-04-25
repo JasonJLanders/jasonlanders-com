@@ -9,7 +9,7 @@ import {
 } from './roster.js';
 import { openManageData } from './manage-data.js';
 import { getAccountByName } from './accounts.js';
-import { computeStats, renderRegionGrid } from './stats.js';
+import { computeStats, renderRegionGrid, computeHireProposal, workload } from './stats.js';
 import { renderDiffBanner, renderSETable } from './table-view.js';
 import { initMap, updateRegionShading, renderRoleMarkers, enterStateEditMode, exitStateEditMode, invalidateMapSize, reloadMapScope } from './map-view.js';
 import { geocodeCities } from './geocode.js';
@@ -127,7 +127,11 @@ function refreshMarkers() {
 // ── Main render ──────────────────────────────────────────────────────────────────
 function render() {
   const data    = (state.viewMode === 'proposed' && state.scenarioB) ? state.scenarioB : state.workingData;
-  const seList  = computeStats(data, state.rebalanceMode ? state.addedSEs : []);
+  // When viewing the proposed scenario, surface wizard TBHs even if empty (so the user sees the headcount ask).
+  const extraForView = (state.viewMode === 'proposed' && state.scenarioBAddedSEs)
+    ? state.scenarioBAddedSEs
+    : (state.rebalanceMode ? state.addedSEs : []);
+  const seList  = computeStats(data, extraForView);
   const active  = seList.filter(s => !s.isTBH && !s.isUnassigned);
   const allAEs  = new Set(data.map(r => r.ae));
   const seNames = [...new Set([
@@ -159,8 +163,10 @@ function render() {
     document.getElementById('assignTitle').textContent =
       state.rebalanceMode ? 'SE Assignments - Editing' : 'SE Assignments';
 
-    renderDiffBanner(state.viewMode, state.scenarioB, getDiff);
-    renderSETable(filteredList, data, seNames, state.rebalanceMode, state.viewMode, changedSet);
+    renderDiffBanner(state.viewMode, state.scenarioB, getDiff, state.scenarioBNarrative || '');
+    const sourceAdded = state.viewMode === 'proposed' ? (state.scenarioBAddedSEs || []) : state.addedSEs;
+    const proposedSet = new Set(sourceAdded.filter(s => s.proposedByWizard).map(s => s.se));
+    renderSETable(filteredList, data, seNames, state.rebalanceMode, state.viewMode, changedSet, proposedSet);
   } else {
     document.getElementById('seTableBody').innerHTML = '';
     document.getElementById('diffBanner').style.display = 'none';
@@ -235,6 +241,7 @@ function toggleRebalance() {
   document.getElementById('rebalanceBanner').style.display = state.rebalanceMode ? 'flex' : 'none';
   document.querySelector('.app-body').classList.toggle('rebalance-active', state.rebalanceMode);
   if (!state.rebalanceMode) hideAddSEForm();
+  syncProposedRevertBtn();
   render();
 }
 
@@ -276,15 +283,168 @@ function resetChanges() {
   state.workingData = DATA.map(r => ({...r}));
   state.changedAccounts.clear();
   state.addedSEs = [];
+  state.lastProposalNarrative = '';
   hideAddSEForm();
+  syncProposedRevertBtn();
   render();
 }
 
 function saveScenario() {
-  state.scenarioB        = state.workingData.map(r => ({...r}));
-  state.scenarioBChanged = new Set(state.changedAccounts);
+  state.scenarioB         = state.workingData.map(r => ({...r}));
+  state.scenarioBChanged  = new Set(state.changedAccounts);
+  state.scenarioBAddedSEs = state.addedSEs.map(s => ({ ...s }));
+  state.scenarioBNarrative = state.lastProposalNarrative || '';
   document.getElementById('viewToggleWrap').style.display = 'block';
   setViewMode('proposed');
+}
+
+// ── Propose Hires wizard (Capacity & Hires: Push 2) ───────────────────────────────────────
+
+let _currentProposal = null;
+
+function openProposeHiresModal() {
+  if (!state.rebalanceMode) {
+    alert('Enter Edit Alignments mode first.');
+    return;
+  }
+  // Compute proposal from the current working data + any wizard TBHs already in state.addedSEs
+  // Excluding wizard-proposed TBHs from the proposal calc so we don't pile up hires on top of hires.
+  const dataView = state.workingData;
+  const seList   = computeStats(dataView, []); // no added SEs for the calc
+  const proposal = computeHireProposal(seList);
+
+  const body = document.getElementById('proposeBody');
+  if (!proposal.totalHires) {
+    body.innerHTML = `<div style="padding:4px 0">
+      <div style="font-size:14px;font-weight:700;color:var(--green);margin-bottom:8px">\u2713 No hires needed</div>
+      <div style="color:var(--muted);font-size:13px">Every active SE is already at or below the Healthy threshold based on your current <strong style="color:var(--text)">Workload</strong> settings.</div>
+    </div>`;
+    document.getElementById('btnConfirmPropose').style.display = 'none';
+  } else {
+    document.getElementById('btnConfirmPropose').style.display = '';
+    const groupHtml = proposal.groups.map(g => {
+      const relievedSEs = g.fromSEs.map(f =>
+        `<li><strong>${_esc(f.se)}</strong>: ${f.before.accounts} \u2192 ${f.after.accounts} accounts</li>`
+      ).join('');
+      return `<div class="propose-group">
+        <div class="propose-group-title">${_esc(g.region)} \u00b7 ${_esc(g.segment)}</div>
+        <div class="propose-group-hires"><strong>+${g.hiresNeeded}</strong> new SE${g.hiresNeeded !== 1 ? 's' : ''}</div>
+        <ul class="propose-relief">${relievedSEs || '<li style="color:var(--muted)">(no relief)</li>'}</ul>
+      </div>`;
+    }).join('');
+    body.innerHTML = `
+      <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:12px">
+        Proposing <span style="color:var(--accent)">${proposal.totalHires}</span> new SE${proposal.totalHires !== 1 ? 's' : ''}
+      </div>
+      <div style="color:var(--muted);font-size:12px;margin-bottom:14px;line-height:1.6">
+        Based on your current <strong style="color:var(--text)">Workload</strong> thresholds. Accounts will be reassigned from overloaded SEs to new TBHs within the same region and segment. You can adjust assignments after adding.
+      </div>
+      ${groupHtml}
+    `;
+  }
+
+  _currentProposal = proposal;
+  document.getElementById('proposeHiresOverlay').style.display = 'flex';
+}
+
+function closeProposeHiresModal() {
+  document.getElementById('proposeHiresOverlay').style.display = 'none';
+  _currentProposal = null;
+}
+
+function applyProposal() {
+  if (!_currentProposal || !_currentProposal.totalHires) { closeProposeHiresModal(); return; }
+
+  // 1) Create wizard-proposed TBHs in state.addedSEs (marked proposedByWizard:true)
+  _currentProposal.groups.forEach(g => {
+    g.tbhLabels.forEach(label => {
+      // Derive a plausible leader from one of the relieved SEs in this group (for context)
+      const existingRow = state.workingData.find(r =>
+        r.ae_region === g.region && r.segment === g.segment && r.se_leader
+      );
+      const leader = existingRow ? existingRow.se_leader : '';
+      if (state.addedSEs.find(s => s.se === label)) return; // shouldn't collide, but guard
+      state.addedSEs.push({
+        se: label,
+        segment: g.segment,
+        ae_region: g.region,
+        se_leader: leader,
+        home_city: '',
+        proposedByWizard: true
+      });
+    });
+  });
+
+  // 2) Apply all account moves: mutate state.workingData rows so r.se points at the new TBH.
+  const moveCount = _currentProposal.groups.reduce((n, g) => n + g.moves.length, 0);
+  _currentProposal.groups.forEach(g => {
+    g.moves.forEach(mv => {
+      state.workingData.forEach(r => {
+        if (r.account === mv.account && r.se === mv.from) {
+          r.se = mv.to;
+          r.se_leader = ''; // TBH has no real leader yet
+          state.changedAccounts.add(r.account);
+        }
+      });
+    });
+  });
+
+  // 3) Save a narrative summary so Save as Scenario can display it
+  state.lastProposalNarrative = _buildProposalNarrative(_currentProposal, moveCount);
+
+  closeProposeHiresModal();
+  render();
+  syncProposedRevertBtn();
+}
+
+function _esc(s) {
+  return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function _buildProposalNarrative(proposal, moveCount) {
+  if (!proposal || !proposal.totalHires) return '';
+  const byRegion = {};
+  proposal.groups.forEach(g => {
+    if (!byRegion[g.region]) byRegion[g.region] = { total: 0, segments: [] };
+    byRegion[g.region].total += g.hiresNeeded;
+    byRegion[g.region].segments.push(`${g.hiresNeeded} ${g.segment}`);
+  });
+  const regionBits = Object.entries(byRegion)
+    .map(([region, info]) => `${region} +${info.total} (${info.segments.join(', ')})`)
+    .join('; ');
+  return `Proposed ${proposal.totalHires} hire${proposal.totalHires !== 1 ? 's' : ''} to reduce overload: ${regionBits}. Reassigned ${moveCount} account${moveCount !== 1 ? 's' : ''} to the new TBHs within the same region + segment.`;
+}
+
+function revertProposedHires() {
+  const wizardTBHs = new Set(state.addedSEs.filter(s => s.proposedByWizard).map(s => s.se));
+  if (!wizardTBHs.size) return;
+  if (!confirm(`Revert ${wizardTBHs.size} proposed hire${wizardTBHs.size !== 1 ? 's' : ''} and move the reassigned accounts back to their previous SEs?`)) return;
+
+  // Pull DATA rows for comparison so we can restore the original SE for each account that was moved to a wizard TBH.
+  const originalBySe = {};
+  DATA.forEach(r => { if (r.account && r.se) originalBySe[r.account] = { se: r.se, se_leader: r.se_leader }; });
+
+  state.workingData.forEach(r => {
+    if (wizardTBHs.has(r.se)) {
+      const orig = originalBySe[r.account];
+      if (orig) {
+        r.se = orig.se;
+        r.se_leader = orig.se_leader || '';
+      }
+      // Leave r in changedAccounts so scenarioB diff math stays consistent; user can Reset Changes to fully clear.
+    }
+  });
+  state.addedSEs = state.addedSEs.filter(s => !s.proposedByWizard);
+  state.lastProposalNarrative = '';
+  render();
+  syncProposedRevertBtn();
+}
+
+function syncProposedRevertBtn() {
+  const btn = document.getElementById('btnRevertProposed');
+  if (!btn) return;
+  const hasWizardTBHs = state.addedSEs.some(s => s.proposedByWizard);
+  btn.style.display = (state.rebalanceMode && hasWizardTBHs) ? '' : 'none';
 }
 
 function setViewMode(mode) {
@@ -463,6 +623,16 @@ document.getElementById('btnViewCurrent').addEventListener('click',  () => setVi
 document.getElementById('btnViewProposed').addEventListener('click', () => setViewMode('proposed'));
 document.getElementById('btnResetChanges').addEventListener('click', resetChanges);
 document.getElementById('btnSaveScenario').addEventListener('click', saveScenario);
+
+// Propose Hires modal + revert button
+document.getElementById('btnProposeHires').addEventListener('click', openProposeHiresModal);
+document.getElementById('btnRevertProposed').addEventListener('click', revertProposedHires);
+document.getElementById('btnClosePropose').addEventListener('click', closeProposeHiresModal);
+document.getElementById('btnCancelPropose').addEventListener('click', closeProposeHiresModal);
+document.getElementById('btnConfirmPropose').addEventListener('click', applyProposal);
+document.getElementById('proposeHiresOverlay').addEventListener('click', e => {
+  if (e.target.id === 'proposeHiresOverlay') closeProposeHiresModal();
+});
 document.getElementById('btnCloseSettings').addEventListener('click', closeSettings);
 document.getElementById('btnClosePanel').addEventListener('click', closePanel);
 document.getElementById('settingsOverlay').addEventListener('click', e => {

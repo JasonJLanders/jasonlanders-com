@@ -62,9 +62,12 @@ export const state = {
   changedAccounts: new Set(),
   scenarioB: null,
   scenarioBChanged: new Set(),
+  scenarioBAddedSEs: null,
+  scenarioBNarrative: '',
   rebalanceMode: false,
   viewMode: 'current',
-  addedSEs: []
+  addedSEs: [],
+  lastProposalNarrative: ''
 };
 
 /**
