@@ -397,10 +397,6 @@ function applyProposal() {
   syncProposedRevertBtn();
 }
 
-function _esc(s) {
-  return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-}
-
 function _buildProposalNarrative(proposal, moveCount) {
   if (!proposal || !proposal.totalHires) return '';
   const byRegion = {};
